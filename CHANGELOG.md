@@ -1,3 +1,9 @@
+## 7.0.1 · Flujo nativo de GitHub
+- Ramas feature por interacción desde develop y publicación al integrar en main.
+- CI de pruebas y build, tags/Releases reales y despliegue del mismo artefacto en Pages.
+- Migración de las siete revisiones históricas y reglas persistentes en AGENTS.md.
+- Pages pendiente de habilitación según visibilidad y plan de la cuenta.
+
 ## 7.0.0 · Colecciones y composiciones independientes
 - Los vinilos pertenecen a colecciones; las composiciones guardan referencias, estilos propios y posiciones.
 - Migración de composiciones anteriores: conserva sus tarjetas, diseños y huecos.

@@ -41,3 +41,8 @@ Formularios móviles y confirmación antes de crear, duplicar o eliminar.
 Colecciones separadas de composiciones, estilos independientes, inserción de cualquier colección, movimiento móvil y zoom 300 %.
 
 El detalle histórico de cada revisión se conserva en su CHANGELOG.md cuando existía. La versión 1 era un único HTML en dist/index.html.
+
+
+## Migración a versiones reales de GitHub
+
+Los commits de GitHub y tags v1.0.0 a v7.0.0 están en versiones.json. El flujo de publicación crea sus Releases automáticamente y conserva las fechas originales en las notas sin falsificar la fecha de importación. Las siguientes versiones proceden de la integración develop → main; las carpetas no sustituyen los tags.
