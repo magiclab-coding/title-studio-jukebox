@@ -7,7 +7,7 @@
 3. Para las versiones con package.json, trabajar en una copia separada de esa carpeta y ejecutar `npm install` y `npm run build`; `npm test` cuando exista.
 4. Revisar el resultado antes de desplegarlo.
 
-El repositorio de GitHub es un archivo de código. No se ha conectado automáticamente al alojamiento actual de Sites. Para restaurar el sitio ya publicado, pedir en su conversación: «Restaura Title Studio a la versión N». Sites conserva sus propias versiones publicadas.
+GitHub es ahora la fuente principal del programa. Las versiones están en Tags y Releases. Para volver a una versión, crear una rama nueva desde develop y recuperar el código de la versión elegida; conservar los workflows actuales, probar y publicar mediante develop → main. GitHub Pages está preparado, pero su activación depende de la visibilidad y del plan de la cuenta. Sites sigue siendo un alojamiento separado. Para restaurar el sitio ya publicado, pedir en su conversación: «Restaura Title Studio a la versión N». Sites conserva sus propias versiones publicadas.
 
 Antes de usar un programa anterior, descargar una copia JSON completa y trabajar preferiblemente en otro perfil o navegador: las versiones antiguas pueden no interpretar campos introducidos después. Restaurar el código no restaura los datos personales.
 

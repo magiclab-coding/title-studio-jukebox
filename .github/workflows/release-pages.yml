@@ -1,0 +1,76 @@
+name: Release and GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-pages
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pages: read
+    outputs:
+      pages_enabled: ${{ steps.pages.outputs.enabled }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node --test tests/release-version.mjs
+      - name: Import original versions as real tags and Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/bootstrap-history.mjs
+      - run: git fetch origin --tags
+      - name: Resolve version for this main commit
+        id: version
+        run: node scripts/release-version.mjs
+      - run: npm run build
+      - name: Record exact published version
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/stamp-build.mjs
+      - name: Package release
+        run: tar -czf title-studio-site.tar.gz -C dist .
+      - name: Create Release idempotently
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/publish-release.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Check Pages availability
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/check-pages.mjs
+  deploy:
+    needs: release
+    if: needs.release.outputs.pages_enabled == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy main build
+        id: deployment
+        uses: actions/deploy-pages@v4
