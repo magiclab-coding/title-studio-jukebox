@@ -1,3 +1,10 @@
+## 6.0.0 · Acciones táctiles y formularios
+- Tocar una tarjeta muestra cuatro iconos sobre ella: editar, estilo, duplicar y eliminar.
+- En móvil, edición y duplicación en formularios con guardar/cancelar; eliminar abre confirmación.
+- Tocar un hueco abre «Nueva tarjeta»; cancelar no crea discos ni ocupa huecos.
+- Desactivado el arrastre móvil para permitir desplazamiento vertical sin mover tarjetas por accidente.
+- Se mantiene el editor de escritorio.
+
 ## 5.0.0 · Composición compacta y contextual
 - Cuadrícula con huecos vacíos: tocar crea una tarjeta editable en esa posición.
 - Acciones por tarjeta: edición directa, estilos en modal, duplicar y vaciar hueco.
