@@ -1,3 +1,14 @@
+## 7.0.0 · Colecciones y composiciones independientes
+- Los vinilos pertenecen a colecciones; las composiciones guardan referencias, estilos propios y posiciones.
+- Migración de composiciones anteriores: conserva sus tarjetas, diseños y huecos.
+- Duplicar tarjeta crea otra posición del mismo disco, sin duplicarlo en la colección.
+- Celda vacía: elegir un disco de cualquier colección o crear uno y elegir dónde guardarlo.
+- Cambiar estilo desde la vista previa del formulario, antes de confirmar la inserción.
+- Opciones de composición en modal; eliminadas cabecera global, cabecera decorativa de composición y pie.
+- Zoom hasta 300 %, incluido en el guardado y la restauración.
+- Mover en móvil: icono para arrastrar o tocar una celda de destino; las ocupadas desplazan tarjetas.
+- Iconos translúcidos, centrados en móvil y en la esquina superior en escritorio.
+
 ## 6.0.0 · Acciones táctiles y formularios
 - Tocar una tarjeta muestra cuatro iconos sobre ella: editar, estilo, duplicar y eliminar.
 - En móvil, edición y duplicación en formularios con guardar/cancelar; eliminar abre confirmación.
