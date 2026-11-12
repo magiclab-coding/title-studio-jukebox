@@ -17,3 +17,24 @@
 .main{grid-column:2}
 
 .compact-label{display:none}@media(max-width:700px){.header-actions>.v-btn.print-action:after{content:none}.header-actions>.v-btn.print-action{font-size:10px}.print-action .full-label{display:none}.print-action .compact-label{display:inline}}
+/* Studio 4: persistent context rail, spacious panels and direct manipulation. */
+.studio,.studio.collapsed{grid-template-columns:56px minmax(0,1fr)}
+.studio:not(.collapsed){grid-template-columns:248px minmax(0,1fr)}
+.icon-rail{position:fixed;inset:0 auto 0 0;width:56px;z-index:98;background:#203630;display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 4px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+.icon-rail button{width:44px;min-height:44px;margin:0;padding:0;display:grid;place-items:center;font-size:23px;border-radius:12px;color:#bdcec5;flex-shrink:0}
+.icon-rail button.active{background:#4b6559;color:#fff;box-shadow:inset 3px 0 #e4b98a}
+.icon-rail .rail-expand{font-size:20px;margin-bottom:20px}.icon-rail .rail-save{margin-top:auto}
+.studio:not(.collapsed) .icon-rail{visibility:hidden}.sidebar{touch-action:pan-y;box-shadow:10px 0 45px #162a221c}
+.active-collection{margin:0;min-width:0;max-width:230px}.active-collection>span{display:block;font-size:9px;letter-spacing:.6px;color:#77877f}
+.active-collection select{margin-top:3px;font-size:12px;padding:7px 24px 7px 9px;max-width:100%;min-height:34px;background:#fff}
+header{height:auto;min-height:80px;gap:12px;padding-block:12px}.breadcrumb{min-width:0}.header-actions{flex-wrap:wrap;justify-content:flex-end}
+.v-application{background:#f3f5f5}.panel{border-radius:18px;background:#fff;border-color:#e1e7e5;box-shadow:0 4px 18px #213d3608}
+h1{font-family:Georgia,serif;font-size:clamp(28px,3vw,40px)}.page-heading{padding:4px 0 5px}.eyebrow{letter-spacing:1.6px}.manager-row label{font-size:11px;color:#556b61}
+label input:not([type=checkbox]),label select{border-radius:9px;background:#fafcfc;padding:11px;font-size:12px}.workspace-toolbar{padding:18px;background:#fbfcfc}.canvas{background-color:#edf1f1;background-image:radial-gradient(#c6d2cc .7px,transparent .7px)}
+.inspector-heading{padding:20px}.inspector-body{padding:20px}.inspector-note{font-size:11px;background:#f0f5f2}.section-label{font-size:9px}.native-print{margin-top:10px}
+.positioned-label{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;transition:left .15s,top .15s;outline-offset:2px}
+.positioned-label.dragging{cursor:grabbing;z-index:5;filter:drop-shadow(0 3px 4px #0005);outline:2px solid #b9553b}
+.positioned-label:focus-visible{outline:3px solid #b9553b}.positioned-svg{pointer-events:none}
+@media(max-width:900px){.studio:not(.collapsed){grid-template-columns:56px minmax(0,1fr)}.studio:not(.collapsed) .icon-rail{visibility:visible}.sidebar.pinned{transform:translateX(-100%)}.sidebar.pinned.open{transform:translateX(0)}.studio:not(.collapsed) .scrim{display:block}.composition{grid-template-columns:1fr}.inspector{margin-top:0}}
+@media(max-width:620px){.studio,.studio.collapsed,.studio:not(.collapsed){grid-template-columns:48px minmax(0,1fr)}.icon-rail{width:48px;padding-inline:2px}.icon-rail button{width:42px}.breadcrumb{flex:1;gap:0}.breadcrumb>.v-btn{display:none}.breadcrumb .slash,.breadcrumb strong{display:none}.active-collection{max-width:100%;width:100%}.active-collection select{width:100%;font-size:11px}header{align-items:flex-start;padding:10px;gap:8px}.header-actions{max-width:116px;gap:6px}.header-actions>.v-btn{min-width:32px!important;padding:0 8px!important;height:30px!important}.header-actions .full-label{display:none}main{padding:22px 10px 0}.page-heading{gap:12px}.page-heading h1{font-size:28px}.composition-manager,.collection-manager{padding:14px}.panel{border-radius:14px}.manager-row{gap:10px}.manager-row label{min-width:100%;flex-basis:100%}.manager-row>.inline{flex-wrap:wrap}.canvas{padding:12px}.composition-pages{min-width:0}.workspace-toolbar{padding:10px}.small-muted{line-height:1.6}.sheet-stage{padding:16px 8px}.print-controls,.settings,.transfer{padding:18px}.view-switch{white-space:normal}.table-footer>.inline{flex-wrap:wrap}.page-controls{gap:8px}}
+@media print{html,body{margin:0!important;padding:0!important;background:white!important}.print-page{display:block!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important}}
