@@ -1,3 +1,11 @@
+## 5.0.0 · Composición compacta y contextual
+- Cuadrícula con huecos vacíos: tocar crea una tarjeta editable en esa posición.
+- Acciones por tarjeta: edición directa, estilos en modal, duplicar y vaciar hueco.
+- Panel de contenido y acceso de edición visibles en escritorio; interfaz compacta en móvil.
+- Vaciar conserva los huecos; arrastrar a un hueco lo ocupa sin compactar el resto.
+- Hojas adicionales persistentes, conservadas en copias e impresión.
+- Opciones de composición y selector de colección recogidos en menús y modales.
+
 # Title Studio 4.0 · 12 noviembre 2026
 
 - Barra minimizada con un icono por contexto, estado activo y nombres accesibles.
