@@ -1,3 +1,8 @@
+# 7.0.9
+
+- Recursos JavaScript y CSS identificados por el hash de su contenido para evitar mezclar archivos en caché de diferentes despliegues. Conserva los datos locales.
+- Prueba de integridad entre cada URL de recurso y su contenido publicado.
+
 # 7.0.8
 
 - Columnas configurables y persistentes; inicialmente se muestran Artista A/B y Canción A/B. Velocidad predeterminada: 45 RPM.
