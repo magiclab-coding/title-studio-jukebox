@@ -591,3 +591,34 @@ assert.equal(
 );
 assert.match(app.templatePreview(app.templates[0], app.current.value), /#123456/);
 console.log('PASS: persistent template defaults preserve existing composition appearances');
+
+// Dos hojas a la misma altura: el puntero debe escoger la segunda por su coordenada X.
+context.document.querySelectorAll = () => [
+  {
+    dataset: { page: '0' },
+    getBoundingClientRect: () => ({ ...rect, left: 100, right: 500, width: 400 }),
+  },
+  {
+    dataset: { page: '1' },
+    getBoundingClientRect: () => ({ ...rect, left: 520, right: 920, width: 400 }),
+  },
+];
+const crossItem = app.composition.value.items[0];
+app.dragStart(
+  {
+    button: 0,
+    target: { closest: () => null },
+    currentTarget: element,
+    clientX: 220,
+    clientY: 160,
+    pointerId: 2,
+  },
+  crossItem,
+);
+listeners.get('pointermove')({ clientX: 650, clientY: 190, preventDefault() {} });
+assert.equal(crossItem.page, 1, 'Arrastrar a la derecha debe entrar en la segunda hoja visible');
+listeners.get('pointermove')({ clientX: 220, clientY: 190, preventDefault() {} });
+assert.equal(crossItem.page, 0, 'Arrastrar a la izquierda debe volver a la primera hoja');
+listeners.get('pointerup')({ type: 'pointerup' });
+assert.equal(listeners.size, 0);
+console.log('PASS: horizontal drag between adjacent sheets in both directions');
