@@ -17,6 +17,8 @@ for (const [source, target] of [
 // El icono se publica sin alterar la imagen original.
 for (const file of ['favicon.png', 'favicon.ico']) await copyFile('src/' + file, 'dist/' + file);
 
+await import('./scripts/build-fonts.mjs');
+
 // No se renombran propiedades públicas utilizadas por las plantillas de Vue.
 for (const file of ['app.js', 'pdf.js', 'style.css']) {
   const result = await transform(await readFile('src/' + file, 'utf8'), {

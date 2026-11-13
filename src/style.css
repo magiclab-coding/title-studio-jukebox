@@ -2883,3 +2883,55 @@ label select {
 .composing .composition.no-inspector {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* --- Selectores: flecha visible y área táctil coherente en todos los contextos. --- */
+select:not([multiple]) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6' fill='none' stroke='%23344f48' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 16px !important;
+  padding-right: 36px !important;
+  border: 1px solid #a9bbb5 !important;
+  cursor: pointer;
+  min-height: 40px;
+}
+select:focus-visible {
+  outline: 2px solid #277e71;
+  outline-offset: 2px;
+}
+select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.metadata-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.style-modal-content > .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.custom-style-preview {
+  padding: 12px;
+  background: #edf1ee;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.custom-style-preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+}
+/* El color debe verse como una muestra amplia, también con los estilos globales de formulario. */
+.style-modal input[type='color'] {
+  width: 70px;
+  min-height: 42px;
+  padding: 4px !important;
+  cursor: pointer;
+}
