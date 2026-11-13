@@ -1,3 +1,8 @@
+# 7.0.5
+
+- Añadido el favicon del pulpo con esquinas transparentes, PNG de 96 px e ICO de 16/32/48 px. Faltaban la declaración HTML y el archivo en la distribución.
+- Ruta relativa compatible con GitHub Pages y versión en la URL para renovar la caché.
+
 # 7.0.4
 
 - Corregido el arranque en blanco causado por cadenas partidas dentro de interpolaciones Vue.
