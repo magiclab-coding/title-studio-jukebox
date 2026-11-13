@@ -28,6 +28,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm run format:check
       - run: npm test
       - run: node --test tests/release-version.mjs
       - name: Import original versions as real tags and Releases

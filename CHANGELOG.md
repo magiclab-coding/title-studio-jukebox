@@ -1,10 +1,19 @@
+## 7.0.2 · Código fuente legible
+
+- Formato del código activo JavaScript, HTML y CSS con sangrado y saltos de línea.
+- Prettier fijado en dependencias, comandos format y format:check y comprobación en CI.
+- Regla persistente de código legible en AGENTS.md; builds y dependencias fuera del repositorio.
+- Instantáneas históricas y tags existentes conservados sin cambios.
+
 ## 7.0.1 · Flujo nativo de GitHub
+
 - Ramas feature por interacción desde develop y publicación al integrar en main.
 - CI de pruebas y build, tags/Releases reales y despliegue del mismo artefacto en Pages.
 - Migración de las siete revisiones históricas y reglas persistentes en AGENTS.md.
 - Pages pendiente de habilitación según visibilidad y plan de la cuenta.
 
 ## 7.0.0 · Colecciones y composiciones independientes
+
 - Los vinilos pertenecen a colecciones; las composiciones guardan referencias, estilos propios y posiciones.
 - Migración de composiciones anteriores: conserva sus tarjetas, diseños y huecos.
 - Duplicar tarjeta crea otra posición del mismo disco, sin duplicarlo en la colección.
@@ -16,6 +25,7 @@
 - Iconos translúcidos, centrados en móvil y en la esquina superior en escritorio.
 
 ## 6.0.0 · Acciones táctiles y formularios
+
 - Tocar una tarjeta muestra cuatro iconos sobre ella: editar, estilo, duplicar y eliminar.
 - En móvil, edición y duplicación en formularios con guardar/cancelar; eliminar abre confirmación.
 - Tocar un hueco abre «Nueva tarjeta»; cancelar no crea discos ni ocupa huecos.
@@ -23,6 +33,7 @@
 - Se mantiene el editor de escritorio.
 
 ## 5.0.0 · Composición compacta y contextual
+
 - Cuadrícula con huecos vacíos: tocar crea una tarjeta editable en esa posición.
 - Acciones por tarjeta: edición directa, estilos en modal, duplicar y vaciar hueco.
 - Panel de contenido y acceso de edición visibles en escritorio; interfaz compacta en móvil.
@@ -50,11 +61,11 @@ Guardar todo → conservar el JSON descargado. Para restaurarlo: Importar y expo
 
 Pedir en el chat: «Restaura Title Studio a la versión 3», o indicar 2 o 1. Se vuelve a desplegar la versión guardada correspondiente, sin borrar el historial. La recuperación de código no restaura los discos: exportar primero un JSON completo.
 
-| Versión de Sites | Commit conservado | Identificador de versión |
-| --- | --- | --- |
+| Versión de Sites             | Commit conservado                        | Identificador de versión                                                          |
+| ---------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------- |
 | 3 (anterior a esta revisión) | 245cee2dd191c286a5f3e2de7379e027e50d341b | appgprj_6af50e142b7c81918ff97a0ded609004~appgver_7147b77be0888191aab9646b9d84515e |
-| 2 | e8faf2e993dc4f07d0864fe1a6b234ee167a5ff1 | appgprj_6af50e142b7c81918ff97a0ded609004~appgver_53aaf5ec6e4081919ba739fcb421b874 |
-| 1 | a3e2667b1484b15a4ddcb2b8891a897fc930246a | appgprj_6af50e142b7c81918ff97a0ded609004~appgver_39e8c2c571688191823f3bf8b08cc4d3 |
+| 2                            | e8faf2e993dc4f07d0864fe1a6b234ee167a5ff1 | appgprj_6af50e142b7c81918ff97a0ded609004~appgver_53aaf5ec6e4081919ba739fcb421b874 |
+| 1                            | a3e2667b1484b15a4ddcb2b8891a897fc930246a | appgprj_6af50e142b7c81918ff97a0ded609004~appgver_39e8c2c571688191823f3bf8b08cc4d3 |
 
 La clave local title-studio-v3 se conserva para mantener compatibilidad con los datos existentes. El formato JSON incorpora schema 4. No se borran las claves v1/v2.
 
