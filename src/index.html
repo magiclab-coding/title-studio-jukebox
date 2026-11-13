@@ -653,7 +653,7 @@
                   </div>
                   <div class="style-modal-content">
                     <div class="custom-style-preview" v-html="svg(styleCard)"></div>
-                    <div class="style-tabs">
+                    <div class="style-tabs" v-if="!defaultStyleId">
                       <button
                         @click="stylePanel = 'select'"
                         :class="{ on: stylePanel === 'select' }"

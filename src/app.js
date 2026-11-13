@@ -829,7 +829,8 @@ createApp({
         font: t.font || 'Georgia',
         artistFont: '',
         artistInk: t.artistInk || '#202020',
-        // Los interruptores de metadatos pertenecen a la tarjeta y no se reinician aquí.
+        // Los predeterminados personalizados se copian a esta posición.
+        ...(settings.value.templateDefaults?.[t.id] || {}),
       });
     }
 
