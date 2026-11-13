@@ -2935,3 +2935,489 @@ select:disabled {
   padding: 4px !important;
   cursor: pointer;
 }
+/* --- Cabeceras compactas y acciones comunes a todos los contextos --- */
+.page-heading,
+.composing .page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.page-heading h1,
+.composing .page-heading h1 {
+  margin: 0;
+  font-size: clamp(18px, 2vw, 26px);
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+}
+.page-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.header-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid #cfdbd5;
+  background: #fff;
+  border-radius: 9px;
+  font-size: 12px;
+}
+.header-action.primary {
+  background: #213d36;
+  color: #fff;
+  border-color: #213d36;
+}
+.header-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.group-dialog {
+  padding: 24px;
+}
+.group-dialog h3 {
+  margin-bottom: 18px;
+}
+.group-dialog p {
+  line-height: 1.5;
+  margin: 14px 0;
+}
+/* --- Formularios homogéneos: cuatro campos principales y metadatos plegables --- */
+.record-core {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.record-fields label {
+  min-width: 0;
+  display: block;
+  margin-bottom: 10px;
+}
+.record-fields input,
+.record-fields select {
+  width: 100%;
+}
+.record-metadata {
+  margin-top: 12px;
+  border-top: 1px solid #dce5df;
+  padding-top: 12px;
+}
+.record-metadata summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.genre-field {
+  display: block;
+  min-width: 0;
+}
+.genre-field input {
+  margin-top: 5px;
+}
+.inline-card-editor {
+  display: block;
+  overflow: auto;
+  padding: 8px;
+}
+.inline-card-editor .record-core {
+  gap: 6px;
+}
+.inline-card-editor .record-fields label {
+  font: 10px Arial;
+  margin-bottom: 4px;
+}
+.inline-card-editor .record-fields input {
+  font: 12px Arial;
+  min-height: 30px;
+  padding: 4px;
+  border: 1px solid #ccd9d0;
+}
+.inline-card-editor .record-fields select {
+  font: 12px Arial;
+}
+.pixel-sizes label {
+  flex: 1 1 150px;
+}
+.metadata-options {
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 16px 0;
+}
+.metadata-options legend {
+  padding: 0 5px;
+  font-size: 12px;
+}
+.metadata-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+/* --- Fuentes: menú con muestras reales, visibles antes de seleccionar --- */
+.font-picker {
+  margin: 16px 0;
+}
+.field-caption {
+  font-size: 12px;
+  color: #53685f;
+  display: block;
+  margin-bottom: 7px;
+}
+.font-picker details {
+  border: 1px solid #a9bbb5;
+  border-radius: 10px;
+  background: #fff;
+}
+.font-picker summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.font-picker summary::-webkit-details-marker {
+  display: none;
+}
+.font-picker details[open] summary {
+  border-bottom: 1px solid #dce5df;
+}
+.font-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 8px;
+  gap: 8px;
+  max-height: 300px;
+  overflow: auto;
+}
+.font-options button {
+  text-align: left;
+  min-width: 0;
+  border: 1px solid #dce5df;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafcfb;
+}
+.font-options button[aria-pressed='true'] {
+  border-color: #277e71;
+  background: #edf7f3;
+}
+.font-options small {
+  display: block;
+  font: 10px Arial;
+  color: #63766c;
+  margin-bottom: 8px;
+}
+.font-options span {
+  display: block;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+/* --- Discos: tabla legible en escritorio, fichas con etiquetas en móvil --- */
+.disc-search {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 400px;
+  min-width: 0;
+}
+.disc-search .search {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+.desktop-disc-table table {
+  min-width: 1400px;
+  table-layout: fixed;
+}
+.desktop-disc-table th,
+.desktop-disc-table td {
+  min-width: 130px;
+  width: 145px;
+}
+.desktop-disc-table th:first-child,
+.desktop-disc-table td:first-child {
+  width: 100px;
+  min-width: 100px;
+}
+.desktop-disc-table .genre-field {
+  font-size: 0;
+}
+.desktop-disc-table .genre-field select,
+.desktop-disc-table .genre-field input {
+  font-size: 12px;
+  width: 100%;
+}
+.mobile-disc-list,
+.mobile-disc-filters {
+  display: none;
+}
+.picker-selection {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  font-size: 12px;
+}
+.picker-selection button {
+  padding: 8px 10px;
+  background: #edf3ef;
+  border-radius: 8px;
+}
+/* El desplazamiento horizontal de la rejilla no altera las coordenadas guardadas. */
+.composing .composition-pages {
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 220px;
+}
+.composing .composition-sheet {
+  margin-bottom: 0;
+}
+.sheet-navigation {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+.sheet-navigation button {
+  padding: 9px 12px;
+  border: 1px solid #ccd9d0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+}
+.sheet-navigation span {
+  font-size: 12px;
+}
+.sheet-navigation button:disabled {
+  opacity: 0.4;
+}
+@media (max-width: 720px) {
+  .page-heading,
+  .composing .page-heading {
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .page-heading h1,
+  .composing .page-heading h1 {
+    font-size: 18px;
+  }
+  .page-actions {
+    gap: 5px;
+  }
+  .header-action {
+    padding: 8px 10px;
+    font-size: 18px;
+  }
+  .header-action span {
+    display: none;
+  }
+  .desktop-disc-table {
+    display: none;
+  }
+  .mobile-disc-list {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+  }
+  .mobile-disc-card {
+    min-width: 0;
+    border: 1px solid #d5e0d9;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  .mobile-disc-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 8px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .mobile-disc-heading > span {
+    font-size: 11px;
+    white-space: nowrap;
+    padding: 3px 6px;
+    background: #edf3ef;
+    border-radius: 5px;
+  }
+  .mobile-disc-card p {
+    font-size: 12px;
+    margin: 8px 0;
+    overflow-wrap: anywhere;
+  }
+  .mobile-disc-card p > span {
+    color: #6a7c72;
+    font-weight: 700;
+    padding-right: 6px;
+  }
+  .mobile-disc-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    margin-top: 12px;
+  }
+  .mobile-disc-footer .genre-field {
+    font-size: 10px;
+  }
+  .mobile-disc-footer select {
+    width: 100%;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .mobile-disc-filters {
+    display: block;
+    padding: 12px;
+    border-block: 1px solid #e1e8e3;
+  }
+  .mobile-disc-filters summary {
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .mobile-disc-filters .record-core {
+    margin-top: 12px;
+  }
+  .disc-search {
+    flex: none;
+    width: 100%;
+    gap: 7px;
+  }
+  .disc-search .v-btn {
+    padding: 0 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .disc-library .table-tools {
+    padding: 12px;
+    gap: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .collection-manager .manager-row {
+    flex-wrap: wrap;
+  }
+  .collection-manager .manager-row > label {
+    width: 100%;
+  }
+  .collection-manager .inline {
+    gap: 5px;
+  }
+  .collection-manager .v-btn {
+    font-size: 10px;
+    padding-inline: 8px;
+  }
+  .compact-manager .manager-row {
+    flex-wrap: wrap;
+  }
+  .compact-manager .composition-select {
+    flex: 1 1 100%;
+  }
+  .font-options {
+    grid-template-columns: 1fr;
+  }
+  .record-core {
+    gap: 8px;
+  }
+  .record-fields input {
+    font-size: 14px;
+    min-height: 42px;
+  }
+  .sheet-navigation {
+    gap: 6px;
+  }
+  .sheet-navigation button {
+    padding: 8px;
+    font-size: 11px;
+  }
+}
+
+/* A 100 % cabe una hoja completa; el zoom permite ampliarla sin cambiar la impresión. */
+.composing .composition-pages {
+  width: min(calc(100% * var(--zoom)), calc((100dvh - 360px) * var(--paper-ratio) * var(--zoom)));
+  min-width: 0;
+  max-width: none;
+}
+
+/* Mantener las acciones a la derecha también cuando la cabecera ocupa dos líneas. */
+.page-heading,
+.composing .page-heading {
+  flex-direction: row;
+  text-align: left;
+}
+.page-heading h1 {
+  min-width: 0;
+  flex: 1;
+}
+.page-heading .page-actions {
+  flex-direction: row;
+}
+
+[v-cloak] {
+  display: none !important;
+}
+.add-disc-short {
+  display: none;
+}
+.page-heading,
+.composing .page-heading {
+  padding: 0;
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+}
+@media (max-width: 720px) {
+  .collection-manager {
+    padding: 12px;
+  }
+  .collection-manager .manager-row {
+    gap: 8px;
+  }
+  .collection-manager .v-btn {
+    min-width: 0;
+    padding-inline: 6px;
+    height: 28px;
+    font-size: 10px;
+  }
+  .disc-library .table-tools .inline {
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+  .disc-library .table-tools .inline .v-btn {
+    min-width: 0;
+    padding-inline: 6px;
+    font-size: 10px;
+    height: 32px;
+  }
+  .mobile-disc-filters {
+    padding: 10px 12px;
+  }
+  .mobile-disc-filters summary {
+    padding: 0;
+    min-height: 20px;
+    line-height: 20px;
+  }
+}
+@media (max-width: 400px) {
+  .add-disc-long {
+    display: none;
+  }
+  .add-disc-short {
+    display: inline;
+    font-size: 22px;
+  }
+  .disc-search .v-btn {
+    min-width: 40px;
+    width: 40px;
+    padding: 0;
+  }
+}

@@ -29,3 +29,10 @@ Use short section comments to organize significant areas of authored code. Add c
 - Mantener src legible y comentado. Minificar únicamente dist durante npm run build.
 - Ejecutar npm run test:build después de compilar: valida las plantillas Vue y los archivos publicados.
 - No dividir cadenas dentro de interpolaciones Vue; usar el parser Vue del formateador para src/index.html.
+
+## Plantillas HTML y controles compartidos
+
+- En src/index.html y las plantillas minificadas, cerrar explícitamente los componentes propios (genre-select, record-fields, font-picker). HTML no reconoce el cierre abreviado de elementos personalizados.
+- Mantener el formulario de datos en src/components.js para que Artista A/B y Canción A/B sean iguales en todos los contextos.
+- Conservar las claves JSON históricas collections/collection para compatibilidad; la interfaz usa Discos.
+- Centrar las etiquetas solo en horizontal. La posición vertical y las medidas físicas no cambian.

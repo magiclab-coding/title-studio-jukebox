@@ -15,8 +15,8 @@ Antes de usar un programa anterior, descargar una copia JSON completa y trabajar
 
 En la aplicación: Guardar todo descarga la copia JSON. Para cargarla: Importar y exportar → seleccionar el JSON → revisar → Cargar copia. Ajustes → Versiones recuperables permite guardar y recuperar hasta diez copias locales.
 
-Las copias locales desaparecen al borrar los datos del navegador. Las colecciones personales y las copias JSON del usuario no se incluyen en este repositorio.
+Las copias locales desaparecen al borrar los datos del navegador. Las listas de discos personales y las copias JSON del usuario no se incluyen en este repositorio.
 
 ## Verificación de la versión 7
 
-Las pruebas automatizadas cubren selección de discos, posiciones y huecos, estilos independientes entre composiciones, referencias a discos de distintas colecciones, duplicación sin duplicar vinilos, restauración, impresión, zoom persistente y movimiento por destino. También se revisaron las interfaces de escritorio y de 360 píxeles de ancho. No se ha realizado una prueba física en la impresora ni en el teléfono del usuario.
+Las pruebas automatizadas cubren selección de discos, posiciones y huecos, estilos independientes entre composiciones, referencias a discos de distintas listas de discos, duplicación sin duplicar vinilos, restauración, impresión, zoom persistente y movimiento por destino. También se revisaron las interfaces de escritorio y de 360 píxeles de ancho. No se ha realizado una prueba física en la impresora ni en el teléfono del usuario.
