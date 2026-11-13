@@ -21,6 +21,7 @@
         ><div
           class="studio"
           :class="{ collapsed: !pinned, composing: view === 'compose' }"
+          @pointerdown.capture="dismissCardActions"
           @touchstart.passive="gestureStart"
           @touchend.passive="gestureEnd"
         >
@@ -132,15 +133,43 @@
                     @click="undo"
                     :disabled="!history.length"
                     aria-label="Deshacer"
+                    title="Deshacer el último cambio"
+                    data-tooltip="Deshacer el último cambio"
                   >
-                    ↶ <span>Deshacer</span>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 5 4 10l5 5M4 10h9a6 6 0 0 1 0 12" transform="translate(0 -3)" />
+                    </svg>
                   </button>
                   <button
                     class="header-action primary"
                     @click="saveEverything"
                     aria-label="Guardar todo"
+                    title="Guardar todo: descargar copia JSON"
+                    data-tooltip="Guardar todo: descargar copia JSON"
                   >
-                    ↓ <span>Guardar todo</span>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+                    </svg>
                   </button>
                 </div>
               </header>
@@ -173,11 +202,17 @@
                     </button>
                   </div>
                 </section>
-                <div class="composition" :class="{ 'no-inspector': !currentItem }">
+                <div class="composition no-inspector">
                   <section class="workspace panel">
                     <div class="workspace-toolbar">
                       <div>
                         <span class="status-pill">{{ compositionCards.length }} TARJETAS</span
+                        ><button
+                          class="bulk-style-button"
+                          @click="openStyleAll"
+                          :disabled="!compositionCards.length"
+                        >
+                          ◈ Estilo para todas</button
                         ><span class="toolbar-note"
                           >{{ settings.width }} × {{ settings.height }} mm</span
                         >
@@ -216,7 +251,21 @@
                         </button>
                       </div>
                     </div>
-                    <div class="canvas">
+                    <div class="canvas" :class="{ 'drag-active': dragActive }">
+                      <div v-if="dragActive" class="drag-page-cues" aria-live="polite">
+                        <span :class="{ ready: dragEdge === -1, unavailable: composePage === 0 }"
+                          >‹ {{ composePage ? 'Hoja anterior' : 'Primera hoja' }}</span
+                        ><span
+                          :class="{
+                            ready: dragEdge === 1,
+                            unavailable: composePage + 1 >= gridPages,
+                          }"
+                          >{{
+                            gridPages > composePage + 1 ? 'Hoja siguiente' : 'Última hoja'
+                          }}
+                          ›</span
+                        >
+                      </div>
                       <div class="composition-hint">
                         <button
                           v-if="movingItemId"
@@ -276,31 +325,8 @@
                               @keydown="cardKey($event, slot.item)"
                             >
                               <div class="positioned-svg" v-html="svg(slot.item.card)"></div>
-                              <form
-                                v-if="editingId === slot.item.id"
-                                class="inline-card-editor"
-                                :style="{
-                                  '--ink': slot.item.card.ink,
-                                  '--paper': slot.item.card.paper,
-                                  fontFamily: slot.item.card.font,
-                                }"
-                                @click.stop
-                                @submit.prevent="finishEditing"
-                                @keydown.esc="finishEditing"
-                              >
-                                <record-fields :record="current" :genres="genres"></record-fields>
-                                <button type="submit" aria-label="Terminar edición">✓ Listo</button>
-                              </form>
-                              <button
-                                v-if="editingId !== slot.item.id"
-                                class="desktop-card-edit"
-                                @click.stop="selectForEdit(slot.item)"
-                                aria-label="Editar tarjeta"
-                              >
-                                ✎
-                              </button>
                               <div
-                                v-if="actionCardId === slot.item.id && editingId !== slot.item.id"
+                                v-if="actionCardId === slot.item.id"
                                 class="card-icon-actions"
                                 role="toolbar"
                                 aria-label="Acciones de tarjeta"
@@ -339,11 +365,22 @@
                                   aria-label="Eliminar tarjeta de composición"
                                   title="Eliminar"
                                 >
-                                  ×
+                                  <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+                                  </svg>
                                 </button>
-                              </div>
-                            </article></template
-                          >
+                              </div></article
+                          ></template>
                         </section>
                       </div>
                       <div class="sheet-navigation">
@@ -382,15 +419,6 @@
                       >
                     </div>
                   </section>
-                  <aside v-if="currentItem" class="inspector panel desktop-editor">
-                    <div class="inspector-heading">
-                      <span>Editar etiqueta</span
-                      ><span class="badge">{{ current.number || 'NUEVA' }}</span>
-                    </div>
-                    <div class="inspector-body">
-                      <record-fields :record="current" :genres="genres"></record-fields>
-                    </div>
-                  </aside>
                 </div>
                 <!-- Opciones globales de la composición, fuera de los paneles recortables. -->
                 <v-dialog v-model="optionsDialog" max-width="460"
@@ -610,7 +638,13 @@
               <v-dialog v-model="styleDialog" max-width="680" scrollable
                 ><section class="panel style-modal">
                   <div class="dialog-heading">
-                    <h3>Estilo · {{ styleCard.number }}</h3>
+                    <h3>
+                      {{
+                        styleAll
+                          ? 'Estilo para toda la composición'
+                          : 'Estilo · ' + styleCard.number
+                      }}
+                    </h3>
                     <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                   </div>
                   <div class="style-modal-content">
@@ -623,22 +657,7 @@
                         @click="useTemplate(t)"
                         :aria-pressed="styleCard.style === t.id"
                       >
-                        <div
-                          v-html="
-                            svg({
-                              ...styleCard,
-                              style: t.id,
-                              ink: t.ink,
-                              artistInk: t.artistInk || '#202020',
-                              paper: t.paper,
-                              font: t.font || styleCard.font,
-                              showMeta: t.showMeta !== false,
-                              showGenre: t.showMeta !== false,
-                              showRpm: t.showMeta !== false,
-                              showNumber: t.showMeta !== false,
-                            })
-                          "
-                        ></div>
+                        <div v-html="templatePreview(t, styleCard)"></div>
                         <span>{{ t.name }}</span>
                       </button>
                     </div>
@@ -694,7 +713,9 @@
                       >
                     </fieldset>
                   </div>
-                  <v-btn color="primary" block @click="styleDialog = false">Listo</v-btn>
+                  <v-btn v-if="styleAll" color="primary" block @click="applyAll"
+                    >Aplicar a {{ compositionCards.length }} tarjetas</v-btn
+                  ><v-btn v-else color="primary" block @click="styleDialog = false">Listo</v-btn>
                 </section></v-dialog
               >
               <v-dialog v-model="picker" max-width="540"
@@ -805,12 +826,30 @@
                       >
                     </div>
                   </div>
+                  <details class="column-chooser">
+                    <summary>Columnas · {{ visibleColumns.length }}</summary>
+                    <div class="column-options">
+                      <label v-for="col in columns" :key="col.key"
+                        ><input type="checkbox" v-model="columnKeys" :value="col.key" />
+                        {{ col.label }}</label
+                      >
+                    </div>
+                    <div class="inline wrap">
+                      <button @click="columnKeys = ['artist', 'artistB', 'a', 'b']">
+                        Artistas y canciones</button
+                      ><button @click="columnKeys = columns.map((c) => c.key)">
+                        Mostrar todas
+                      </button>
+                    </div>
+                  </details>
                   <details class="mobile-disc-filters">
                     <summary>Filtros y orden</summary>
                     <div class="record-core">
                       <label
                         >Ordenar por<select v-model="sortKey">
-                          <option v-for="col in columns" :value="col.key">{{ col.label }}</option>
+                          <option v-for="col in visibleColumns" :value="col.key">
+                            {{ col.label }}
+                          </option>
                         </select></label
                       >
                       <label
@@ -819,17 +858,17 @@
                           <option :value="-1">Descendente</option>
                         </select></label
                       >
-                      <label v-for="col in columns"
+                      <label v-for="col in visibleColumns"
                         >{{ col.label
                         }}<input v-model="filters[col.key]" :aria-label="'Filtrar ' + col.label"
                       /></label>
                     </div>
                   </details>
                   <div class="table-scroll desktop-disc-table">
-                    <table>
+                    <table :style="{ minWidth: visibleColumns.length * 160 + 96 + 'px' }">
                       <thead>
                         <tr>
-                          <th v-for="col in columns">
+                          <th v-for="col in visibleColumns">
                             <button class="sort-head" @click="sortColumn(col.key)">
                               {{ col.label }}
                               {{ sortKey === col.key ? (sortDirection === 1 ? '↑' : '↓') : '↕' }}
@@ -838,7 +877,7 @@
                           <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
-                          <th v-for="col in columns">
+                          <th v-for="col in visibleColumns">
                             <input
                               v-model="filters[col.key]"
                               :aria-label="'Filtrar ' + col.label"
@@ -850,7 +889,7 @@
                       </thead>
                       <tbody>
                         <tr v-for="card in pagedCards" :key="card.id">
-                          <td v-for="col in columns" :data-label="col.label">
+                          <td v-for="col in visibleColumns" :data-label="col.label">
                             <genre-select
                               v-if="col.key === 'category'"
                               v-model="card.category"
@@ -862,7 +901,6 @@
                               v-model="card.rpm"
                               :aria-label="'Velocidad ' + card.number"
                             >
-                              <option value="">Proyecto</option>
                               <option>33 RPM</option>
                               <option>45 RPM</option>
                               <option>78 RPM</option>
@@ -895,13 +933,37 @@
                   </div>
                   <div class="mobile-disc-list">
                     <article v-for="card in pagedCards" :key="card.id" class="mobile-disc-card">
-                      <div class="mobile-disc-heading">
-                        <b>{{ artistName(card) || 'Sin artista' }}</b><span>{{ card.number }}</span>
+                      <div
+                        class="mobile-disc-heading"
+                        v-if="
+                          columnKeys.some((key) => ['artist', 'artistB', 'number'].includes(key))
+                        "
+                      >
+                        <b v-if="columnKeys.includes('artist') || columnKeys.includes('artistB')">{{
+                          mobileArtist(card) || 'Sin artista'
+                        }}</b><span v-if="columnKeys.includes('number')">{{ card.number }}</span>
                       </div>
-                      <p><span>A</span> {{ card.a || 'Sin canción A' }}</p>
-                      <p><span>B</span> {{ card.b || 'Sin canción B' }}</p>
-                      <div class="mobile-disc-footer">
+                      <p v-if="columnKeys.includes('a')">
+                        <span>A</span> {{ card.a || 'Sin canción A' }}
+                      </p>
+                      <p v-if="columnKeys.includes('b')">
+                        <span>B</span> {{ card.b || 'Sin canción B' }}
+                      </p>
+                      <p v-if="columnKeys.includes('rpm')" class="mobile-disc-extra">
+                        Velocidad · {{ card.rpm }}
+                      </p>
+                      <p v-if="columnKeys.includes('label')" class="mobile-disc-extra">
+                        Sello · {{ card.label || '—' }}
+                      </p>
+                      <p v-if="columnKeys.includes('year')" class="mobile-disc-extra">
+                        Año · {{ card.year || '—' }}
+                      </p>
+                      <div
+                        class="mobile-disc-footer"
+                        :class="{ 'with-genre': columnKeys.includes('category') }"
+                      >
                         <genre-select
+                          v-if="columnKeys.includes('category')"
                           v-model="card.category"
                           :genres="genres"
                           :label="'Estilo musical ' + card.number"
@@ -958,22 +1020,7 @@
                     @click="useTemplate(t)"
                   >
                     <div class="template-preview">
-                      <div
-                        v-html="
-                          svg({
-                            ...current,
-                            style: t.id,
-                            ink: t.ink,
-                            artistInk: t.artistInk || '#202020',
-                            paper: t.paper,
-                            font: t.font || current.font,
-                            showMeta: t.showMeta !== false,
-                            showGenre: t.showMeta !== false,
-                            showRpm: t.showMeta !== false,
-                            showNumber: t.showMeta !== false,
-                          })
-                        "
-                      ></div>
+                      <div v-html="templatePreview(t, current)"></div>
                     </div>
                     <div class="template-info">
                       <div>

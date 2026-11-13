@@ -3,6 +3,7 @@ const { createApp, ref, computed, watch } = Vue;
 const templates = [
   {
     id: 'arrows',
+    font: 'Oswald',
     name: 'Classic Arrows',
     group: 'Clásicos',
     description: 'Flechas junto al artista',
@@ -11,22 +12,25 @@ const templates = [
   },
   {
     id: 'ribbon',
+    font: 'DM Sans',
     name: 'Ribbon No. 45',
     group: 'Clásicos',
-    description: 'Líneas finas y artista central',
+    description: 'Cinta en negativo con remates',
     ink: '#36776b',
     paper: '#f6f5e7',
   },
   {
     id: 'block',
+    font: 'Space Grotesk',
     name: 'Midnight Block',
     group: 'Clásicos',
-    description: 'Contraste y geometría',
+    description: 'Líneas gruesas y contraste',
     ink: '#324d70',
     paper: '#f5f3e9',
   },
   {
     id: 'stars',
+    font: 'Playfair Display',
     name: 'Starlight',
     group: 'Vintage',
     description: 'Estrellas de los cincuenta',
@@ -35,6 +39,7 @@ const templates = [
   },
   {
     id: 'stamp',
+    font: 'Permanent Marker',
     name: 'The Hit Parade',
     group: 'Vintage',
     description: 'Sello y personalidad',
@@ -43,6 +48,7 @@ const templates = [
   },
   {
     id: 'lines',
+    font: 'DM Sans',
     name: 'Studio Lines',
     group: 'Minimalistas',
     description: 'Líneas limpias',
@@ -51,6 +57,7 @@ const templates = [
   },
   {
     id: 'two',
+    font: 'Playfair Display',
     name: 'Two Artists',
     group: 'Clásicos',
     description: 'Dos artistas separados por /',
@@ -59,6 +66,7 @@ const templates = [
   },
   {
     id: 'mono',
+    font: 'monospace',
     name: 'Typewriter',
     group: 'Minimalistas',
     description: 'El ritmo de la tipografía',
@@ -74,7 +82,37 @@ const templates = [
     artistInk: '#111111',
     paper: '#ffffff',
     font: 'Trade Winds',
-    showMeta: false,
+    showMeta: true,
+  },
+  {
+    id: 'inverse',
+    name: 'Artista en negativo',
+    group: 'Clásicos',
+    description: 'Cartela central oscura y letras claras',
+    ink: '#28548a',
+    artistInk: '#172d44',
+    paper: '#ffffff',
+    font: 'Oswald',
+  },
+  {
+    id: 'pill',
+    name: 'Pill Line',
+    group: 'Minimalistas',
+    description: 'Cápsula central y líneas continuas',
+    ink: '#234b43',
+    artistInk: '#234b43',
+    paper: '#fbfbf4',
+    font: 'DM Sans',
+  },
+  {
+    id: 'chevron',
+    name: 'Broadway Chevron',
+    group: 'Vintage',
+    description: 'Banda geométrica y chevrones',
+    ink: '#b24231',
+    artistInk: '#743322',
+    paper: '#fff8eb',
+    font: 'Space Grotesk',
   },
 ];
 // Fuentes libres incluidas en el build; no dependen de servicios externos.
@@ -123,7 +161,7 @@ const normalize = (c) => {
     category: 'HIT TUNES',
     label: '',
     year: '',
-    rpm: '',
+    rpm: '45 RPM',
     size: 100,
     font: t.font || 'Georgia',
     artistFont: '',
@@ -132,6 +170,7 @@ const normalize = (c) => {
     showMeta: t.showMeta !== false,
     ...c,
     style,
+    rpm: c.rpm || '45 RPM',
     artist: parts[0],
     artistB: c.artistB || parts.slice(1).join(' / '),
     titlePx: c.titlePx ?? (20 * (+c.size || 100)) / 100,
@@ -181,20 +220,49 @@ function makeSvg(c, settings) {
   const fontCss = [...new Set([font, artistFont])]
     .map((f) => globalThis.StudioFonts?.[f] || '')
     .join('');
-  let art = '';
+  let art = '',
+    artistFill = artistInk;
+  const line = (y, weight = 1, dash = '0') =>
+    `<path d="M10 ${y * sy}H290" stroke="${artistInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
+  const centerHalf = Math.min(130, name.length * textSize(name, artistPx) * 0.36 + 8);
   if (c.style === 'brush') {
-    const half = Math.min(132, name.length * textSize(name, artistPx) * 0.36 + 8);
-    const left = 150 - half;
-    const right = 150 + half;
-    // Trazos laterales interrumpidos por el nombre, sin marco exterior.
-    art = `<path d="M4 ${76 * sy}L${left} ${72 * sy}L${left} ${75 * sy}Z M296 ${76 * sy}L${right} ${72 * sy}L${right} ${75 * sy}Z" fill="${artistInk}"/>`;
+    art = `<path d="M4 ${76 * sy}L${150 - centerHalf} ${72 * sy}L${150 - centerHalf} ${75 * sy}Z M296 ${76 * sy}L${150 + centerHalf} ${72 * sy}L${150 + centerHalf} ${75 * sy}Z" fill="${artistInk}"/>`;
+  } else if (c.style === 'ribbon' || c.style === 'chevron') {
+    art = `<path d="M6 ${58 * sy}L20 ${75 * sy}L6 ${92 * sy}H294L280 ${75 * sy}L294 ${58 * sy}Z" fill="${artistInk}"/>`;
+    if (c.style === 'chevron')
+      art += `<path d="M9 ${52 * sy}H291 M9 ${98 * sy}H291" stroke="${ink}" stroke-width="3"/>`;
+    artistFill = paper;
+  } else if (c.style === 'inverse') {
+    art =
+      `<rect x="10" y="${58 * sy}" width="280" height="${34 * sy}" rx="2" fill="${artistInk}"/>` +
+      line(54, 1) +
+      line(96, 1);
+    artistFill = paper;
+  } else if (c.style === 'block') {
+    art = line(55, 5) + line(95, 5) + line(49, 1) + line(101, 1);
   } else if (c.style === 'arrows') {
-    art = `<path d="M14 ${74 * sy}l10 -4v8z M286 ${74 * sy}l-10 -4v8z" fill="${artistInk}"/>`;
+    art = `<path d="M10 ${55 * sy}H124L140 ${61 * sy}L124 ${67 * sy}H10Z M290 ${83 * sy}H176L160 ${89 * sy}L176 ${95 * sy}H290Z" fill="${artistInk}"/>`;
   } else if (c.style === 'stars') {
-    art = `<text x="12" y="${78 * sy}" fill="${artistInk}">✦</text><text x="276" y="${78 * sy}" fill="${artistInk}">✦</text>`;
-  } else if (['lines', 'stamp', 'ribbon', 'block'].includes(c.style)) {
-    art = `<path d="M14 ${58 * sy}h272 M14 ${91 * sy}h272" fill="none" stroke="${artistInk}" stroke-width="${c.style === 'block' ? 2 : 0.7}" stroke-dasharray="${c.style === 'stamp' ? '3 2' : '0'}"/>`;
-  }
+    art = `<path d="M12 ${56 * sy}H288 M12 ${94 * sy}H288" stroke="${artistInk}"/>`;
+    for (const x of [20, 40, 260, 280])
+      art += `<text x="${x}" y="${78 * sy}" text-anchor="middle" font-size="12" fill="${artistInk}">✦</text>`;
+  } else if (c.style === 'stamp') {
+    art =
+      line(55, 2, '5 3') +
+      line(95, 2, '5 3') +
+      `<path d="M10 ${63 * sy}l10 12 -10 12 M290 ${63 * sy}l-10 12 10 12" fill="none" stroke="${artistInk}" stroke-width="3"/>`;
+  } else if (c.style === 'pill') {
+    art =
+      line(75, 2) +
+      `<rect x="${150 - centerHalf}" y="${59 * sy}" width="${centerHalf * 2}" height="${32 * sy}" rx="${16 * sy}" fill="${paper}"/><path d="M${150 - centerHalf + 10} ${56 * sy}H${150 + centerHalf - 10} M${150 - centerHalf + 10} ${94 * sy}H${150 + centerHalf - 10}" stroke="${artistInk}"/>`;
+  } else if (c.style === 'lines') {
+    art = `<path d="M8 ${75 * sy}H${150 - centerHalf} M${150 + centerHalf} ${75 * sy}H292" stroke="${artistInk}" stroke-width="1.5"/>`;
+  } else if (c.style === 'two') {
+    art =
+      line(55, 0.7) +
+      line(95, 0.7) +
+      `<path d="M14 ${69 * sy}l6 6 -6 6 -6 -6z M286 ${69 * sy}l6 6 -6 6 -6 -6z" fill="${artistInk}"/>`;
+  } else if (c.style === 'mono') art = line(57, 0.6, '1 4') + line(93, 0.6, '1 4');
   const meta =
     ((c.showGenre ?? c.showMeta !== false) ? tx(c.category, 13, 7, 'Arial', artistInk) : '') +
     ((c.showRpm ?? c.showMeta !== false)
@@ -204,7 +272,22 @@ function makeSvg(c, settings) {
       ? `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
       : '');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistInk)}${tx(c.b, 112, titlePx)}${meta}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(c.b, 112, titlePx)}${meta}</svg>`;
+}
+
+function templatePreview(t, card, settings) {
+  return makeSvg(
+    {
+      ...card,
+      style: t.id,
+      ink: t.ink,
+      paper: t.paper,
+      artistInk: t.artistInk || '#202020',
+      font: t.font || 'Georgia',
+      artistFont: t.artistFont || '',
+    },
+    settings,
+  );
 }
 
 createApp({
@@ -339,6 +422,11 @@ createApp({
     const page = ref(1),
       pageSize = ref([25, 50, 100].includes(saved?.ui?.pageSize) ? saved.ui.pageSize : 25),
       filters = ref({}),
+      columnKeys = ref(
+        Array.isArray(saved?.ui?.columnKeys)
+          ? saved.ui.columnKeys.filter((key) => columns.some((c) => c.key === key))
+          : ['artist', 'artistB', 'a', 'b'],
+      ),
       sortKey = ref('number'),
       sortDirection = ref(1),
       picked = ref([]),
@@ -369,6 +457,7 @@ createApp({
         zoom: zoom.value,
         pageSize: pageSize.value,
         composePage: composePage.value,
+        columnKeys: columnKeys.value,
       },
       printSource: printSource.value,
       collections: collections.value,
@@ -402,6 +491,7 @@ createApp({
         zoom,
         pageSize,
         composePage,
+        columnKeys,
       ],
       () => {
         const next = JSON.stringify(snapshot());
@@ -453,6 +543,9 @@ createApp({
       pinned.value = !!s.pinned;
       selected.value = s.ui?.selected || cards.value[0]?.id;
       if (s.ui) {
+        columnKeys.value = Array.isArray(s.ui.columnKeys)
+          ? s.ui.columnKeys.filter((key) => columns.some((c) => c.key === key))
+          : ['artist', 'artistB', 'a', 'b'];
         if (
           ['compose', 'collection', 'templates', 'print', 'transfer', 'settings'].includes(
             s.ui.view,
@@ -612,7 +705,11 @@ createApp({
       sourceRecordId = ref(''),
       destinationCollection = ref(activeCollection.value),
       movingItemId = ref(null),
-      styleOnDraft = ref(false);
+      styleOnDraft = ref(false),
+      styleAll = ref(false),
+      batchStyle = ref(normalize({})),
+      dragActive = ref(false),
+      dragEdge = ref(0);
     const actionCardId = ref(null),
       editorDialog = ref(false),
       deleteDialog = ref(false),
@@ -686,11 +783,24 @@ createApp({
       if (c) draft.value = normalize({ ...c });
     }
     // En un formulario se cambia el borrador; cancelar no modifica la composición.
-    const styleCard = computed(() => (styleOnDraft.value ? draft.value : current.value));
+    const styleCard = computed(() =>
+      styleAll.value ? batchStyle.value : styleOnDraft.value ? draft.value : current.value,
+    );
     function openStyle(onDraft = false) {
+      styleAll.value = false;
       styleOnDraft.value = onDraft;
       styleDialog.value = true;
       actionCardId.value = null;
+    }
+    function openStyleAll() {
+      if (!compositionCards.value.length) return;
+      styleAll.value = true;
+      batchStyle.value = normalize({ ...current.value });
+      styleDialog.value = true;
+      actionCardId.value = null;
+    }
+    function dismissCardActions(event) {
+      if (!event.target.closest?.('.positioned-label')) actionCardId.value = null;
     }
     function useTemplate(t) {
       const target = styleDialog.value ? styleCard.value : current.value;
@@ -698,13 +808,10 @@ createApp({
         style: t.id,
         ink: t.ink,
         paper: t.paper,
-        font: t.font || (t.id === 'mono' ? 'monospace' : target.font),
+        font: t.font || 'Georgia',
         artistFont: '',
         artistInk: t.artistInk || '#202020',
-        showMeta: t.showMeta !== false,
-        showGenre: t.showMeta !== false,
-        showRpm: t.showMeta !== false,
-        showNumber: t.showMeta !== false,
+        // Los interruptores de metadatos pertenecen a la tarjeta y no se reinician aquí.
       });
     }
 
@@ -722,14 +829,8 @@ createApp({
     }
     function editCard() {
       cardActions.value = false;
-      if (innerWidth <= 1100) {
-        openCardEditor('edit');
-        return;
-      }
-      mode.value = 'grid';
-      editingId.value = currentItem.value?.id || current.value.id;
-      actionCardId.value = null;
-      Vue.nextTick(() => document.querySelector('.inline-card-editor input')?.focus());
+      editingId.value = null;
+      openCardEditor('edit');
     }
     function finishEditing() {
       editingId.value = null;
@@ -1110,6 +1211,14 @@ createApp({
     }
     // --- Reordenación por teclado, ratón y pantalla táctil ---
     let suppressCardClick = false;
+    const edgeDirection = (x, rect) => (x >= rect.right - 24 ? 1 : x <= rect.left + 24 ? -1 : 0);
+    function moveAcrossPage(id, direction, row) {
+      const target = composePage.value + direction;
+      if (target < 0 || target >= gridPages.value) return false;
+      const col = direction > 0 ? 0 : Math.max(0, printCols.value - 1);
+      moveItem(id, target * capacity.value + row * printCols.value + col);
+      return true;
+    }
     function dragStart(e, item) {
       // En móvil solo el asa inicia un arrastre; el resto permite desplazar la página.
       if (e.pointerType === 'touch' && !e.target.closest('.move-handle')) return;
@@ -1123,7 +1232,18 @@ createApp({
         startX = e.clientX,
         startY = e.clientY,
         before = JSON.stringify(snapshot());
-      let moved = false;
+      // Capturar el puntero en el canvas estable evita perder el gesto al cambiar de hoja.
+      const capture = el.closest('.canvas') || el;
+      let moved = false,
+        edgeTimer = null,
+        pendingEdge = 0,
+        edgeLatched = false;
+      const clearEdge = () => {
+        if (edgeTimer !== null) clearTimeout(edgeTimer);
+        edgeTimer = null;
+        pendingEdge = 0;
+        dragEdge.value = 0;
+      };
       const move = (ev) => {
         if (!moved && Math.hypot(ev.clientX - startX, ev.clientY - startY) < 10) return;
         if (!moved) {
@@ -1133,7 +1253,8 @@ createApp({
           selected.value = item.cardId;
           selectedItemId.value = item.id;
           actionCardId.value = null;
-          el.setPointerCapture(e.pointerId);
+          capture.setPointerCapture(e.pointerId);
+          dragActive.value = true;
           el.classList.add('dragging');
         }
         ev.preventDefault();
@@ -1172,10 +1293,34 @@ createApp({
             ),
           ),
         );
+        const direction = edgeDirection(ev.clientX, r);
+        if (!direction) {
+          clearEdge();
+          edgeLatched = false;
+        }
+        const canTurn =
+          direction &&
+          composePage.value + direction >= 0 &&
+          composePage.value + direction < gridPages.value;
+        if (canTurn && !edgeLatched && direction !== pendingEdge) {
+          clearEdge();
+          pendingEdge = direction;
+          dragEdge.value = direction;
+          edgeTimer = setTimeout(() => {
+            edgeTimer = null;
+            pendingEdge = 0;
+            dragEdge.value = 0;
+            edgeLatched = true;
+            moveAcrossPage(item.id, direction, row);
+          }, 650);
+        } else if (!canTurn) clearEdge();
         moveItem(item.id, composePage.value * capacity.value + row * printCols.value + col);
       };
       // Un gesto cancelado restaura el estado; un gesto completo añade un solo deshacer.
       const stop = (ev) => {
+        clearEdge();
+        dragActive.value = false;
+        if (capture.hasPointerCapture?.(e.pointerId)) capture.releasePointerCapture(e.pointerId);
         if (moved) {
           if (ev.type === 'pointercancel') restore(JSON.parse(before));
           else if (JSON.stringify(snapshot()) !== before) {
@@ -1658,6 +1803,22 @@ createApp({
     watch(activeComposition, () => {
       if (!hydrating) composePage.value = 0;
     });
+    const visibleColumns = computed(() =>
+      columns.filter((column) => columnKeys.value.includes(column.key)),
+    );
+    const mobileArtist = (card) =>
+      artistName({
+        artist: columnKeys.value.includes('artist') ? card.artist : '',
+        artistB: columnKeys.value.includes('artistB') ? card.artistB : '',
+      });
+    watch(
+      columnKeys,
+      (keys) => {
+        for (const key of Object.keys(filters.value))
+          if (!keys.includes(key)) delete filters.value[key];
+      },
+      { deep: true },
+    );
     // --- API expuesta a la plantilla Vue ---
     return {
       openPicker,
@@ -1676,6 +1837,17 @@ createApp({
       artistName,
       printJob,
       optionsDialog,
+      columnKeys,
+      visibleColumns,
+      mobileArtist,
+      openStyleAll,
+      styleAll,
+      dismissCardActions,
+      dragActive,
+      dragEdge,
+      edgeDirection,
+      moveAcrossPage,
+      templatePreview: (t, c) => templatePreview(t, c, settings.value),
       selectedItemId,
       currentItem,
       insertMode,
@@ -1835,8 +2007,10 @@ createApp({
       }),
       svg: (c) => makeSvg(c, settings.value),
       applyAll: () => {
-        const appearance = appearanceOf(current.value);
+        const appearance = appearanceOf(styleAll.value ? batchStyle.value : current.value);
         composition.value?.items.forEach((i) => (i.appearance = { ...appearance }));
+        styleDialog.value = false;
+        styleAll.value = false;
         notify('Estilo aplicado a esta composición');
       },
       sortByArtist: () => cards.value.sort((a, b) => a.artist.localeCompare(b.artist)),

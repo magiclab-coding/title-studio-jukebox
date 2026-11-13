@@ -312,7 +312,9 @@ assert.match(rendered, /fill="#005bbb">EL RIO/);
 assert.match(rendered, /fill="#111111">MIGUEL RÍOS/);
 assert.ok(rendered.indexOf('>EL RIO</text>') < rendered.indexOf('>MIGUEL RÍOS</text>'));
 assert.ok(rendered.indexOf('>MIGUEL RÍOS</text>') < rendered.indexOf('>VUELVO A GRANADA</text>'));
-assert.doesNotMatch(rendered, /stroke="|HIT TUNES|45 RPM/);
+assert.doesNotMatch(rendered, /stroke="/);
+assert.match(rendered, />HIT TUNES</);
+assert.match(rendered, />45 RPM</);
 const oldArtist = vm.runInNewContext(
   `normalize({artist:'Artista A', artistB:'Artista B'})`,
   context,
@@ -427,4 +429,151 @@ assert.match(onlyGenre, />JAZZ</);
 assert.doesNotMatch(onlyGenre, />78 RPM<|>Z99</);
 console.log(
   'PASS: disc-only creation, A/B artists, batch insertion, reversible sheet deletion, horizontal-only centering and metadata toggles',
+);
+
+// --- Revisión 7.0.8: estilos independientes, columnas y edición uniforme ---
+assert.equal(vm.runInNewContext(`normalize({}).rpm`, context), '45 RPM');
+assert.equal(vm.runInNewContext(`normalize({rpm:'78 RPM'}).rpm`, context), '78 RPM');
+assert.deepEqual([...app.visibleColumns.value.map((c) => c.key)], ['artist', 'artistB', 'a', 'b']);
+app.columnKeys.value.push('rpm');
+await nextTick();
+assert.ok(JSON.parse(storage.get('title-studio-v3')).ui.columnKeys.includes('rpm'));
+app.columnKeys.value = ['artist', 'artistB', 'a', 'b'];
+app.newComposition();
+app.view.value = 'compose';
+await nextTick();
+const styleSources = app.cards.value.slice(0, 3);
+app.addToComposition(styleSources.map((c) => c.id));
+await nextTick();
+app.selectCard(app.composition.value.items[0].id);
+const sourceBeforeStyles = JSON.stringify(styleSources);
+const previewBefore = app.templatePreview(
+  app.templates.find((t) => t.id === 'ribbon'),
+  app.current.value,
+);
+app.openStyle(false);
+app.useTemplate(app.templates.find((t) => t.id === 'brush'));
+assert.equal(
+  app.templatePreview(
+    app.templates.find((t) => t.id === 'ribbon'),
+    app.current.value,
+  ),
+  previewBefore,
+);
+assert.equal(JSON.stringify(styleSources), sourceBeforeStyles);
+app.current.value.category = 'JAZZ';
+app.current.value.showGenre = false;
+app.current.value.showRpm = false;
+app.current.value.showNumber = false;
+app.useTemplate(app.templates.find((t) => t.id === 'inverse'));
+assert.equal(app.current.value.showGenre, false);
+assert.doesNotMatch(app.svg(app.current.value), />JAZZ<|>45 RPM</);
+assert.doesNotMatch(
+  app.templatePreview(
+    app.templates.find((t) => t.id === 'brush'),
+    app.current.value,
+  ),
+  />JAZZ<|>45 RPM</,
+);
+const inverseSvg = app.svg({
+  ...app.current.value,
+  artist: 'ARTISTA EN NEGATIVO',
+  artistB: '',
+  paper: '#ffffff',
+});
+assert.match(inverseSvg, /fill="#ffffff">ARTISTA EN NEGATIVO/);
+app.styleDialog.value = false;
+const placesBeforeAll = JSON.stringify(app.composition.value.items);
+app.openStyleAll();
+app.useTemplate(app.templates.find((t) => t.id === 'block'));
+assert.equal(JSON.stringify(app.composition.value.items), placesBeforeAll);
+app.applyAll();
+assert.ok(app.composition.value.items.every((item) => item.appearance.style === 'block'));
+assert.notEqual(
+  app.composition.value.items[0].appearance,
+  app.composition.value.items[1].appearance,
+);
+context.innerWidth = 1440;
+app.editCard();
+assert.equal(app.editorDialog.value, true);
+assert.equal(app.editingId.value, null);
+app.editorDialog.value = false;
+app.selectCard(app.currentItem.value.id);
+app.actionCardId.value = app.currentItem.value.id;
+app.dismissCardActions({ target: { closest: () => ({}) } });
+assert.equal(app.actionCardId.value, app.currentItem.value.id);
+app.dismissCardActions({ target: { closest: () => null } });
+assert.equal(app.actionCardId.value, null);
+
+// El mismo temporizador y la misma captura del gesto que usa el navegador.
+app.addSheet();
+app.composePage.value = 0;
+await nextTick();
+const dragItem = app.composition.value.items[0];
+const beforeDragIndex = app.slotIndex(dragItem);
+const listeners = new Map(),
+  timers = new Map();
+let timerId = 0,
+  captured = false,
+  released = false;
+context.setTimeout = (fn, delay) => {
+  const id = ++timerId;
+  timers.set(id, { fn, delay });
+  return id;
+};
+context.clearTimeout = (id) => timers.delete(id);
+context.window.addEventListener = (name, fn) => listeners.set(name, fn);
+context.window.removeEventListener = (name) => listeners.delete(name);
+const rect = { left: 100, right: 500, top: 100, bottom: 660, width: 400, height: 560 };
+context.document.querySelectorAll = () => [{ getBoundingClientRect: () => rect }];
+const capture = {
+  setPointerCapture() {
+    captured = true;
+  },
+  hasPointerCapture: () => true,
+  releasePointerCapture() {
+    released = true;
+  },
+};
+const element = {
+  closest: (selector) => (selector === '.canvas' ? capture : element),
+  classList: { add() {}, remove() {} },
+};
+app.dragStart(
+  {
+    pointerType: 'mouse',
+    button: 0,
+    target: { closest: () => null },
+    currentTarget: element,
+    clientX: 220,
+    clientY: 160,
+    pointerId: 1,
+  },
+  dragItem,
+);
+listeners.get('pointermove')({ clientX: 495, clientY: 190, preventDefault() {} });
+assert.equal(captured, true);
+assert.equal(app.dragEdge.value, 1);
+const pageTimer = [...timers.values()].find((timer) => timer.delay === 650);
+assert.ok(pageTimer);
+pageTimer.fn();
+await nextTick();
+assert.equal(app.composePage.value, 1);
+assert.equal(dragItem.page, 1);
+listeners.get('pointercancel')({ type: 'pointercancel' });
+await nextTick();
+assert.equal(released, true);
+assert.equal(app.dragActive.value, false);
+assert.equal(app.composePage.value, 0);
+assert.equal(
+  app.slotIndex(app.composition.value.items.find((item) => item.id === dragItem.id)),
+  beforeDragIndex,
+);
+assert.equal(listeners.size, 0);
+assert.equal(app.moveAcrossPage(dragItem.id, -1, 0), false);
+assert.equal(app.moveAcrossPage(dragItem.id, 1, 0), true);
+assert.equal(app.moveAcrossPage(dragItem.id, 1, 0), false);
+assert.equal(app.moveAcrossPage(dragItem.id, -1, 0), true);
+console.log(
+  'PASS: independent presets, metadata visibility, column persistence, bulk draft, desktop modal and pointer-drag page turning/cancel',
 );

@@ -1,3 +1,14 @@
+# 7.0.8
+
+- Columnas configurables y persistentes; inicialmente se muestran Artista A/B y Canción A/B. Velocidad predeterminada: 45 RPM.
+- Guardar y deshacer usan iconos grandes con ayuda al pasar el ratón o enfocar.
+- Previsualizaciones con fuentes propias por plantilla y visibilidad de metadatos respetada al cambiar de diseño.
+- Diseños diferenciados con líneas gruesas, cintas, estrellas y artista en negativo; nuevas variantes Artista en negativo, Pill Line y Broadway Chevron.
+- Edición e inserción mediante modal en escritorio y móvil; acciones contextuales con papelera y cierre al pulsar fuera.
+- Arrastrar durante 650 ms junto a un borde cambia a la hoja contigua existente; cancelar restaura la posición original.
+- Estilo para todas permite preparar y aplicar un mismo aspecto a todas las posiciones de la composición sin cambiar los discos originales.
+- Pruebas de regresión de fuentes, metadatos, columnas, estilos independientes y arrastre entre hojas; compilación de producción minificada.
+
 # 7.0.7
 
 - Aplicadas las 14 anotaciones de interfaz: Discos/Mis discos, cabeceras con los nombres de la barra lateral y acciones Guardar/Deshacer a la derecha.
