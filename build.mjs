@@ -1,4 +1,5 @@
 import { mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { transform } from 'esbuild';
 import { minify } from 'html-minifier-terser';
 
@@ -36,10 +37,20 @@ for (const file of ['app.js', 'components.js', 'pdf.js', 'style.css']) {
   });
   await writeFile('dist/' + file, result.code);
 }
+// Cada URL identifica su contenido y evita mezclar recursos de versiones distintas.
+let html = await readFile('src/index.html', 'utf8');
+for (const match of [...html.matchAll(/(?:src|href)="([^"?#]+\.(?:js|css))"/g)]) {
+  const file = match[1];
+  const hash = createHash('sha256')
+    .update(await readFile('dist/' + file))
+    .digest('hex')
+    .slice(0, 12);
+  html = html.replace(match[0], match[0].slice(0, -1) + '?v=' + hash + '"');
+}
 // Conserva las directivas, atributos entrecomillados y mayúsculas de Vue/SVG.
 await writeFile(
   'dist/index.html',
-  await minify(await readFile('src/index.html', 'utf8'), {
+  await minify(html, {
     collapseWhitespace: true,
     removeComments: true,
     caseSensitive: true,
