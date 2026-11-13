@@ -1,3 +1,11 @@
+# 7.0.6
+
+- Plantilla Pincel inspirada en El Río: artista central y canciones arriba y abajo, sin marcos exteriores.
+- Colores, fuentes y tamaños independientes para canciones y artista; metadatos opcionales.
+- Seis fuentes libres locales, incrustadas en SVG y PDF, con sus licencias en la distribución.
+- Dos artistas en un único campo separados por /, con compatibilidad para copias antiguas.
+- Flechas visibles en todos los selectores y selector de género real con entrada personalizada.
+
 # 7.0.5
 
 - Añadido el favicon del pulpo con esquinas transparentes, PNG de 96 px e ICO de 16/32/48 px. Faltaban la declaración HTML y el archivo en la distribución.

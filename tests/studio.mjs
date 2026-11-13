@@ -296,3 +296,34 @@ assert.ok(app.versions.value.length);
 console.log(
   'PASS: selective composition, physical layout, print sources, full/scoped restore, undo, collections, 1,000-row import, pagination and filters',
 );
+
+// --- Diseños personalizados y compatibilidad del campo único de artista ---
+const rendered = vm.runInNewContext(
+  `makeSvg(normalize({style:'brush', artist:'MIGUEL RÍOS', a:'EL RIO', b:'VUELVO A GRANADA'}), {width:76, height:38, rpm:'45 RPM'})`,
+  context,
+);
+assert.match(rendered, /fill="#005bbb">EL RIO/);
+assert.match(rendered, /fill="#111111">MIGUEL RÍOS/);
+assert.ok(rendered.indexOf('>EL RIO</text>') < rendered.indexOf('>MIGUEL RÍOS</text>'));
+assert.ok(rendered.indexOf('>MIGUEL RÍOS</text>') < rendered.indexOf('>VUELVO A GRANADA</text>'));
+assert.doesNotMatch(rendered, /stroke="|HIT TUNES|45 RPM/);
+const oldArtist = vm.runInNewContext(
+  `normalize({artist:'Artista A', artistB:'Artista B'})`,
+  context,
+);
+assert.equal(oldArtist.artist, 'Artista A / Artista B');
+assert.equal(oldArtist.artistB, '');
+for (const t of app.templates) {
+  const svg = app.svg({ ...app.cards.value[0], style: t.id });
+  assert.doesNotMatch(svg, /<rect[^>]*stroke=/);
+}
+// Los nuevos atributos viven en cada posición, no en el disco compartido.
+app.useTemplate(app.templates.find((t) => t.id === 'brush'));
+app.current.value.artistInk = '#663399';
+app.current.value.artistFont = 'DM Sans';
+assert.equal(app.currentItem.value.appearance.artistInk, '#663399');
+assert.notEqual(foreign.artistInk, '#663399');
+assert.equal(app.currentItem.value.appearance.artistFont, 'DM Sans');
+console.log(
+  'PASS: custom layouts, separate inks, no outer frames, shared artist field and independent appearance',
+);

@@ -5,7 +5,7 @@ const templates = [
     id: 'arrows',
     name: 'Classic Arrows',
     group: 'Clásicos',
-    description: 'Flechas y doble línea',
+    description: 'Flechas junto al artista',
     ink: '#a44736',
     paper: '#fff9e9',
   },
@@ -13,7 +13,7 @@ const templates = [
     id: 'ribbon',
     name: 'Ribbon No. 45',
     group: 'Clásicos',
-    description: 'Banda central',
+    description: 'Líneas finas y artista central',
     ink: '#36776b',
     paper: '#f6f5e7',
   },
@@ -53,7 +53,7 @@ const templates = [
     id: 'two',
     name: 'Two Artists',
     group: 'Clásicos',
-    description: 'Un artista por cara',
+    description: 'Dos artistas separados por /',
     ink: '#5e5779',
     paper: '#f8f3ed',
   },
@@ -65,7 +65,35 @@ const templates = [
     ink: '#3b4140',
     paper: '#f4efdf',
   },
+  {
+    id: 'brush',
+    name: 'Pincel · El Río',
+    group: 'Vintage',
+    description: 'Canciones azules y artista central con trazos laterales',
+    ink: '#005bbb',
+    artistInk: '#111111',
+    paper: '#ffffff',
+    font: 'Trade Winds',
+    showMeta: false,
+  },
 ];
+// Fuentes libres incluidas en el build; no dependen de servicios externos.
+const fontOptions = [
+  { value: 'Trade Winds', label: 'Trade Winds · Pincel desgastado' },
+  { value: 'Permanent Marker', label: 'Permanent Marker · Rotulador' },
+  { value: 'DM Sans', label: 'DM Sans · Moderna y limpia' },
+  { value: 'Space Grotesk', label: 'Space Grotesk · Geométrica' },
+  { value: 'Oswald', label: 'Oswald · Condensada' },
+  { value: 'Playfair Display', label: 'Playfair Display · Editorial' },
+  { value: 'Georgia', label: 'Georgia · Clásica' },
+  { value: 'Arial', label: 'Arial · Sans' },
+  { value: 'monospace', label: 'Monoespaciada' },
+];
+// Une las copias antiguas con artista B sin perder el contenido original.
+const artistName = (c) =>
+  [c.artist, c.artistB && !String(c.artist || '').includes(c.artistB) ? c.artistB : '']
+    .filter(Boolean)
+    .join(' / ');
 const columns = [
   { key: 'number', label: 'Selección' },
   { key: 'artist', label: 'Artista' },
@@ -93,9 +121,15 @@ const normalize = (c) => {
     label: '',
     year: '',
     size: 100,
-    font: 'Georgia',
+    font: t.font || 'Georgia',
+    artistFont: '',
+    artistSize: 100,
+    artistInk: t.artistInk || '#202020',
+    showMeta: t.showMeta !== false,
     ...c,
     style,
+    artist: artistName(c),
+    artistB: '',
     ink: c.ink || t.ink,
     paper: c.paper || t.paper,
   };
@@ -119,33 +153,47 @@ const esc = (s) =>
   );
 // --- Renderizado común a pantalla, exportación e impresión ---
 function makeSvg(c, settings) {
-  const ink = /^#[0-9a-f]{6}$/i.test(c.ink) ? c.ink : '#a44736',
-    paper = /^#[0-9a-f]{6}$/i.test(c.paper) ? c.paper : '#fff9e9';
+  const color = (value, fallback) => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
+  const ink = color(c.ink, '#005bbb');
+  const artistInk = color(c.artistInk, '#202020');
+  const paper = color(c.paper, '#ffffff');
   const H = (300 * settings.height) / settings.width;
   const sy = H / 150;
-  const tx = (s, y, size = 20, f = c.font, bold = true) => {
-    const n = Math.min(
-      (size * (+c.size || 100)) / 100,
-      (260 / Math.max(1, String(s || '').length)) * 1.6,
-    );
-    return `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(f)}" font-size="${n * Math.min(1, sy)}" font-weight="${bold ? 'bold' : 'normal'}" fill="${ink}">${esc(s)}</text>`;
-  };
-  let art = `<rect x="5" y="5" width="290" height="${H - 10}" fill="none" stroke="${ink}"/>`;
-  if (c.style === 'block' || c.style === 'ribbon') {
-    art += `<rect x="5" y="${61 * sy}" width="290" height="${23 * sy}" fill="${ink}"/>`;
-  }
-  if (c.style === 'arrows') {
-    art += `<path d="M10 ${34 * sy}h280 M10 ${37 * sy}h280 M10 ${113 * sy}h280 M10 ${116 * sy}h280 M13 ${23 * sy}l10 -5v10z M287 ${23 * sy}l-10 -5v10z" stroke="${ink}" fill="${ink}"/>`;
+  const font = c.font || 'Georgia';
+  const artistFont = c.artistFont || font;
+  const name = artistName(c);
+  const textSize = (text, size, scale = c.size) =>
+    Math.min((size * (+scale || 100)) / 100, 270 / Math.max(1, String(text || '').length) / 0.72) *
+    Math.min(1, sy);
+  const tx = (text, y, size, family = font, fill = ink, scale = c.size) =>
+    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, size, scale)}" font-weight="400" fill="${fill}">${esc(text)}</text>`;
+  // Las fuentes se incrustan también en el SVG: la exportación y el PDF usan el mismo dibujo.
+  const fontCss = [...new Set([font, artistFont])]
+    .map((f) => globalThis.StudioFonts?.[f] || '')
+    .join('');
+  let art = '';
+  if (c.style === 'brush') {
+    const half = Math.min(132, name.length * textSize(name, 19, c.artistSize) * 0.36 + 8);
+    const left = 150 - half;
+    const right = 150 + half;
+    // Trazos laterales interrumpidos por el nombre, sin marco exterior.
+    art = `<path d="M4 ${76 * sy}L${left} ${72 * sy}L${left} ${75 * sy}Z M296 ${76 * sy}L${right} ${72 * sy}L${right} ${75 * sy}Z" fill="${artistInk}"/>`;
+  } else if (c.style === 'arrows') {
+    art = `<path d="M14 ${74 * sy}l10 -4v8z M286 ${74 * sy}l-10 -4v8z" fill="${artistInk}"/>`;
   } else if (c.style === 'stars') {
-    art += `<text x="15" y="${27 * sy}" fill="${ink}">✦</text><text x="270" y="${27 * sy}" fill="${ink}">✦</text><path d="M12 ${36 * sy}h276 M12 ${113 * sy}h276" stroke="${ink}"/>`;
-  } else
-    art += `<path d="M12 ${35 * sy}h276 M12 ${113 * sy}h276" stroke="${ink}" stroke-dasharray="${c.style === 'stamp' ? '3 2' : '0'}"/>`;
-  const artist =
-    c.style === 'ribbon' || c.style === 'block'
-      ? `<text x="150" y="${74 * sy}" text-anchor="middle" dominant-baseline="middle" fill="${paper}" font-family="Arial" font-weight="bold" font-size="${Math.min(11, (245 / Math.max(1, c.artist.length)) * 1.6) * Math.min(1, sy)}">${esc(c.artist)}</text>`
-      : tx(c.artist, 74, 11, 'Arial');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(c.artist + ' ' + c.a)}"><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.category, 22, 8, 'Arial')}${tx(c.a, 51, 19)}${artist}${tx(c.b, 99, 19)}${tx(c.artistB || settings.rpm, 130, 8, 'Arial')}<text x="14" y="${133 * sy}" fill="${ink}" font-family="Arial" font-size="8">${esc(c.number)}</text></svg>`;
+    art = `<text x="12" y="${78 * sy}" fill="${artistInk}">✦</text><text x="276" y="${78 * sy}" fill="${artistInk}">✦</text>`;
+  } else if (['lines', 'stamp', 'ribbon', 'block'].includes(c.style)) {
+    art = `<path d="M14 ${58 * sy}h272 M14 ${91 * sy}h272" fill="none" stroke="${artistInk}" stroke-width="${c.style === 'block' ? 2 : 0.7}" stroke-dasharray="${c.style === 'stamp' ? '3 2' : '0'}"/>`;
+  }
+  const meta =
+    c.showMeta !== false
+      ? tx(c.category, 13, 7, 'Arial', artistInk) +
+        tx(settings.rpm, 139, 7, 'Arial', artistInk) +
+        `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
+      : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, 20)}${tx(name, 75, 19, artistFont, artistInk, c.artistSize)}${tx(c.b, 112, 20)}${meta}</svg>`;
 }
+
 createApp({
   setup() {
     // --- Estado inicial y compatibilidad con copias anteriores ---
@@ -167,6 +215,9 @@ createApp({
         },
       ],
     );
+    collections.value.forEach((group) => {
+      group.cards = group.cards.map(normalize);
+    });
     const activeCollection = ref(saved?.activeCollection || collections.value[0].id);
     const cards = computed({
       get: () =>
@@ -200,7 +251,17 @@ createApp({
     );
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
     // El disco aporta el contenido; cada posición conserva su propio estilo.
-    const appearanceKeys = ['style', 'ink', 'paper', 'font', 'size'];
+    const appearanceKeys = [
+      'style',
+      'ink',
+      'artistInk',
+      'paper',
+      'font',
+      'artistFont',
+      'size',
+      'artistSize',
+      'showMeta',
+    ];
     const appearanceOf = (c) => Object.fromEntries(appearanceKeys.map((k) => [k, c[k]]));
     // Añade identidad y apariencia a las tarjetas creadas con esquemas antiguos.
     function migrateCompositions() {
@@ -566,7 +627,10 @@ createApp({
         style: t.id,
         ink: t.ink,
         paper: t.paper,
-        font: t.id === 'mono' ? 'monospace' : target.font,
+        font: t.font || (t.id === 'mono' ? 'monospace' : target.font),
+        artistFont: '',
+        artistInk: t.artistInk || '#202020',
+        showMeta: t.showMeta !== false,
       });
     }
 
@@ -712,7 +776,8 @@ createApp({
       const item = currentItem.value;
       if (!item || item.cardId !== base.id || view.value === 'collection') return base;
       return new Proxy(base, {
-        get: (target, key) => (appearanceKeys.includes(key) ? item.appearance[key] : target[key]),
+        get: (target, key) =>
+          appearanceKeys.includes(key) ? (item.appearance[key] ?? target[key]) : target[key],
         set: (target, key, value) => {
           if (appearanceKeys.includes(key)) item.appearance[key] = value;
           else target[key] = value;
@@ -1549,7 +1614,8 @@ createApp({
       checkpoint,
       restoreVersion,
       templates,
-      columns,
+      fontOptions,
+      columns: columns.filter((c) => c.key !== 'artistB'),
       cards,
       settings,
       selected,
@@ -1614,8 +1680,8 @@ createApp({
       }),
       svg: (c) => makeSvg(c, settings.value),
       applyAll: () => {
-        const { style, ink, paper, font, size } = current.value;
-        composition.value?.items.forEach((i) => (i.appearance = { style, ink, paper, font, size }));
+        const appearance = appearanceOf(current.value);
+        composition.value?.items.forEach((i) => (i.appearance = { ...appearance }));
         notify('Estilo aplicado a esta composición');
       },
       sortByArtist: () => cards.value.sort((a, b) => a.artist.localeCompare(b.artist)),
