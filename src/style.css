@@ -3583,3 +3583,35 @@ select:disabled {
     font-size: 10px;
   }
 }
+
+/* Las filas de discos no representan la selección de una tarjeta. */
+.disc-library tbody tr td,
+.disc-library tbody tr:hover td {
+  background: transparent;
+}
+.style-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.style-tabs button {
+  padding: 10px 16px;
+  border: 1px solid #bbc6bf;
+  border-radius: 8px;
+}
+.style-tabs .on {
+  background: #203d35;
+  color: white;
+}
+
+/* Hojas contiguas al tamaño del zoom; se conserva la posición vertical del contenido. */
+.composing .composition-pages {
+  width: max-content;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: flex-start;
+}
+.composing .composition-sheet {
+  flex: none;
+}

@@ -47,3 +47,9 @@ Cada plantilla define su tipografía de previsualización. Cambiar el diseño co
 La edición de tarjetas y la inserción usan el mismo modal en escritorio y móvil. Las acciones aparecen al seleccionar y se ocultan al pulsar fuera. Estilo para todas utiliza un borrador: solo el botón de aplicación copia el aspecto a todas las posiciones de la composición; cada posición recibe una copia independiente.
 
 Durante un arrastre, permanecer 650 ms a 24 px del borde cambia a la hoja contigua existente. Se conserva la fila y se entra por la columna del borde opuesto. Para volver a cambiar de hoja hay que salir de la zona del borde y entrar de nuevo. La captura del puntero permanece en el canvas al sustituir la hoja; cancelar restaura el estado anterior y completar registra una única operación de deshacer.
+
+## Interfaz 7.0.10
+
+Los formularios de discos contienen solo datos musicales. La creación de una tarjeta en composición ofrece estilo; editar sus datos no abre controles de diseño. El diálogo de estilo separa selección y parámetros. El catálogo edita valores en `settings.templateDefaults`, incluidos en las copias completas, y cada nueva asignación recibe sus propios valores. Cambiar un predeterminado no modifica posiciones existentes.
+
+Crear un disco compara Artista A/B y Canción A/B dentro de la lista destino, normalizando espacios y mayúsculas; si coincide solicita confirmación antes de repetirlo. Las hojas visibles se calculan según anchura disponible y zoom, hasta tres, y el arrastre calcula el destino sobre la hoja bajo el puntero. Se mantiene el centrado exclusivamente horizontal.

@@ -285,6 +285,11 @@ function templatePreview(t, card, settings) {
       artistInk: t.artistInk || '#202020',
       font: t.font || 'Georgia',
       artistFont: t.artistFont || '',
+      ...Object.fromEntries(
+        ['titlePx', 'artistPx', 'showGenre', 'showRpm', 'showNumber']
+          .filter((k) => t[k] !== undefined)
+          .map((k) => [k, t[k]]),
+      ),
     },
     settings,
   );
@@ -783,16 +788,28 @@ createApp({
       if (c) draft.value = normalize({ ...c });
     }
     // En un formulario se cambia el borrador; cancelar no modifica la composición.
+    const defaultStyleId = ref(''),
+      stylePanel = ref('select');
     const styleCard = computed(() =>
-      styleAll.value ? batchStyle.value : styleOnDraft.value ? draft.value : current.value,
+      defaultStyleId.value
+        ? batchStyle.value
+        : styleAll.value
+          ? batchStyle.value
+          : styleOnDraft.value
+            ? draft.value
+            : current.value,
     );
-    function openStyle(onDraft = false) {
+    function openStyle(onDraft = false, panel = 'select') {
+      defaultStyleId.value = '';
+      stylePanel.value = panel;
       styleAll.value = false;
       styleOnDraft.value = onDraft;
       styleDialog.value = true;
       actionCardId.value = null;
     }
     function openStyleAll() {
+      defaultStyleId.value = '';
+      stylePanel.value = 'select';
       if (!compositionCards.value.length) return;
       styleAll.value = true;
       batchStyle.value = normalize({ ...current.value });
@@ -804,6 +821,7 @@ createApp({
     }
     function useTemplate(t) {
       const target = styleDialog.value ? styleCard.value : current.value;
+      t = { ...t, ...(settings.value.templateDefaults?.[t.id] || {}) };
       Object.assign(target, {
         style: t.id,
         ink: t.ink,
@@ -811,10 +829,50 @@ createApp({
         font: t.font || 'Georgia',
         artistFont: '',
         artistInk: t.artistInk || '#202020',
-        // Los interruptores de metadatos pertenecen a la tarjeta y no se reinician aquí.
+        // Los predeterminados personalizados se copian a esta posición.
+        ...(settings.value.templateDefaults?.[t.id] || {}),
       });
     }
 
+    // Los valores del catálogo se guardan en ajustes; las posiciones conservan sus copias.
+    function editTemplateDefaults(t) {
+      batchStyle.value = normalize({
+        ...current.value,
+        ...t,
+        style: t.id,
+        ...(settings.value.templateDefaults?.[t.id] || {}),
+      });
+      defaultStyleId.value = t.id;
+      stylePanel.value = 'edit';
+      styleAll.value = false;
+      styleDialog.value = true;
+    }
+    function finishStyle() {
+      if (defaultStyleId.value) {
+        settings.value.templateDefaults = {
+          ...(settings.value.templateDefaults || {}),
+          [defaultStyleId.value]: appearanceOf(batchStyle.value),
+        };
+      }
+      styleDialog.value = false;
+      defaultStyleId.value = '';
+    }
+    function duplicateAllowed() {
+      const key = (c) =>
+        ['artist', 'artistB', 'a', 'b']
+          .map((k) =>
+            String(c[k] || '')
+              .trim()
+              .replace(/\s+/g, ' ')
+              .toLocaleLowerCase('es'),
+          )
+          .join('\u0001');
+      const owner = collections.value.find((c) => c.id === destinationCollection.value);
+      if (!owner?.cards.some((c) => key(c) === key(draft.value))) return true;
+      return window.confirm(
+        'Este disco ya existe en esta lista con los mismos artistas y canciones. ¿Deseas repetirlo?',
+      );
+    }
     // El borrador separa los cambios pendientes del disco y de su posición.
     function openCardEditor(action = 'edit') {
       editorContext.value = view.value === 'collection' ? 'discs' : 'composition';
@@ -868,6 +926,12 @@ createApp({
     }
     // Confirma por separado la creación del disco y la de su tarjeta en la composición.
     function saveCardEditor() {
+      if (
+        editorMode.value === 'create' &&
+        (editorContext.value === 'discs' || insertMode.value === 'new') &&
+        !duplicateAllowed()
+      )
+        return;
       if (editorMode.value === 'create' && editorContext.value === 'discs') {
         const owner = collections.value.find((c) => c.id === destinationCollection.value);
         if (!owner) return;
@@ -1138,6 +1202,45 @@ createApp({
         printPage.value = 1;
       },
     );
+    // La cantidad de hojas depende del espacio real disponible y del zoom.
+    const workspaceWidth = ref(0),
+      workspaceHeight = ref(760);
+    const pageWidth = computed(() =>
+      Math.max(
+        120,
+        Math.min(
+          workspaceWidth.value || 300,
+          ((workspaceHeight.value - 360) * dimensions.value[0]) / dimensions.value[1],
+        ) * zoom.value,
+      ),
+    );
+    const visiblePageNumbers = computed(() => {
+      const count = Math.max(
+        1,
+        Math.min(3, Math.floor(((workspaceWidth.value || 300) + 16) / (pageWidth.value + 16))),
+      );
+      const start = Math.min(composePage.value, Math.max(0, gridPages.value - count));
+      return Array.from({ length: Math.min(count, gridPages.value) }, (_, i) => start + i + 1);
+    });
+    if (Vue.onMounted)
+      Vue.onMounted(() => {
+        const measure = () => {
+          workspaceWidth.value =
+            document.querySelector('.canvas')?.clientWidth ||
+            document.querySelector('main')?.clientWidth ||
+            300;
+          workspaceHeight.value = window.innerHeight;
+        };
+        watch(view, () => Vue.nextTick(measure));
+        const observer = new ResizeObserver(measure);
+        observer.observe(document.querySelector('#app'));
+        window.addEventListener('resize', measure);
+        measure();
+        Vue.onUnmounted(() => {
+          observer.disconnect();
+          window.removeEventListener('resize', measure);
+        });
+      });
     const sheetStyle = computed(() => ({ aspectRatio: dimensions.value[0] / dimensions.value[1] }));
     const horizontalOffset = (cols) =>
       (dimensions.value[0] -
@@ -1293,7 +1396,8 @@ createApp({
             ),
           ),
         );
-        const direction = edgeDirection(ev.clientX, r);
+        const sheetPage = Number(sheets[best].dataset?.page ?? composePage.value);
+        const direction = sheets.length === 1 ? edgeDirection(ev.clientX, r) : 0;
         if (!direction) {
           clearEdge();
           edgeLatched = false;
@@ -1314,7 +1418,7 @@ createApp({
             moveAcrossPage(item.id, direction, row);
           }, 650);
         } else if (!canTurn) clearEdge();
-        moveItem(item.id, composePage.value * capacity.value + row * printCols.value + col);
+        moveItem(item.id, sheetPage * capacity.value + row * printCols.value + col);
       };
       // Un gesto cancelado restaura el estado; un gesto completo añade un solo deshacer.
       const stop = (ev) => {
@@ -1847,7 +1951,12 @@ createApp({
       dragEdge,
       edgeDirection,
       moveAcrossPage,
-      templatePreview: (t, c) => templatePreview(t, c, settings.value),
+      templatePreview: (t, c) =>
+        templatePreview(
+          { ...t, ...(settings.value.templateDefaults?.[t.id] || {}) },
+          c,
+          settings.value,
+        ),
       selectedItemId,
       currentItem,
       insertMode,
@@ -1864,6 +1973,10 @@ createApp({
       slotClick,
       selectForEdit,
       openStyle,
+      stylePanel,
+      defaultStyleId,
+      editTemplateDefaults,
+      finishStyle,
       styleCard,
       useTemplate,
       actionCardId,
@@ -1988,6 +2101,8 @@ createApp({
       printCards,
       pageCount,
       sheetStyle,
+      visiblePageNumbers,
+      pageWidth,
       add,
       duplicate,
       remove,
