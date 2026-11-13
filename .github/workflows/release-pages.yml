@@ -42,6 +42,7 @@ jobs:
         id: version
         run: node scripts/release-version.mjs
       - run: npm run build
+      - run: npm run test:build
       - name: Record exact published version
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.version }}

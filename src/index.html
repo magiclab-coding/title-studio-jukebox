@@ -17,24 +17,27 @@
       <v-app
         ><div
           class="studio"
-          :class="{collapsed:!pinned, composing:view==='compose'}"
+          :class="{ collapsed: !pinned, composing: view === 'compose' }"
           @touchstart.passive="gestureStart"
           @touchend.passive="gestureEnd"
         >
           <!-- Navegación: contextos y acceso rápido al guardado. -->
           <nav class="icon-rail" aria-label="Contextos">
-            <button class="rail-expand" @click="drawer=!drawer" aria-label="Expandir navegación">
+            <button class="rail-expand" @click="drawer = !drawer" aria-label="Expandir navegación">
               ☰</button
             ><button
               v-for="n in allNavigation"
               :key="n.id"
               :title="n.name"
               :aria-label="n.name"
-              :aria-current="view===n.id?'page':undefined"
-              :class="{active:view===n.id}"
-              @click="view=n.id;mobileClose()"
+              :aria-current="view === n.id ? 'page' : undefined"
+              :class="{ active: view === n.id }"
+              @click="
+                view = n.id;
+                mobileClose();
+              "
             >
-              {{n.icon}}</button
+              {{ n.icon }}</button
             ><button
               @click="undo"
               :disabled="!history.length"
@@ -54,27 +57,34 @@
           <!-- Panel lateral ampliado: conserva desplazamiento y fijación propios. -->
           <aside
             class="sidebar"
-            :class="{open:drawer,pinned:pinned}"
+            :class="{ open: drawer, pinned: pinned }"
             @mouseleave="autoCloseSidebar"
           >
             <button
               class="pin-button"
-              @click="pinned=!pinned;drawer=pinned"
+              @click="
+                pinned = !pinned;
+                drawer = pinned;
+              "
               :aria-pressed="pinned"
-              :aria-label="pinned?'Desfijar barra lateral':'Fijar barra lateral'"
+              :aria-label="pinned ? 'Desfijar barra lateral' : 'Fijar barra lateral'"
             >
-              {{pinned?'📌 Fijada':'⌖ Fijar'}}</button
-            ><button class="close-sidebar" @click="drawer=false" aria-label="Cerrar barra lateral">
+              {{ pinned ? '📌 Fijada' : '⌖ Fijar' }}</button><button
+              class="close-sidebar"
+              @click="drawer = false"
+              aria-label="Cerrar barra lateral"
+            >
               ×</button
-            ><a class="brand" href="#" @click.prevent="view='compose'"
+            ><a class="brand" href="#" @click.prevent="view = 'compose'"
               ><span class="record">◉</span
               ><span>Title Studio<small>THE JUKEBOX WORKSHOP</small></span></a
             >
             <div class="project">
               <span class="project-icon">♫</span>
               <div>
-                <strong>{{collectionName}}</strong
-                ><small>{{cards.length}} discos · {{cards.length*2}} canciones</small>
+                <strong>{{ collectionName }}</strong><small
+                  >{{ cards.length }} discos · {{ cards.length * 2 }} canciones</small
+                >
               </div>
               <span class="dot"></span>
             </div>
@@ -82,23 +92,36 @@
             <nav>
               <button
                 v-for="n in navigation"
-                :class="{active:view===n.id}"
-                @click="view=n.id; mobileClose()"
+                :class="{ active: view === n.id }"
+                @click="
+                  view = n.id;
+                  mobileClose();
+                "
               >
-                <span class="nav-icon">{{n.icon}}</span>{{n.name}}<span
-                  class="nav-count"
-                  v-if="n.id==='collection'"
-                  >{{cards.length}}</span
+                <span class="nav-icon">{{ n.icon }}</span>{{ n.name
+                }}<span class="nav-count" v-if="n.id === 'collection'">{{ cards.length }}</span
                 ><span class="nav-arrow" v-else>›</span>
               </button>
             </nav>
             <div class="nav-label second">TU TALLER</div>
             <nav>
-              <button @click="view='transfer';mobileClose()" :class="{active:view==='transfer'}">
+              <button
+                @click="
+                  view = 'transfer';
+                  mobileClose();
+                "
+                :class="{ active: view === 'transfer' }"
+              >
                 <span class="nav-icon">⇅</span>Importar y exportar<span class="nav-arrow"
                   >›</span
                 ></button
-              ><button @click="view='settings';mobileClose()" :class="{active:view==='settings'}">
+              ><button
+                @click="
+                  view = 'settings';
+                  mobileClose();
+                "
+                :class="{ active: view === 'settings' }"
+              >
                 <span class="nav-icon">⚙</span>Ajustes del proyecto<span class="nav-arrow">›</span>
               </button>
             </nav>
@@ -111,55 +134,56 @@
               </div>
               <div class="little-strip">GOOD MUSIC<br /><b>DESERVES A GOOD LABEL.</b></div>
               <div class="local-status">
-                <span class="dot"></span> {{saveStatus}}<small>Guardado en este navegador</small>
+                <span class="dot"></span> {{ saveStatus }}<small>Guardado en este navegador</small>
               </div>
             </div>
           </aside>
-          <div v-if="drawer" class="scrim" @click="drawer=false"></div>
+          <div v-if="drawer" class="scrim" @click="drawer = false"></div>
           <div class="main">
             <main>
-              <div v-if="view!=='compose'" class="page-heading">
+              <div v-if="view !== 'compose'" class="page-heading">
                 <div>
                   <div class="eyebrow">TU MÚSICA, CON CARÁCTER</div>
-                  <h1>{{pageTitle}}</h1>
-                  <p>{{pageDescription}}</p>
+                  <h1>{{ pageTitle }}</h1>
+                  <p>{{ pageDescription }}</p>
                 </div>
                 <div v-if="false" class="view-switch">
-                  <button :class="{on:mode==='grid'}" @click="mode='grid'">▦ Composición</button
-                  ><button :class="{on:mode==='single'}" @click="mode='single'">
+                  <button :class="{ on: mode === 'grid' }" @click="mode = 'grid'">
+                    ▦ Composición</button
+                  ><button :class="{ on: mode === 'single' }" @click="mode = 'single'">
                     ▣ Una etiqueta
                   </button>
                 </div>
-                <v-btn v-if="view==='collection'" color="primary" @click="add"
+                <v-btn v-if="view === 'collection'" color="primary" @click="add"
                   >＋ Añadir disco</v-btn
                 >
               </div>
               <!-- Composición: posiciones, huecos y acciones de cada tarjeta. -->
-              <template v-if="view==='compose'">
+              <template v-if="view === 'compose'">
                 <section class="panel composition-manager compact-manager">
                   <div class="manager-row">
                     <label class="composition-select"
                       >Composición<select v-model="activeComposition">
-                        <option v-for="c in compositions" :value="c.id">{{c.name}}</option>
+                        <option v-for="c in compositions" :value="c.id">{{ c.name }}</option>
                       </select></label
-                    ><button class="composition-options-button" @click="optionsDialog=true">
+                    ><button class="composition-options-button" @click="optionsDialog = true">
                       Opciones ···
                     </button>
                   </div>
                 </section>
-                <div class="composition" :class="{'no-inspector':!currentItem}">
+                <div class="composition" :class="{ 'no-inspector': !currentItem }">
                   <section class="workspace panel">
                     <div class="workspace-toolbar">
                       <div>
-                        <span class="status-pill">{{compositionCards.length}} TARJETAS</span
+                        <span class="status-pill">{{ compositionCards.length }} TARJETAS</span
                         ><span class="toolbar-note"
-                          >{{settings.width}} × {{settings.height}} mm</span
+                          >{{ settings.width }} × {{ settings.height }} mm</span
                         >
                       </div>
                       <div>
                         <button
                           class="text-btn"
-                          @click="zoom=Math.max(.65,zoom-.1)"
+                          @click="zoom = Math.max(0.65, zoom - 0.1)"
                           aria-label="Reducir composición"
                         >
                           −</button
@@ -168,18 +192,22 @@
                           v-model.number="zoom"
                           aria-label="Zoom de composición"
                         >
-                          <option v-for="z in [.65,.75,1,1.25,1.5,2,2.5,3]" :value="z">
-                            {{Math.round(z*100)}} %
+                          <option v-for="z in [0.65, 0.75, 1, 1.25, 1.5, 2, 2.5, 3]" :value="z">
+                            {{ Math.round(z * 100) }} %
                           </option>
                           <option
-                            v-if="![.65,.75,1,1.25,1.5,2,2.5,3].some(z=>Math.abs(z-zoom)<.001)"
+                            v-if="
+                              ![0.65, 0.75, 1, 1.25, 1.5, 2, 2.5, 3].some(
+                                (z) => Math.abs(z - zoom) < 0.001,
+                              )
+                            "
                             :value="zoom"
                           >
-                            {{Math.round(zoom*100)}} %
+                            {{ Math.round(zoom * 100) }} %
                           </option></select
                         ><button
                           class="text-btn"
-                          @click="zoom=Math.min(3,zoom+.1)"
+                          @click="zoom = Math.min(3, zoom + 0.1)"
                           aria-label="Ampliar composición"
                         >
                           ＋
@@ -188,48 +216,72 @@
                     </div>
                     <div class="canvas">
                       <div class="composition-hint">
-                        <button v-if="movingItemId" @click="movingItemId=null" class="cancel-move">
+                        <button
+                          v-if="movingItemId"
+                          @click="movingItemId = null"
+                          class="cancel-move"
+                        >
                           Cancelar movimiento</button
-                        >{{movingItemId?'Toca un hueco o una tarjeta de destino':'Toca un hueco para
-                        insertar · Toca una tarjeta para ver sus acciones'}}
+                        >{{
+                          movingItemId
+                            ? 'Toca un hueco o una tarjeta de destino'
+                            : 'Toca un hueco para insertar · Toca una tarjeta para ver sus acciones'
+                        }}
                       </div>
-                      <div class="composition-pages" :style="{'--zoom':zoom,width:(zoom*100)+'%'}">
+                      <div
+                        class="composition-pages"
+                        :style="{ '--zoom': zoom, width: zoom * 100 + '%' }"
+                      >
                         <section
                           v-for="p in gridPages"
                           :key="p"
                           class="composition-sheet"
                           :style="sheetStyle"
-                          :aria-label="'Hoja '+p"
+                          :aria-label="'Hoja ' + p"
                         >
                           <template
-                            v-for="slot in compositionSlots.filter(i=>i.page===p-1)"
+                            v-for="slot in compositionSlots.filter((i) => i.page === p - 1)"
                             :key="slot.index"
                             ><button
                               v-if="!slot.item"
                               class="empty-slot"
                               :style="itemStyle(slot)"
                               @click="slotClick(slot)"
-                              :aria-label="'Añadir tarjeta en hoja '+p+', hueco '+(slot.index% (printCols*printRows)+1)"
+                              :aria-label="
+                                'Añadir tarjeta en hoja ' +
+                                p +
+                                ', hueco ' +
+                                ((slot.index % (printCols * printRows)) + 1)
+                              "
                             >
                               <span>＋</span><small>Nueva tarjeta</small>
                             </button>
                             <article
                               v-else
                               class="positioned-label"
-                              :class="{selected:selectedItemId===slot.item.id,editing:editingId===slot.item.id,'actions-visible':actionCardId===slot.item.id,'first-column':slot.index%printCols===0}"
+                              :class="{
+                                selected: selectedItemId === slot.item.id,
+                                editing: editingId === slot.item.id,
+                                'actions-visible': actionCardId === slot.item.id,
+                                'first-column': slot.index % printCols === 0,
+                              }"
                               :style="itemStyle(slot)"
                               @click="slotClick(slot)"
-                              @pointerdown="dragStart($event,slot.item)"
+                              @pointerdown="dragStart($event, slot.item)"
                               tabindex="0"
                               role="group"
-                              :aria-label="'Tarjeta '+slot.item.card.number"
-                              @keydown="cardKey($event,slot.item)"
+                              :aria-label="'Tarjeta ' + slot.item.card.number"
+                              @keydown="cardKey($event, slot.item)"
                             >
                               <div class="positioned-svg" v-html="svg(slot.item.card)"></div>
                               <form
-                                v-if="editingId===slot.item.id"
+                                v-if="editingId === slot.item.id"
                                 class="inline-card-editor"
-                                :style="{'--ink':slot.item.card.ink,'--paper':slot.item.card.paper,fontFamily:slot.item.card.font}"
+                                :style="{
+                                  '--ink': slot.item.card.ink,
+                                  '--paper': slot.item.card.paper,
+                                  fontFamily: slot.item.card.font,
+                                }"
                                 @click.stop
                                 @submit.prevent="finishEditing"
                                 @keydown.esc="finishEditing"
@@ -268,7 +320,7 @@
                                 </div>
                               </form>
                               <button
-                                v-if="editingId!==slot.item.id"
+                                v-if="editingId !== slot.item.id"
                                 class="desktop-card-edit"
                                 @click.stop="selectForEdit(slot.item)"
                                 aria-label="Editar tarjeta"
@@ -276,7 +328,7 @@
                                 ✎
                               </button>
                               <div
-                                v-if="actionCardId===slot.item.id&&editingId!==slot.item.id"
+                                v-if="actionCardId === slot.item.id && editingId !== slot.item.id"
                                 class="card-icon-actions"
                                 role="toolbar"
                                 aria-label="Acciones de tarjeta"
@@ -303,7 +355,7 @@
                                   ⧉</button
                                 ><button
                                   class="move-handle"
-                                  @pointerdown.stop="dragStart($event,slot.item)"
+                                  @pointerdown.stop="dragStart($event, slot.item)"
                                   @click="beginMove"
                                   aria-label="Mover tarjeta"
                                   title="Mover: arrastra o toca el destino"
@@ -328,7 +380,7 @@
                   <aside v-if="currentItem" class="inspector panel desktop-editor">
                     <div class="inspector-heading">
                       <span>Editar etiqueta</span
-                      ><span class="badge">{{current.number||'NUEVA'}}</span>
+                      ><span class="badge">{{ current.number || 'NUEVA' }}</span>
                     </div>
                     <div class="inspector-body">
                       <div class="section-label">01 / CONTENIDO</div>
@@ -343,7 +395,7 @@
                         <label>Selección<input v-model="current.number" @change="changed" /></label
                         ><label
                           >Categoría<select v-model="current.category" @change="changed">
-                            <option v-for="g in genres">{{g}}</option>
+                            <option v-for="g in genres">{{ g }}</option>
                           </select></label
                         >
                       </div>
@@ -370,27 +422,51 @@
                   ><section class="panel composition-options-modal">
                     <div class="dialog-heading">
                       <h3>Opciones de composición</h3>
-                      <button @click="optionsDialog=false" aria-label="Cerrar opciones">×</button>
+                      <button @click="optionsDialog = false" aria-label="Cerrar opciones">×</button>
                     </div>
                     <label v-if="composition"
                       >Nombre<input v-model="composition.name" maxlength="100"
                     /></label>
                     <div class="options-grid">
-                      <v-btn @click="newComposition();optionsDialog=false">＋ Nueva</v-btn
+                      <v-btn
+                        @click="
+                          newComposition();
+                          optionsDialog = false;
+                        "
+                        >＋ Nueva</v-btn
                       ><v-btn
-                        @click="copyComposition();optionsDialog=false"
+                        @click="
+                          copyComposition();
+                          optionsDialog = false;
+                        "
                         :disabled="!composition"
                         >Duplicar</v-btn
                       ><v-btn
-                        @click="deleteComposition();optionsDialog=false"
+                        @click="
+                          deleteComposition();
+                          optionsDialog = false;
+                        "
                         :disabled="!composition"
                         >Eliminar</v-btn
-                      ><v-btn @click="optionsDialog=false;picker=true">Elegir discos</v-btn
                       ><v-btn
-                        @click="reflow();optionsDialog=false"
+                        @click="
+                          optionsDialog = false;
+                          picker = true;
+                        "
+                        >Elegir discos</v-btn
+                      ><v-btn
+                        @click="
+                          reflow();
+                          optionsDialog = false;
+                        "
                         :disabled="!compositionCards.length"
                         >Compactar huecos</v-btn
-                      ><v-btn @click="view='print';printSource='composition';optionsDialog=false"
+                      ><v-btn
+                        @click="
+                          view = 'print';
+                          printSource = 'composition';
+                          optionsDialog = false;
+                        "
                         >Imprimir</v-btn
                       ><v-btn @click="saveEverything">Guardar todo</v-btn>
                     </div>
@@ -405,12 +481,17 @@
                   ><form class="panel card-form-modal" @submit.prevent="saveCardEditor">
                     <div class="dialog-heading">
                       <h3>
-                        {{editorMode==='create'?'Nueva tarjeta':editorMode==='duplicate'?'Duplicar
-                        tarjeta':'Editar tarjeta'}}
+                        {{
+                          editorMode === 'create'
+                            ? 'Nueva tarjeta'
+                            : editorMode === 'duplicate'
+                              ? 'Duplicar tarjeta'
+                              : 'Editar tarjeta'
+                        }}
                       </h3>
                       <button
                         type="button"
-                        @click="editorDialog=false"
+                        @click="editorDialog = false"
                         aria-label="Cerrar formulario"
                       >
                         ×
@@ -418,30 +499,30 @@
                     </div>
                     <div class="card-form-content">
                       <div
-                        v-if="editorMode==='create'"
+                        v-if="editorMode === 'create'"
                         class="insert-tabs"
                         role="group"
                         aria-label="Origen de tarjeta"
                       >
                         <button
                           type="button"
-                          :class="{active:insertMode==='existing'}"
-                          @click="insertMode='existing'"
+                          :class="{ active: insertMode === 'existing' }"
+                          @click="insertMode = 'existing'"
                         >
                           De una colección</button
                         ><button
                           type="button"
-                          :class="{active:insertMode==='new'}"
-                          @click="insertMode='new'"
+                          :class="{ active: insertMode === 'new' }"
+                          @click="insertMode = 'new'"
                         >
                           Crear disco nuevo
                         </button>
                       </div>
-                      <template v-if="editorMode==='create'&&insertMode==='existing'"
+                      <template v-if="editorMode === 'create' && insertMode === 'existing'"
                         ><label
                           >Colección de origen<select v-model="sourceCollection">
                             <option value="">Todas las colecciones</option>
-                            <option v-for="c in collections" :value="c.id">{{c.name}}</option>
+                            <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                           </select></label
                         ><input
                           class="search"
@@ -450,24 +531,25 @@
                         />
                         <div class="source-record-list">
                           <button
-                            v-for="c in sourceRecords.slice(0,100)"
+                            v-for="c in sourceRecords.slice(0, 100)"
                             :key="c.id"
                             type="button"
-                            :class="{chosen:sourceRecordId===c.id}"
+                            :class="{ chosen: sourceRecordId === c.id }"
                             @click="chooseSource(c.id)"
                           >
-                            <strong>{{c.artist||'Sin artista'}} · {{c.a}}</strong
-                            ><small>{{c.collectionName}} · {{c.number}} · {{c.b}}</small
-                            ><span v-if="sourceRecordId===c.id">✓</span>
+                            <strong>{{ c.artist || 'Sin artista' }} · {{ c.a }}</strong
+                            ><small>{{ c.collectionName }} · {{ c.number }} · {{ c.b }}</small
+                            ><span v-if="sourceRecordId === c.id">✓</span>
                           </button>
-                          <p v-if="sourceRecords.length>100" class="small-muted">
+                          <p v-if="sourceRecords.length > 100" class="small-muted">
                             Mostrando 100 resultados. Afina la búsqueda para encontrar tu disco.
                           </p>
                           <p v-if="!sourceRecords.length" class="small-muted">
                             No hay discos que coincidan.
                           </p>
                         </div></template
-                      ><template v-if="editorMode!=='create'||insertMode==='new'||sourceRecordId"
+                      ><template
+                        v-if="editorMode !== 'create' || insertMode === 'new' || sourceRecordId"
                         ><button
                           type="button"
                           class="card-form-preview preview-style-button"
@@ -475,20 +557,26 @@
                           aria-label="Cambiar estilo de la tarjeta"
                         >
                           <span v-html="svg(draft)"></span><small>◈ Cambiar estilo</small></button
-                        ><label v-if="editorMode==='create'&&insertMode==='new'"
+                        ><label v-if="editorMode === 'create' && insertMode === 'new'"
                           >Guardar disco en colección<select v-model="destinationCollection">
-                            <option v-for="c in collections" :value="c.id">{{c.name}}</option>
+                            <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                           </select></label
                         >
                         <p
-                          v-if="editorMode==='duplicate'||(editorMode==='create'&&insertMode==='existing')"
+                          v-if="
+                            editorMode === 'duplicate' ||
+                            (editorMode === 'create' && insertMode === 'existing')
+                          "
                           class="small-muted"
                         >
                           Se utiliza el disco de la colección. El estilo y la posición pertenecen a
                           esta composición.
                         </p>
                         <template
-                          v-if="editorMode==='edit'||(editorMode==='create'&&insertMode==='new')"
+                          v-if="
+                            editorMode === 'edit' ||
+                            (editorMode === 'create' && insertMode === 'new')
+                          "
                           ><label
                             >Artista<input
                               v-model="draft.artist"
@@ -529,14 +617,23 @@
                       ></template>
                     </div>
                     <div class="modal-footer">
-                      <v-btn type="button" variant="text" @click="editorDialog=false"
+                      <v-btn type="button" variant="text" @click="editorDialog = false"
                         >Cancelar</v-btn
                       ><v-btn
                         type="submit"
                         color="primary"
-                        :disabled="editorMode==='create'&&insertMode==='existing'&&!sourceRecordId"
-                        >{{editorMode==='create'?(insertMode==='existing'?'Insertar disco':'Crear e
-                        insertar'):editorMode==='duplicate'?'Crear copia':'Guardar cambios'}}</v-btn
+                        :disabled="
+                          editorMode === 'create' && insertMode === 'existing' && !sourceRecordId
+                        "
+                        >{{
+                          editorMode === 'create'
+                            ? insertMode === 'existing'
+                              ? 'Insertar disco'
+                              : 'Crear e insertar'
+                            : editorMode === 'duplicate'
+                              ? 'Crear copia'
+                              : 'Guardar cambios'
+                        }}</v-btn
                       >
                     </div>
                   </form></v-dialog
@@ -545,14 +642,16 @@
                   ><section class="panel delete-card-modal">
                     <div class="dialog-heading">
                       <h3>Eliminar de la composición</h3>
-                      <button @click="deleteDialog=false" aria-label="Cerrar eliminación">×</button>
+                      <button @click="deleteDialog = false" aria-label="Cerrar eliminación">
+                        ×
+                      </button>
                     </div>
                     <p>
-                      Se vaciará el hueco de la tarjeta <b>{{current.number}}</b>. El disco seguirá
-                      en tu colección.
+                      Se vaciará el hueco de la tarjeta <b>{{ current.number }}</b>. El disco
+                      seguirá en tu colección.
                     </p>
                     <div class="modal-footer">
-                      <v-btn variant="text" @click="deleteDialog=false">Cancelar</v-btn
+                      <v-btn variant="text" @click="deleteDialog = false">Cancelar</v-btn
                       ><v-btn color="primary" @click="confirmDelete">Eliminar tarjeta</v-btn>
                     </div>
                   </section></v-dialog
@@ -561,22 +660,22 @@
                 <v-dialog v-model="styleDialog" max-width="680" scrollable
                   ><section class="panel style-modal">
                     <div class="dialog-heading">
-                      <h3>Estilo · {{styleCard.number}}</h3>
-                      <button @click="styleDialog=false" aria-label="Cerrar estilos">×</button>
+                      <h3>Estilo · {{ styleCard.number }}</h3>
+                      <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                     </div>
                     <div class="style-modal-content">
                       <div class="style-choices">
                         <button
                           v-for="t in templates"
                           :key="t.id"
-                          :class="{chosen:styleCard.style===t.id}"
+                          :class="{ chosen: styleCard.style === t.id }"
                           @click="useTemplate(t)"
-                          :aria-pressed="styleCard.style===t.id"
+                          :aria-pressed="styleCard.style === t.id"
                         >
                           <div
-                            v-html="svg({...styleCard,style:t.id,ink:t.ink,paper:t.paper})"
+                            v-html="svg({ ...styleCard, style: t.id, ink: t.ink, paper: t.paper })"
                           ></div>
-                          <span>{{t.name}}</span>
+                          <span>{{ t.name }}</span>
                         </button>
                       </div>
                       <div class="form-row">
@@ -590,31 +689,31 @@
                           <option value="monospace">Máquina de escribir</option>
                         </select></label
                       ><label
-                        >Tamaño del título · {{styleCard.size}} %<input
+                        >Tamaño del título · {{ styleCard.size }} %<input
                           type="range"
                           min="60"
                           max="140"
                           v-model="styleCard.size"
                       /></label>
                     </div>
-                    <v-btn color="primary" block @click="styleDialog=false">Listo</v-btn>
+                    <v-btn color="primary" block @click="styleDialog = false">Listo</v-btn>
                   </section></v-dialog
                 >
                 <v-dialog v-model="picker" max-width="540"
                   ><section class="panel picker-modal">
                     <div class="dialog-heading">
                       <h3>Discos para esta composición</h3>
-                      <button @click="picker=false" aria-label="Cerrar selector">×</button>
+                      <button @click="picker = false" aria-label="Cerrar selector">×</button>
                     </div>
                     <label
                       >Colección<select v-model="sourceCollection">
                         <option value="">Todas las colecciones</option>
-                        <option v-for="c in collections" :value="c.id">{{c.name}}</option>
+                        <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                       </select></label
                     ><input class="search" v-model="sourceQuery" placeholder="Buscar discos" />
                     <div class="picker-list">
                       <label
-                        v-for="c in sourceRecords.slice((pickerPage-1)*25,pickerPage*25)"
+                        v-for="c in sourceRecords.slice((pickerPage - 1) * 25, pickerPage * 25)"
                         :key="c.id"
                         class="check"
                         ><input
@@ -622,33 +721,33 @@
                           :checked="picked.includes(c.id)"
                           @change="togglePicked(c.id)"
                         /><span
-                          ><b>{{c.number}} · {{c.artist}}</b
-                          ><small>{{c.collectionName}} · {{c.a}} / {{c.b}}</small></span
+                          ><b>{{ c.number }} · {{ c.artist }}</b
+                          ><small>{{ c.collectionName }} · {{ c.a }} / {{ c.b }}</small></span
                         ></label
                       >
                     </div>
                     <div class="inline wrap">
-                      <v-btn size="small" @click="pickerPage--" :disabled="pickerPage<=1"
+                      <v-btn size="small" @click="pickerPage--" :disabled="pickerPage <= 1"
                         >Anterior</v-btn
                       ><v-btn
                         size="small"
                         @click="pickerPage++"
-                        :disabled="pickerPage*25>=sourceRecords.length"
+                        :disabled="pickerPage * 25 >= sourceRecords.length"
                         >Siguiente</v-btn
                       ><v-btn color="primary" @click="addToComposition()" :disabled="!picked.length"
-                        >Insertar {{picked.length}}</v-btn
+                        >Insertar {{ picked.length }}</v-btn
                       >
                     </div>
                   </section></v-dialog
                 >
               </template>
               <!-- Colecciones: edición de los vinilos originales y selección múltiple. -->
-              <template v-if="view==='collection'"
+              <template v-if="view === 'collection'"
                 ><section class="panel collection-manager">
                   <div class="manager-row">
                     <label
                       >Colección<select v-model="activeCollection">
-                        <option v-for="c in collections" :value="c.id">{{c.name}}</option>
+                        <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                       </select></label
                     ><label>Nombre<input v-model="collectionName" maxlength="100" /></label>
                     <div class="inline">
@@ -656,7 +755,7 @@
                       ><v-btn
                         size="small"
                         @click="deleteCollection"
-                        :disabled="collections.length===1"
+                        :disabled="collections.length === 1"
                         >Eliminar colección</v-btn
                       >
                     </div>
@@ -670,14 +769,23 @@
                       placeholder="Buscar artista, título o selección…"
                     />
                     <div class="inline wrap">
-                      <v-btn variant="outlined" @click="view='transfer'"
+                      <v-btn variant="outlined" @click="view = 'transfer'"
                         >⇅ Importar / exportar</v-btn
-                      ><v-btn variant="text" @click="query='';filters={}">Limpiar filtros</v-btn
+                      ><v-btn
+                        variant="text"
+                        @click="
+                          query = '';
+                          filters = {};
+                        "
+                        >Limpiar filtros</v-btn
                       ><v-btn
                         color="primary"
                         :disabled="!picked.length"
-                        @click="addToComposition();view='compose'"
-                        >Insertar {{picked.length}} en composición</v-btn
+                        @click="
+                          addToComposition();
+                          view = 'compose';
+                        "
+                        >Insertar {{ picked.length }} en composición</v-btn
                       >
                     </div>
                   </div>
@@ -689,13 +797,24 @@
                             <input
                               type="checkbox"
                               aria-label="Seleccionar página"
-                              :checked="pagedCards.length>0&&pagedCards.every(c=>picked.includes(c.id))"
-                              @change="pagedCards.forEach(c=>{if($event.target.checked&&!picked.includes(c.id))picked.push(c.id);else if(!$event.target.checked)picked=picked.filter(id=>id!==c.id)})"
+                              :checked="
+                                pagedCards.length > 0 &&
+                                pagedCards.every((c) => picked.includes(c.id))
+                              "
+                              @change="
+                                pagedCards.forEach((c) => {
+                                  if ($event.target.checked && !picked.includes(c.id))
+                                    picked.push(c.id);
+                                  else if (!$event.target.checked)
+                                    picked = picked.filter((id) => id !== c.id);
+                                })
+                              "
                             />
                           </th>
                           <th v-for="col in columns">
                             <button @click="sortColumn(col.key)">
-                              {{col.label}} {{sortKey===col.key?(sortDirection===1?'↑':'↓'):'↕'}}
+                              {{ col.label }}
+                              {{ sortKey === col.key ? (sortDirection === 1 ? '↑' : '↓') : '↕' }}
                             </button>
                           </th>
                           <th>Acciones</th>
@@ -705,8 +824,8 @@
                           <th v-for="col in columns">
                             <input
                               v-model="filters[col.key]"
-                              :aria-label="'Filtrar '+col.label"
-                              :placeholder="'Filtrar '+col.label"
+                              :aria-label="'Filtrar ' + col.label"
+                              :placeholder="'Filtrar ' + col.label"
                             />
                           </th>
                           <th></th>
@@ -717,23 +836,27 @@
                           <td>
                             <input
                               type="checkbox"
-                              :aria-label="'Elegir '+c.number"
+                              :aria-label="'Elegir ' + c.number"
                               :checked="picked.includes(c.id)"
                               @change="togglePicked(c.id)"
                             />
                           </td>
                           <td v-for="col in columns">
                             <input
-                              :aria-label="col.label+' '+c.number"
+                              :aria-label="col.label + ' ' + c.number"
                               v-model="c[col.key]"
                               @change="changed"
-                              :class="{selection:col.key==='number'}"
+                              :class="{ selection: col.key === 'number' }"
                             />
                           </td>
                           <td>
                             <button
                               class="text-btn"
-                              @click="selectedItemId=null;selected=c.id;openCardEditor('edit')"
+                              @click="
+                                selectedItemId = null;
+                                selected = c.id;
+                                openCardEditor('edit');
+                              "
                               title="Diseñar"
                             >
                               ↗</button
@@ -747,8 +870,8 @@
                   </div>
                   <div class="table-footer wrap">
                     <span
-                      >{{filtered.length}} de {{cards.length}} discos · {{picked.length}}
-                      elegidos</span
+                      >{{ filtered.length }} de {{ cards.length }} discos ·
+                      {{ picked.length }} elegidos</span
                     >
                     <div class="inline">
                       <label
@@ -757,10 +880,10 @@
                           <option :value="50">50</option>
                           <option :value="100">100</option>
                         </select></label
-                      ><button class="text-btn" @click="page--" :disabled="page<=1">
+                      ><button class="text-btn" @click="page--" :disabled="page <= 1">
                         ‹ Anterior</button
-                      ><span>Pág. {{page}} / {{totalPages}}</span
-                      ><button class="text-btn" @click="page++" :disabled="page>=totalPages">
+                      ><span>Pág. {{ page }} / {{ totalPages }}</span
+                      ><button class="text-btn" @click="page++" :disabled="page >= totalPages">
                         Siguiente ›
                       </button>
                     </div>
@@ -776,29 +899,33 @@
                 </div></template
               >
               <!-- Catálogo visual de diseños. -->
-              <template v-if="view==='templates'"
+              <template v-if="view === 'templates'"
                 ><div class="filter-tabs">
                   <button
-                    v-for="f in ['Todos','Clásicos','Vintage','Minimalistas']"
-                    :class="{on:templateFilter===f}"
-                    @click="templateFilter=f"
+                    v-for="f in ['Todos', 'Clásicos', 'Vintage', 'Minimalistas']"
+                    :class="{ on: templateFilter === f }"
+                    @click="templateFilter = f"
                   >
-                    {{f}}
+                    {{ f }}
                   </button>
                 </div>
                 <div class="template-grid">
                   <button
                     v-for="t in visibleTemplates"
                     class="template-card panel"
-                    :class="{chosen:current.style===t.id}"
+                    :class="{ chosen: current.style === t.id }"
                     @click="useTemplate(t)"
                   >
                     <div class="template-preview">
-                      <div v-html="svg({...current,style:t.id,ink:t.ink,paper:t.paper})"></div>
+                      <div
+                        v-html="svg({ ...current, style: t.id, ink: t.ink, paper: t.paper })"
+                      ></div>
                     </div>
                     <div class="template-info">
-                      <div><b>{{t.name}}</b><small>{{t.group}} · {{t.description}}</small></div>
-                      <span>{{current.style===t.id?'✓':'↗'}}</span>
+                      <div>
+                        <b>{{ t.name }}</b><small>{{ t.group }} · {{ t.description }}</small>
+                      </div>
+                      <span>{{ current.style === t.id ? '✓' : '↗' }}</span>
                     </div>
                   </button>
                 </div>
@@ -808,7 +935,7 @@
                 </div></template
               >
               <!-- Impresión: papel, medidas físicas y vista previa de salida. -->
-              <template v-if="view==='print'"
+              <template v-if="view === 'print'"
                 ><div class="print-layout">
                   <section class="panel print-controls">
                     <h3>Preparar salida</h3>
@@ -818,13 +945,13 @@
                         <option value="composition">Composición elegida</option>
                         <option value="selected">Etiqueta seleccionada</option>
                       </select></label
-                    ><label v-if="printSource==='collection'"
+                    ><label v-if="printSource === 'collection'"
                       >Colección<select v-model="activeCollection">
-                        <option v-for="c in collections" :value="c.id">{{c.name}}</option>
+                        <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                       </select></label
-                    ><label v-if="printSource==='composition'"
+                    ><label v-if="printSource === 'composition'"
                       >Composición<select v-model="activeComposition">
-                        <option v-for="c in compositions" :value="c.id">{{c.name}}</option>
+                        <option v-for="c in compositions" :value="c.id">{{ c.name }}</option>
                       </select></label
                     ><label
                       >Orientación<select v-model="settings.orientation">
@@ -873,22 +1000,22 @@
                       corte</label
                     >
                     <div class="print-summary">
-                      <b>{{printCards.length}} etiquetas · {{pageCount}} hoja(s)</b
-                      ><span>{{printCols}} columnas × {{printRows}} filas por página</span>
+                      <b>{{ printCards.length }} etiquetas · {{ pageCount }} hoja(s)</b
+                      ><span>{{ printCols }} columnas × {{ printRows }} filas por página</span>
                     </div>
                     <v-btn
                       block
                       color="primary"
                       @click="exportPdf"
                       :loading="pdfBusy"
-                      :disabled="!validPrint||!printCards.length||pdfBusy"
+                      :disabled="!validPrint || !printCards.length || pdfBusy"
                       >↓ Descargar PDF · 1:1</v-btn
                     ><v-btn
                       block
                       variant="outlined"
                       class="native-print"
                       @click="printAll"
-                      :disabled="!validPrint||!printCards.length"
+                      :disabled="!validPrint || !printCards.length"
                       >↗ Imprimir con el navegador</v-btn
                     >
                     <p class="small-muted">
@@ -903,36 +1030,36 @@
                   </section>
                   <div class="sheet-stage">
                     <div class="sheet-caption">
-                      {{settings.paper}} · VISTA A ESCALA REDUCIDA · {{settings.width}} ×
-                      {{settings.height}} mm
+                      {{ settings.paper }} · VISTA A ESCALA REDUCIDA · {{ settings.width }} ×
+                      {{ settings.height }} mm
                     </div>
                     <section class="paper-sheet" :style="sheetStyle">
                       <div
-                        v-for="(item,i) in previewItems"
+                        v-for="(item, i) in previewItems"
                         :key="i"
                         class="print-preview-card"
-                        :class="{cut:settings.guides}"
+                        :class="{ cut: settings.guides }"
                         v-html="svg(item.card)"
                         :style="itemStyle(item)"
                       ></div>
                     </section>
                     <div class="inline page-controls">
-                      <button @click="printPage--" :disabled="printPage<=1">‹ Anterior</button
-                      ><span>Hoja {{printPage}} / {{Math.max(1,pageCount)}}</span
-                      ><button @click="printPage++" :disabled="printPage>=pageCount">
+                      <button @click="printPage--" :disabled="printPage <= 1">‹ Anterior</button
+                      ><span>Hoja {{ printPage }} / {{ Math.max(1, pageCount) }}</span
+                      ><button @click="printPage++" :disabled="printPage >= pageCount">
                         Siguiente ›
                       </button>
                     </div>
                     <p class="small-muted">
-                      {{settings.orientation==='landscape'?'Horizontal':'Vertical'}} · Las etiquetas
-                      conservan {{settings.width}} × {{settings.height}} mm. La orientación
-                      redistribuye las tarjetas.
+                      {{ settings.orientation === 'landscape' ? 'Horizontal' : 'Vertical' }} · Las
+                      etiquetas conservan {{ settings.width }} × {{ settings.height }} mm. La
+                      orientación redistribuye las tarjetas.
                     </p>
                   </div>
                 </div></template
               >
               <!-- Entrada y salida de datos: CSV, Excel y copias JSON. -->
-              <template v-if="view==='transfer'"
+              <template v-if="view === 'transfer'"
                 ><div class="transfer-grid">
                   <section class="panel transfer">
                     <span class="section-label">01 / ENTRADA</span>
@@ -951,18 +1078,25 @@
                       ref="file"
                       type="file"
                       accept=".csv,.tsv,.xlsx,.xls,.json"
-                      @change="readFile($event.target.files[0]);$event.target.value='' "
+                      @change="
+                        readFile($event.target.files[0]);
+                        $event.target.value = '';
+                      "
                     />
                     <div v-if="pendingBackup" class="backup-review">
                       <b>Copia JSON lista para cargar</b>
                       <p>
-                        {{pendingBackup.collections?'Se reemplazará el sistema
-                        completo.':pendingBackup.kind==='settings'?'Se cargarán los ajustes.':'Se
-                        añadirá el contenido como una colección o composición nueva.'}} Se guardará
-                        antes una versión recuperable.
+                        {{
+                          pendingBackup.collections
+                            ? 'Se reemplazará el sistema completo.'
+                            : pendingBackup.kind === 'settings'
+                              ? 'Se cargarán los ajustes.'
+                              : 'Se añadirá el contenido como una colección o composición nueva.'
+                        }}
+                        Se guardará antes una versión recuperable.
                       </p>
                       <v-btn color="primary" @click="loadBackup">Cargar copia</v-btn
-                      ><v-btn @click="pendingBackup=null">Cancelar</v-btn>
+                      ><v-btn @click="pendingBackup = null">Cancelar</v-btn>
                     </div>
                     <details>
                       <summary>Pegar datos desde una hoja de cálculo</summary>
@@ -973,25 +1107,26 @@
                       ><v-btn @click="parsePasted" variant="outlined">Revisar datos</v-btn>
                     </details>
                     <div v-if="importRows.length" class="import-preview">
-                      <b>{{importRows.length}} filas detectadas · {{importFile}}</b>
+                      <b>{{ importRows.length }} filas detectadas · {{ importFile }}</b>
                       <p>Asigna las columnas antes de añadir los discos.</p>
                       <label v-for="c in columns"
-                        >{{c.label}}<select v-model="mapping[c.key]">
+                        >{{ c.label
+                        }}<select v-model="mapping[c.key]">
                           <option value="">No importar</option>
-                          <option v-for="h in importHeaders" :value="h">{{h}}</option>
+                          <option v-for="h in importHeaders" :value="h">{{ h }}</option>
                         </select></label
                       >
-                      <div class="sample">Primera fila: {{JSON.stringify(importRows[0])}}</div>
+                      <div class="sample">Primera fila: {{ JSON.stringify(importRows[0]) }}</div>
                       <v-btn color="primary" @click="commitImport"
-                        >Añadir {{importRows.length}} discos</v-btn
-                      ><v-btn variant="text" @click="importRows=[]">Cancelar</v-btn>
+                        >Añadir {{ importRows.length }} discos</v-btn
+                      ><v-btn variant="text" @click="importRows = []">Cancelar</v-btn>
                     </div>
                   </section>
                   <section class="panel transfer">
                     <span class="section-label">02 / SALIDA</span>
                     <h2>Llévatela contigo.</h2>
                     <p>
-                      Exporta los {{cards.length}} discos de tu colección. JSON conserva también
+                      Exporta los {{ cards.length }} discos de tu colección. JSON conserva también
                       diseños y ajustes.
                     </p>
                     <button class="export-option" @click="exportData('xlsx')">
@@ -1034,7 +1169,7 @@
                 </div></template
               >
               <!-- Ajustes y copias recuperables del navegador. -->
-              <template v-if="view==='settings'"
+              <template v-if="view === 'settings'"
                 ><section class="panel settings">
                   <h2>Un taller a tu medida.</h2>
                   <label>Nombre del proyecto<input v-model="settings.name" /></label
@@ -1076,8 +1211,12 @@
                       >Guardar versión de los datos</v-btn
                     >
                     <div class="version-row" v-for="v in versions" :key="v.id">
-                      <span>{{new Date(v.date).toLocaleString('es-ES')}}</span
-                      ><button class="text-btn" @click="restoreVersion(v)">Recuperar</button>
+                      <span>{{ new Date(v.date).toLocaleString('es-ES') }}</span><button
+                        class="text-btn"
+                        @click="restoreVersion(v)"
+                      >
+                        Recuperar
+                      </button>
                     </div>
                   </div>
                   <div class="reference">
@@ -1115,8 +1254,9 @@
           </div>
         </div>
         <v-snackbar v-model="snackbar" :timeout="3500" color="primary"
-          >{{message}}<template #actions
-            ><v-btn variant="text" @click="snackbar=false">Cerrar</v-btn></template
+          >{{ message
+          }}<template #actions
+            ><v-btn variant="text" @click="snackbar = false">Cerrar</v-btn></template
           ></v-snackbar
         ></v-app
       >
