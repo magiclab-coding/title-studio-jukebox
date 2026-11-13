@@ -21,6 +21,7 @@
           @touchstart.passive="gestureStart"
           @touchend.passive="gestureEnd"
         >
+          <!-- Navegación: contextos y acceso rápido al guardado. -->
           <nav class="icon-rail" aria-label="Contextos">
             <button class="rail-expand" @click="drawer=!drawer" aria-label="Expandir navegación">
               ☰</button
@@ -50,6 +51,7 @@
               ↓
             </button>
           </nav>
+          <!-- Panel lateral ampliado: conserva desplazamiento y fijación propios. -->
           <aside
             class="sidebar"
             :class="{open:drawer,pinned:pinned}"
@@ -132,6 +134,7 @@
                   >＋ Añadir disco</v-btn
                 >
               </div>
+              <!-- Composición: posiciones, huecos y acciones de cada tarjeta. -->
               <template v-if="view==='compose'">
                 <section class="panel composition-manager compact-manager">
                   <div class="manager-row">
@@ -362,6 +365,7 @@
                     </div>
                   </aside>
                 </div>
+                <!-- Opciones globales de la composición, fuera de los paneles recortables. -->
                 <v-dialog v-model="optionsDialog" max-width="460"
                   ><section class="panel composition-options-modal">
                     <div class="dialog-heading">
@@ -396,6 +400,7 @@
                     </p>
                   </section></v-dialog
                 >
+                <!-- Creación y edición con borrador; los cambios se confirman al guardar. -->
                 <v-dialog v-model="editorDialog" max-width="480" scrollable
                   ><form class="panel card-form-modal" @submit.prevent="saveCardEditor">
                     <div class="dialog-heading">
@@ -552,6 +557,7 @@
                     </div>
                   </section></v-dialog
                 >
+                <!-- Estilo de una posición o del borrador abierto. -->
                 <v-dialog v-model="styleDialog" max-width="680" scrollable
                   ><section class="panel style-modal">
                     <div class="dialog-heading">
@@ -636,6 +642,7 @@
                   </section></v-dialog
                 >
               </template>
+              <!-- Colecciones: edición de los vinilos originales y selección múltiple. -->
               <template v-if="view==='collection'"
                 ><section class="panel collection-manager">
                   <div class="manager-row">
@@ -768,6 +775,7 @@
                   visibles. Puedes pegar filas desde Excel en «Importar y exportar».
                 </div></template
               >
+              <!-- Catálogo visual de diseños. -->
               <template v-if="view==='templates'"
                 ><div class="filter-tabs">
                   <button
@@ -799,6 +807,7 @@
                   personaliza sus colores y tipografía en Composición.
                 </div></template
               >
+              <!-- Impresión: papel, medidas físicas y vista previa de salida. -->
               <template v-if="view==='print'"
                 ><div class="print-layout">
                   <section class="panel print-controls">
@@ -922,6 +931,7 @@
                   </div>
                 </div></template
               >
+              <!-- Entrada y salida de datos: CSV, Excel y copias JSON. -->
               <template v-if="view==='transfer'"
                 ><div class="transfer-grid">
                   <section class="panel transfer">
@@ -1023,6 +1033,7 @@
                   </section>
                 </div></template
               >
+              <!-- Ajustes y copias recuperables del navegador. -->
               <template v-if="view==='settings'"
                 ><section class="panel settings">
                   <h2>Un taller a tu medida.</h2>

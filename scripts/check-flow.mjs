@@ -1,3 +1,5 @@
+// --- Reglas de integración entre ramas ---
+// Las ejecuciones por push no tienen PR_BASE; los PR sí validan su origen.
 const { PR_BASE: base, PR_HEAD: head } = process.env;
 if (base === 'main' && head !== 'develop') throw Error('Only develop may be merged into main.');
 if (base === 'develop' && !(head?.startsWith('feature/') || head === 'main'))

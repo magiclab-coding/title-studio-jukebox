@@ -1,3 +1,5 @@
+// --- Disponibilidad del alojamiento ---
+// La Release se conserva aunque Pages todavía no esté configurado.
 import { appendFileSync } from 'node:fs';
 import { gh, repo } from './github.mjs';
 const pages = gh(['api', `repos/${repo}/pages`], { allow404: true });
