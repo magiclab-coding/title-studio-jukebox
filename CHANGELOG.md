@@ -1,3 +1,9 @@
+# 7.0.4
+
+- Corregido el arranque en blanco causado por cadenas partidas dentro de interpolaciones Vue.
+- Minificación de HTML, JavaScript y CSS solo en la distribución.
+- Validación de las plantillas fuente y publicadas en integración continua.
+
 ## 7.0.3 · Comentarios y secciones del código
 
 - Cabeceras de sección en aplicación, plantillas, estilos, PDF, pruebas y automatización.

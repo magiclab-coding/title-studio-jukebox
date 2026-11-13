@@ -28,3 +28,4 @@ jobs:
       - run: npm test
       - run: node --test tests/release-version.mjs
       - run: npm run build
+      - run: npm run test:build

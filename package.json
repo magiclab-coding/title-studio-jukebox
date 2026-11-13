@@ -1,13 +1,14 @@
 {
   "name": "title-studio",
-  "version": "7.0.3",
+  "version": "7.0.4",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "test": "node tests/studio.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:build": "node tests/build.mjs"
   },
   "dependencies": {
     "vue": "3.5.24",
@@ -15,6 +16,9 @@
     "xlsx": "0.18.5"
   },
   "devDependencies": {
+    "esbuild": "0.25.12",
+    "html-minifier-terser": "7.2.0",
+    "linkedom": "0.18.12",
     "prettier": "3.10.1"
   }
 }
