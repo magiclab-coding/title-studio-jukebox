@@ -1,3 +1,8 @@
+# 7.0.11
+
+- Corrige el arrastre entre hojas contiguas: el destino se calcula con ambas coordenadas del puntero.
+- Prueba de regresión con dos hojas a la misma altura y movimiento en ambos sentidos.
+
 # 7.0.10
 
 - Datos de discos separados del diseño; confirmación de duplicados por artistas y canciones dentro de cada lista.

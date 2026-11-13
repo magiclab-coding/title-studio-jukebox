@@ -1366,7 +1366,11 @@ createApp({
           dist = Infinity;
         sheets.forEach((sheet, p) => {
           const r = sheet.getBoundingClientRect(),
-            d = Math.max(r.top - ev.clientY, 0, ev.clientY - r.bottom);
+            // Distancia al rectángulo completo: las hojas contiguas comparten altura.
+            d = Math.hypot(
+              Math.max(r.left - ev.clientX, 0, ev.clientX - r.right),
+              Math.max(r.top - ev.clientY, 0, ev.clientY - r.bottom),
+            );
           if (d < dist) {
             dist = d;
             best = p;
