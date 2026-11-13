@@ -23,3 +23,9 @@ Run `npm run format` before committing and `npm run format:check` during validat
 ## Short comments and section headings
 
 Use short section comments to organize significant areas of authored code. Add concise comments where intent, data ownership, units, compatibility, resource cleanup or publication guarantees are not obvious. Avoid narrating simple statements. Apply this to application code, styles, templates, scripts and workflows when useful; preserve historical snapshots unchanged.
+
+## Producción minificada
+
+- Mantener src legible y comentado. Minificar únicamente dist durante npm run build.
+- Ejecutar npm run test:build después de compilar: valida las plantillas Vue y los archivos publicados.
+- No dividir cadenas dentro de interpolaciones Vue; usar el parser Vue del formateador para src/index.html.

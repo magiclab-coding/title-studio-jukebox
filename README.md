@@ -52,3 +52,5 @@ La CI comprueba el formato antes de ejecutar las pruebas y publicar.
 ## Comentarios y secciones
 
 Las áreas importantes del código se organizan con cabeceras de sección y comentarios breves que explican la intención, las unidades y los casos menos evidentes. La versión 7.0.3 aplica esta convención al código activo; las versiones históricas conservan sus originales. La regla queda documentada en AGENTS.md para las siguientes revisiones.
+
+La distribución de GitHub Pages se genera minificada en `dist`; el código de `src` permanece legible y comentado. `npm run build && npm run test:build` comprueba también que las plantillas Vue pueden compilarse antes de publicar.
