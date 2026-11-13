@@ -391,24 +391,26 @@
                         >Artista<input
                           v-model="current.artist"
                           @change="changed"
-                          placeholder="Nombre del artista" /></label
+                          placeholder="Artista A / Artista B" /></label
                       ><label>Cara A<input v-model="current.a" @change="changed" /></label
                       ><label>Cara B<input v-model="current.b" @change="changed" /></label>
                       <div class="form-row">
                         <label>Selección<input v-model="current.number" @change="changed" /></label
                         ><label
-                          >Categoría<select v-model="current.category" @change="changed">
-                            <option v-for="g in genres">{{ g }}</option>
+                          >Género<select v-model="current.category" @change="changed">
+                            <option v-for="g in genres" :value="g">{{ g }}</option>
+                            <option
+                              v-if="!genres.includes(current.category)"
+                              :value="current.category"
+                            >
+                              {{ current.category || 'Sin género' }}
+                            </option>
                           </select></label
                         >
                       </div>
                       <details>
-                        <summary>Dos artistas / metadatos</summary>
+                        <summary>Metadatos</summary>
                         <label
-                          >Artista de la cara B<input
-                            v-model="current.artistB"
-                            @change="changed" /></label
-                        ><label
                           >Sello discográfico<input
                             v-model="current.label"
                             @change="changed" /></label
@@ -584,7 +586,7 @@
                             >Artista<input
                               v-model="draft.artist"
                               maxlength="300"
-                              placeholder="Nombre del artista"
+                              placeholder="Artista A / Artista B"
                               autofocus /></label
                           ><label
                             >Cara A<input
@@ -600,20 +602,26 @@
                           <div class="form-row">
                             <label>Selección<input v-model="draft.number" maxlength="60" /></label
                             ><label
-                              >Categoría<input
+                              >Género<select v-model="draft.category" aria-label="Género del disco">
+                                <option v-for="g in genres" :value="g">{{ g }}</option>
+                                <option
+                                  v-if="draft.category && !genres.includes(draft.category)"
+                                  :value="draft.category"
+                                >
+                                  {{ draft.category }}
+                                </option>
+                                <option value="">Otro género…</option></select
+                              ><input
+                                v-if="!genres.includes(draft.category)"
                                 v-model="draft.category"
+                                aria-label="Escribir otro género"
+                                placeholder="Escribe un género"
                                 maxlength="100"
-                                list="card-genres" /><datalist id="card-genres">
-                                <option v-for="g in genres" :value="g"></option></datalist
-                            ></label>
+                            /></label>
                           </div>
                           <details>
-                            <summary>Artista B y metadatos</summary>
-                            <label
-                              >Artista de la cara B<input
-                                v-model="draft.artistB"
-                                maxlength="300" /></label
-                            ><label>Sello<input v-model="draft.label" maxlength="300" /></label
+                            <summary>Metadatos</summary>
+                            <label>Sello<input v-model="draft.label" maxlength="300" /></label
                             ><label
                               >Año<input v-model="draft.year" maxlength="20"
                             /></label></details></template
@@ -667,6 +675,7 @@
                       <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                     </div>
                     <div class="style-modal-content">
+                      <div class="custom-style-preview" v-html="svg(styleCard)"></div>
                       <div class="style-choices">
                         <button
                           v-for="t in templates"
@@ -676,23 +685,46 @@
                           :aria-pressed="styleCard.style === t.id"
                         >
                           <div
-                            v-html="svg({ ...styleCard, style: t.id, ink: t.ink, paper: t.paper })"
+                            v-html="
+                              svg({
+                                ...styleCard,
+                                style: t.id,
+                                ink: t.ink,
+                                artistInk: t.artistInk || '#202020',
+                                paper: t.paper,
+                                font: t.font || styleCard.font,
+                                showMeta: t.showMeta !== false,
+                              })
+                            "
                           ></div>
                           <span>{{ t.name }}</span>
                         </button>
                       </div>
                       <div class="form-row">
-                        <label>Tinta<input type="color" v-model="styleCard.ink" /></label
+                        <label>Canciones<input type="color" v-model="styleCard.ink" /></label
+                        ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
                         ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
                       </div>
                       <label
-                        >Tipografía<select v-model="styleCard.font">
-                          <option value="Georgia">Clásica · Serif</option>
-                          <option value="Arial">Moderna · Sans</option>
-                          <option value="monospace">Máquina de escribir</option>
+                        >Fuente de las canciones<select v-model="styleCard.font">
+                          <option v-for="f in fontOptions" :value="f.value">{{ f.label }}</option>
                         </select></label
                       ><label
-                        >Tamaño del título · {{ styleCard.size }} %<input
+                        >Fuente del artista<select v-model="styleCard.artistFont">
+                          <option value="">La misma que las canciones</option>
+                          <option v-for="f in fontOptions" :value="f.value">{{ f.label }}</option>
+                        </select></label
+                      ><label
+                        >Tamaño del artista · {{ styleCard.artistSize || 100 }} %<input
+                          type="range"
+                          min="60"
+                          max="150"
+                          v-model.number="styleCard.artistSize" /></label
+                      ><label class="metadata-toggle"
+                        ><input type="checkbox" v-model="styleCard.showMeta" /> Mostrar género,
+                        selección y RPM</label
+                      ><label
+                        >Tamaño de las canciones · {{ styleCard.size }} %<input
                           type="range"
                           min="60"
                           max="140"
@@ -921,7 +953,17 @@
                   >
                     <div class="template-preview">
                       <div
-                        v-html="svg({ ...current, style: t.id, ink: t.ink, paper: t.paper })"
+                        v-html="
+                          svg({
+                            ...current,
+                            style: t.id,
+                            ink: t.ink,
+                            artistInk: t.artistInk || '#202020',
+                            paper: t.paper,
+                            font: t.font || current.font,
+                            showMeta: t.showMeta !== false,
+                          })
+                        "
                       ></div>
                     </div>
                     <div class="template-info">
@@ -1268,6 +1310,7 @@
     <script src="vendor/vue.js"></script>
     <script src="vendor/vuetify.js"></script>
     <script src="vendor/xlsx.js"></script>
+    <script src="fonts.js"></script>
     <script src="pdf.js"></script>
     <script src="app.js"></script>
   </body>
