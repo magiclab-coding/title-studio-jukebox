@@ -284,10 +284,11 @@
                         :style="{ '--zoom': zoom, '--paper-ratio': dimensions[0] / dimensions[1] }"
                       >
                         <section
-                          v-for="p in [composePage + 1]"
+                          v-for="p in visiblePageNumbers"
+                          :data-page="p - 1"
                           :key="p"
                           class="composition-sheet"
-                          :style="sheetStyle"
+                          :style="{ ...sheetStyle, width: pageWidth + 'px' }"
                           :aria-label="'Hoja ' + p"
                         >
                           <template
@@ -565,6 +566,7 @@
                       v-if="editorMode !== 'create' || insertMode === 'new' || sourceRecordId"
                       ><button
                         type="button"
+                        v-if="editorContext === 'composition' && editorMode === 'create'"
                         class="card-form-preview preview-style-button"
                         @click="openStyle(true)"
                         aria-label="Cambiar estilo de la tarjeta"
@@ -640,16 +642,28 @@
                   <div class="dialog-heading">
                     <h3>
                       {{
-                        styleAll
-                          ? 'Estilo para toda la composición'
-                          : 'Estilo · ' + styleCard.number
+                        defaultStyleId
+                          ? 'Valores predeterminados del diseño'
+                          : styleAll
+                            ? 'Estilo para toda la composición'
+                            : 'Estilo · ' + styleCard.number
                       }}
                     </h3>
                     <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                   </div>
                   <div class="style-modal-content">
                     <div class="custom-style-preview" v-html="svg(styleCard)"></div>
-                    <div class="style-choices">
+                    <div class="style-tabs">
+                      <button
+                        @click="stylePanel = 'select'"
+                        :class="{ on: stylePanel === 'select' }"
+                      >
+                        Seleccionar estilo</button
+                      ><button @click="stylePanel = 'edit'" :class="{ on: stylePanel === 'edit' }">
+                        Editar estilo
+                      </button>
+                    </div>
+                    <div class="style-choices" v-if="stylePanel === 'select'">
                       <button
                         v-for="t in templates"
                         :key="t.id"
@@ -661,61 +675,63 @@
                         <span>{{ t.name }}</span>
                       </button>
                     </div>
-                    <div class="form-row">
-                      <label>Canciones<input type="color" v-model="styleCard.ink" /></label
-                      ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
-                      ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
+                    <div v-if="stylePanel === 'edit'">
+                      <div class="form-row">
+                        <label>Canciones<input type="color" v-model="styleCard.ink" /></label
+                        ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
+                        ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
+                      </div>
+                      <font-picker
+                        label="Fuente de las canciones"
+                        v-model="styleCard.font"
+                        :options="fontOptions"
+                        :sample="styleCard.a || 'Canción A · ÁÉÍÓÚ Ñ'"
+                      ></font-picker>
+                      <font-picker
+                        label="Fuente del artista"
+                        v-model="styleCard.artistFont"
+                        :options="fontOptions"
+                        :sample="artistName(styleCard) || 'Artista A / Artista B'"
+                        inherit
+                      ></font-picker>
+                      <div class="form-row pixel-sizes">
+                        <label
+                          >Letra de canciones · px<input
+                            type="number"
+                            min="6"
+                            max="48"
+                            step="1"
+                            v-model.number="styleCard.titlePx"
+                        /></label>
+                        <label
+                          >Letra del artista · px<input
+                            type="number"
+                            min="6"
+                            max="48"
+                            step="1"
+                            v-model.number="styleCard.artistPx"
+                        /></label>
+                      </div>
+                      <fieldset class="metadata-options">
+                        <legend>Mostrar en la tarjeta</legend>
+                        <label
+                          ><input type="checkbox" v-model="styleCard.showGenre" /> Estilo
+                          musical</label
+                        >
+                        <label
+                          ><input type="checkbox" v-model="styleCard.showRpm" /> Velocidad del
+                          disco</label
+                        >
+                        <label
+                          ><input type="checkbox" v-model="styleCard.showNumber" /> Número de
+                          selección</label
+                        >
+                      </fieldset>
                     </div>
-                    <font-picker
-                      label="Fuente de las canciones"
-                      v-model="styleCard.font"
-                      :options="fontOptions"
-                      :sample="styleCard.a || 'Canción A · ÁÉÍÓÚ Ñ'"
-                    ></font-picker>
-                    <font-picker
-                      label="Fuente del artista"
-                      v-model="styleCard.artistFont"
-                      :options="fontOptions"
-                      :sample="artistName(styleCard) || 'Artista A / Artista B'"
-                      inherit
-                    ></font-picker>
-                    <div class="form-row pixel-sizes">
-                      <label
-                        >Letra de canciones · px<input
-                          type="number"
-                          min="6"
-                          max="48"
-                          step="1"
-                          v-model.number="styleCard.titlePx"
-                      /></label>
-                      <label
-                        >Letra del artista · px<input
-                          type="number"
-                          min="6"
-                          max="48"
-                          step="1"
-                          v-model.number="styleCard.artistPx"
-                      /></label>
-                    </div>
-                    <fieldset class="metadata-options">
-                      <legend>Mostrar en la tarjeta</legend>
-                      <label
-                        ><input type="checkbox" v-model="styleCard.showGenre" /> Estilo
-                        musical</label
-                      >
-                      <label
-                        ><input type="checkbox" v-model="styleCard.showRpm" /> Velocidad del
-                        disco</label
-                      >
-                      <label
-                        ><input type="checkbox" v-model="styleCard.showNumber" /> Número de
-                        selección</label
-                      >
-                    </fieldset>
                   </div>
                   <v-btn v-if="styleAll" color="primary" block @click="applyAll"
                     >Aplicar a {{ compositionCards.length }} tarjetas</v-btn
-                  ><v-btn v-else color="primary" block @click="styleDialog = false">Listo</v-btn>
+                  ><v-btn v-else color="primary" block @click="finishStyle">Guardar estilo</v-btn>
                 </section></v-dialog
               >
               <v-dialog v-model="picker" max-width="540"
@@ -1017,7 +1033,7 @@
                     v-for="t in visibleTemplates"
                     class="template-card panel"
                     :class="{ chosen: current.style === t.id }"
-                    @click="useTemplate(t)"
+                    @click="editTemplateDefaults(t)"
                   >
                     <div class="template-preview">
                       <div v-html="templatePreview(t, current)"></div>
@@ -1032,7 +1048,8 @@
                 </div>
                 <div class="tip">
                   Diseños propios inspirados en las familias clásicas de etiquetas. Selecciona uno y
-                  personaliza sus colores y tipografía en Composición.
+                  edita aquí sus valores predeterminados. Cada tarjeta puede personalizarse en
+                  Composición.
                 </div></template
               >
               <!-- Impresión: papel, medidas físicas y vista previa de salida. -->
