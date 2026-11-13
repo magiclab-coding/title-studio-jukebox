@@ -37,3 +37,14 @@ Una colección agrupa vinilos según preferencias del usuario. Una composición 
 Este repositorio conserva el programa y su documentación. No incluye las colecciones personales guardadas en los navegadores, contraseñas, credenciales de despliegue ni configuración interna de Sites. GitHub Actions crea una Release por integración en main y publica en Pages cuando está habilitado. No hay sincronización automática con Sites. Este GitHub es la fuente principal para el trabajo futuro.
 
 La documentación de versiones se reconstruye a partir del historial Git y los registros del proyecto. Los cambios se describen según la revisión en la que fueron introducidos; las notas antiguas no representan necesariamente el comportamiento actual.
+
+## Código legible
+
+El código activo se conserva sin minificar, con sangrado de dos espacios y formato automático mediante Prettier. Los archivos compilados y dependencias no se suben como código fuente. Las instantáneas históricas conservan su formato original.
+
+```sh
+npm run format
+npm run format:check
+```
+
+La CI comprueba el formato antes de ejecutar las pruebas y publicar.
