@@ -32,8 +32,18 @@ La interfaz usa **Discos** y **Mis discos**. Internamente se mantienen las clave
 
 Los registros guardan `artist` (Artista A) y `artistB` (Artista B) por separado. El SVG une los dos valores con `/`; una copia anterior con ambos valores unidos se separa al normalizarla, sin dividir nombres como AC/DC. CSV y Excel admiten tanto los encabezados antiguos como Artista A/B y Canción A/B.
 
-`titlePx` y `artistPx` expresan el tamaño en píxeles del diseño SVG (viewBox de 300 unidades de ancho). Los porcentajes antiguos se convierten automáticamente. Se mantienen el ajuste de textos largos y la escala física definida por las medidas de la etiqueta. `showGenre`, `showRpm` y `showNumber` controlan por separado los tres metadatos. `rpm` permite indicar una velocidad por disco o heredar la del proyecto.
+`titlePx` y `artistPx` expresan el tamaño en píxeles del diseño SVG (viewBox de 300 unidades de ancho). Los porcentajes antiguos se convierten automáticamente. Se mantienen el ajuste de textos largos y la escala física definida por las medidas de la etiqueta. `showGenre`, `showRpm` y `showNumber` controlan por separado los tres metadatos. `rpm` guarda la velocidad de cada disco; los valores vacíos se normalizan a 45 RPM. Se conservan las velocidades explícitas de 33 y 78 RPM.
 
 Discos abre el formulario sin insertar la nueva ficha en una composición. Composición ofrece selección múltiple entre listas de discos y conserva los huecos libres. Solo se muestra una hoja, indicada por `ui.composePage`. Eliminar hoja retira sus posiciones, desplaza las hojas posteriores, conserva los discos originales y permite deshacer.
 
 El centrado horizontal es una traslación de presentación y salida: no se reescriben las coordenadas originales de los huecos. La vista previa, la impresión y el PDF usan el mismo desplazamiento. No se centra verticalmente: se conserva el margen superior.
+
+## Interfaz 7.0.8
+
+`ui.columnKeys` conserva las columnas visibles; el valor inicial es Artista A/B y Canción A/B. Ocultar una columna limpia su filtro para evitar resultados inexplicables. Las exportaciones siguen incluyendo todos los campos.
+
+Cada plantilla define su tipografía de previsualización. Cambiar el diseño conserva las opciones de visibilidad de estilo musical, RPM y selección. Pincel admite los mismos metadatos que el resto. Los diseños geométricos exploran familias de líneas, cintas y bloques como las documentadas en https://jukebox.tools/jukebox-title-strip-designs, sin incorporar imágenes externas.
+
+La edición de tarjetas y la inserción usan el mismo modal en escritorio y móvil. Las acciones aparecen al seleccionar y se ocultan al pulsar fuera. Estilo para todas utiliza un borrador: solo el botón de aplicación copia el aspecto a todas las posiciones de la composición; cada posición recibe una copia independiente.
+
+Durante un arrastre, permanecer 650 ms a 24 px del borde cambia a la hoja contigua existente. Se conserva la fila y se entra por la columna del borde opuesto. Para volver a cambiar de hoja hay que salir de la zona del borde y entrar de nuevo. La captura del puntero permanece en el canvas al sustituir la hoja; cancelar restaura el estado anterior y completar registra una única operación de deshacer.
