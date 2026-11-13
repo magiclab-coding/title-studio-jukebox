@@ -10,13 +10,13 @@
     <title>Title Studio · Jukebox</title>
     <meta
       name="description"
-      content="Tu taller de etiquetas para jukebox: colección, diseños, composición e impresión."
+      content="Tu taller de etiquetas para jukebox: lista de discos, diseños, composición e impresión."
     />
     <link rel="stylesheet" href="vendor/vuetify.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="app">
+    <div id="app" v-cloak>
       <v-app
         ><div
           class="studio"
@@ -40,21 +40,7 @@
                 mobileClose();
               "
             >
-              {{ n.icon }}</button
-            ><button
-              @click="undo"
-              :disabled="!history.length"
-              title="Deshacer"
-              aria-label="Deshacer"
-            >
-              ↶</button
-            ><button
-              class="rail-save"
-              @click="saveEverything"
-              title="Guardar todo"
-              aria-label="Guardar todo"
-            >
-              ↓
+              {{ n.icon }}
             </button>
           </nav>
           <!-- Panel lateral ampliado: conserva desplazamiento y fijación propios. -->
@@ -129,12 +115,6 @@
               </button>
             </nav>
             <div class="sidebar-bottom">
-              <div class="inline wrap">
-                <button class="text-btn" @click="saveEverything">↓ Guardar todo</button
-                ><button class="text-btn" @click="undo" :disabled="!history.length">
-                  ↶ Deshacer
-                </button>
-              </div>
               <div class="little-strip">GOOD MUSIC<br /><b>DESERVES A GOOD LABEL.</b></div>
               <div class="local-status">
                 <span class="dot"></span> {{ saveStatus }}<small>Guardado en este navegador</small>
@@ -144,23 +124,40 @@
           <div v-if="drawer" class="scrim" @click="drawer = false"></div>
           <div class="main">
             <main>
-              <div v-if="view !== 'compose'" class="page-heading">
-                <div>
-                  <div class="eyebrow">TU MÚSICA, CON CARÁCTER</div>
-                  <h1>{{ pageTitle }}</h1>
-                  <p>{{ pageDescription }}</p>
-                </div>
-                <div v-if="false" class="view-switch">
-                  <button :class="{ on: mode === 'grid' }" @click="mode = 'grid'">
-                    ▦ Composición</button
-                  ><button :class="{ on: mode === 'single' }" @click="mode = 'single'">
-                    ▣ Una etiqueta
+              <header class="page-heading">
+                <h1>{{ pageTitle }}</h1>
+                <div class="page-actions">
+                  <button
+                    class="header-action"
+                    @click="undo"
+                    :disabled="!history.length"
+                    aria-label="Deshacer"
+                  >
+                    ↶ <span>Deshacer</span>
+                  </button>
+                  <button
+                    class="header-action primary"
+                    @click="saveEverything"
+                    aria-label="Guardar todo"
+                  >
+                    ↓ <span>Guardar todo</span>
                   </button>
                 </div>
-                <v-btn v-if="view === 'collection'" color="primary" @click="add"
-                  >＋ Añadir disco</v-btn
-                >
-              </div>
+              </header>
+              <v-dialog v-model="groupDialog" max-width="420"
+                ><form class="panel group-dialog" @submit.prevent="saveGroup">
+                  <h3>
+                    {{ groupEditing ? 'Renombrar lista de discos' : 'Nueva lista de discos' }}
+                  </h3>
+                  <label>Nombre<input v-model="groupName" maxlength="100" autofocus /></label>
+                  <div class="modal-footer">
+                    <v-btn @click="groupDialog = false">Cancelar</v-btn
+                    ><v-btn type="submit" color="primary" :disabled="!groupName.trim()"
+                      >Guardar</v-btn
+                    >
+                  </div>
+                </form></v-dialog
+              >
               <!-- Composición: posiciones, huecos y acciones de cada tarjeta. -->
               <template v-if="view === 'compose'">
                 <section class="panel composition-manager compact-manager">
@@ -169,6 +166,8 @@
                       >Composición<select v-model="activeComposition">
                         <option v-for="c in compositions" :value="c.id">{{ c.name }}</option>
                       </select></label
+                    ><v-btn size="small" color="primary" @click="openPicker"
+                      >＋ Insertar discos</v-btn
                     ><button class="composition-options-button" @click="optionsDialog = true">
                       Opciones ···
                     </button>
@@ -233,10 +232,10 @@
                       </div>
                       <div
                         class="composition-pages"
-                        :style="{ '--zoom': zoom, width: zoom * 100 + '%' }"
+                        :style="{ '--zoom': zoom, '--paper-ratio': dimensions[0] / dimensions[1] }"
                       >
                         <section
-                          v-for="p in gridPages"
+                          v-for="p in [composePage + 1]"
                           :key="p"
                           class="composition-sheet"
                           :style="sheetStyle"
@@ -289,38 +288,8 @@
                                 @submit.prevent="finishEditing"
                                 @keydown.esc="finishEditing"
                               >
-                                <input
-                                  class="edit-category"
-                                  v-model="current.category"
-                                  aria-label="Categoría"
-                                  placeholder="Categoría"
-                                /><input
-                                  class="edit-title"
-                                  v-model="current.a"
-                                  aria-label="Cara A"
-                                  placeholder="Cara A"
-                                /><input
-                                  class="edit-artist"
-                                  v-model="current.artist"
-                                  aria-label="Artista"
-                                  placeholder="Artista"
-                                /><input
-                                  class="edit-title"
-                                  v-model="current.b"
-                                  aria-label="Cara B"
-                                  placeholder="Cara B"
-                                />
-                                <div class="edit-meta">
-                                  <input
-                                    v-model="current.number"
-                                    aria-label="Selección"
-                                    placeholder="Selección"
-                                  /><input
-                                    v-model="current.artistB"
-                                    aria-label="Artista de la cara B"
-                                    placeholder="Artista B"
-                                  /><button type="submit" aria-label="Terminar edición">✓</button>
-                                </div>
+                                <record-fields :record="current" :genres="genres"></record-fields>
+                                <button type="submit" aria-label="Terminar edición">✓ Listo</button>
                               </form>
                               <button
                                 v-if="editingId !== slot.item.id"
@@ -377,7 +346,40 @@
                           >
                         </section>
                       </div>
-                      <button class="add-sheet" @click="addSheet">＋ Añadir hoja</button>
+                      <div class="sheet-navigation">
+                        <button
+                          @click="composePage--"
+                          :disabled="composePage === 0"
+                          aria-label="Hoja anterior"
+                        >
+                          ‹
+                        </button>
+                        <span>Hoja {{ composePage + 1 }} / {{ gridPages }}</span>
+                        <button
+                          @click="composePage++"
+                          :disabled="composePage + 1 >= gridPages"
+                          aria-label="Hoja siguiente"
+                        >
+                          ›
+                        </button>
+                        <button @click="addSheet">＋ Añadir hoja</button>
+                        <button @click="deleteSheetDialog = true" :disabled="gridPages <= 1">
+                          Eliminar hoja
+                        </button>
+                      </div>
+                      <v-dialog v-model="deleteSheetDialog" max-width="420"
+                        ><section class="panel group-dialog">
+                          <h3>Eliminar hoja {{ composePage + 1 }}</h3>
+                          <p>
+                            Se retirarán sus tarjetas de esta composición. Los discos originales se
+                            conservan. Puedes deshacer el cambio.
+                          </p>
+                          <div class="modal-footer">
+                            <v-btn @click="deleteSheetDialog = false">Cancelar</v-btn
+                            ><v-btn color="error" @click="deleteSheet">Eliminar hoja</v-btn>
+                          </div>
+                        </section></v-dialog
+                      >
                     </div>
                   </section>
                   <aside v-if="currentItem" class="inspector panel desktop-editor">
@@ -386,39 +388,7 @@
                       ><span class="badge">{{ current.number || 'NUEVA' }}</span>
                     </div>
                     <div class="inspector-body">
-                      <div class="section-label">01 / CONTENIDO</div>
-                      <label
-                        >Artista<input
-                          v-model="current.artist"
-                          @change="changed"
-                          placeholder="Artista A / Artista B" /></label
-                      ><label>Cara A<input v-model="current.a" @change="changed" /></label
-                      ><label>Cara B<input v-model="current.b" @change="changed" /></label>
-                      <div class="form-row">
-                        <label>Selección<input v-model="current.number" @change="changed" /></label
-                        ><label
-                          >Género<select v-model="current.category" @change="changed">
-                            <option v-for="g in genres" :value="g">{{ g }}</option>
-                            <option
-                              v-if="!genres.includes(current.category)"
-                              :value="current.category"
-                            >
-                              {{ current.category || 'Sin género' }}
-                            </option>
-                          </select></label
-                        >
-                      </div>
-                      <details>
-                        <summary>Metadatos</summary>
-                        <label
-                          >Sello discográfico<input
-                            v-model="current.label"
-                            @change="changed" /></label
-                        ><label>Año<input v-model="current.year" @change="changed" /></label>
-                      </details>
-                      <p class="small-muted">
-                        Toca una tarjeta para ver sus acciones y cambiar su estilo.
-                      </p>
+                      <record-fields :record="current" :genres="genres"></record-fields>
                     </div>
                   </aside>
                 </div>
@@ -456,7 +426,7 @@
                       ><v-btn
                         @click="
                           optionsDialog = false;
-                          picker = true;
+                          openPicker();
                         "
                         >Elegir discos</v-btn
                       ><v-btn
@@ -476,333 +446,352 @@
                       ><v-btn @click="saveEverything">Guardar todo</v-btn>
                     </div>
                     <p class="small-muted">
-                      Selecciona discos de cualquier colección. Cada composición conserva sus
+                      Selecciona discos de cualquier lista de discos. Cada composición conserva sus
                       posiciones y estilos.
                     </p>
                   </section></v-dialog
                 >
                 <!-- Creación y edición con borrador; los cambios se confirman al guardar. -->
-                <v-dialog v-model="editorDialog" max-width="480" scrollable
-                  ><form class="panel card-form-modal" @submit.prevent="saveCardEditor">
-                    <div class="dialog-heading">
-                      <h3>
-                        {{
-                          editorMode === 'create'
-                            ? 'Nueva tarjeta'
-                            : editorMode === 'duplicate'
-                              ? 'Duplicar tarjeta'
+              </template>
+              <v-dialog v-model="editorDialog" max-width="480" scrollable
+                ><form class="panel card-form-modal" @submit.prevent="saveCardEditor">
+                  <div class="dialog-heading">
+                    <h3>
+                      {{
+                        editorMode === 'create'
+                          ? editorContext === 'discs'
+                            ? 'Nuevo disco'
+                            : 'Nueva tarjeta'
+                          : editorMode === 'duplicate'
+                            ? 'Duplicar tarjeta'
+                            : editorContext === 'discs'
+                              ? 'Editar disco'
                               : 'Editar tarjeta'
-                        }}
-                      </h3>
+                      }}
+                    </h3>
+                    <button
+                      type="button"
+                      @click="editorDialog = false"
+                      aria-label="Cerrar formulario"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div class="card-form-content">
+                    <div
+                      v-if="editorMode === 'create' && editorContext === 'composition'"
+                      class="insert-tabs"
+                      role="group"
+                      aria-label="Origen de tarjeta"
+                    >
                       <button
                         type="button"
-                        @click="editorDialog = false"
-                        aria-label="Cerrar formulario"
+                        :class="{ active: insertMode === 'existing' }"
+                        @click="insertMode = 'existing'"
                       >
-                        ×
+                        De una lista de discos</button
+                      ><button
+                        type="button"
+                        :class="{ active: insertMode === 'new' }"
+                        @click="insertMode = 'new'"
+                      >
+                        Crear disco nuevo
                       </button>
                     </div>
-                    <div class="card-form-content">
-                      <div
-                        v-if="editorMode === 'create'"
-                        class="insert-tabs"
-                        role="group"
-                        aria-label="Origen de tarjeta"
-                      >
+                    <template
+                      v-if="
+                        editorMode === 'create' &&
+                        editorContext === 'composition' &&
+                        insertMode === 'existing'
+                      "
+                      ><label
+                        >Lista de origen<select v-model="sourceCollection">
+                          <option value="">Todas las listas de discos</option>
+                          <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
+                        </select></label
+                      ><input
+                        class="search"
+                        v-model="sourceQuery"
+                        placeholder="Buscar disco por artista o título"
+                      />
+                      <div class="source-record-list">
                         <button
+                          v-for="c in sourceRecords.slice(0, 100)"
+                          :key="c.id"
                           type="button"
-                          :class="{ active: insertMode === 'existing' }"
-                          @click="insertMode = 'existing'"
+                          :class="{ chosen: sourceRecordId === c.id }"
+                          @click="chooseSource(c.id)"
                         >
-                          De una colección</button
-                        ><button
-                          type="button"
-                          :class="{ active: insertMode === 'new' }"
-                          @click="insertMode = 'new'"
-                        >
-                          Crear disco nuevo
+                          <strong>{{ artistName(c) || 'Sin artista' }} · {{ c.a }}</strong
+                          ><small>{{ c.collectionName }} · {{ c.number }} · {{ c.b }}</small
+                          ><span v-if="sourceRecordId === c.id">✓</span>
                         </button>
-                      </div>
-                      <template v-if="editorMode === 'create' && insertMode === 'existing'"
-                        ><label
-                          >Colección de origen<select v-model="sourceCollection">
-                            <option value="">Todas las colecciones</option>
-                            <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
-                          </select></label
-                        ><input
-                          class="search"
-                          v-model="sourceQuery"
-                          placeholder="Buscar disco por artista o título"
-                        />
-                        <div class="source-record-list">
-                          <button
-                            v-for="c in sourceRecords.slice(0, 100)"
-                            :key="c.id"
-                            type="button"
-                            :class="{ chosen: sourceRecordId === c.id }"
-                            @click="chooseSource(c.id)"
-                          >
-                            <strong>{{ c.artist || 'Sin artista' }} · {{ c.a }}</strong
-                            ><small>{{ c.collectionName }} · {{ c.number }} · {{ c.b }}</small
-                            ><span v-if="sourceRecordId === c.id">✓</span>
-                          </button>
-                          <p v-if="sourceRecords.length > 100" class="small-muted">
-                            Mostrando 100 resultados. Afina la búsqueda para encontrar tu disco.
-                          </p>
-                          <p v-if="!sourceRecords.length" class="small-muted">
-                            No hay discos que coincidan.
-                          </p>
-                        </div></template
-                      ><template
-                        v-if="editorMode !== 'create' || insertMode === 'new' || sourceRecordId"
-                        ><button
-                          type="button"
-                          class="card-form-preview preview-style-button"
-                          @click="openStyle(true)"
-                          aria-label="Cambiar estilo de la tarjeta"
-                        >
-                          <span v-html="svg(draft)"></span><small>◈ Cambiar estilo</small></button
-                        ><label v-if="editorMode === 'create' && insertMode === 'new'"
-                          >Guardar disco en colección<select v-model="destinationCollection">
-                            <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
-                          </select></label
-                        >
-                        <p
-                          v-if="
-                            editorMode === 'duplicate' ||
-                            (editorMode === 'create' && insertMode === 'existing')
-                          "
-                          class="small-muted"
-                        >
-                          Se utiliza el disco de la colección. El estilo y la posición pertenecen a
-                          esta composición.
+                        <p v-if="sourceRecords.length > 100" class="small-muted">
+                          Mostrando 100 resultados. Afina la búsqueda para encontrar tu disco.
                         </p>
-                        <template
-                          v-if="
-                            editorMode === 'edit' ||
-                            (editorMode === 'create' && insertMode === 'new')
-                          "
-                          ><label
-                            >Artista<input
-                              v-model="draft.artist"
-                              maxlength="300"
-                              placeholder="Artista A / Artista B"
-                              autofocus /></label
-                          ><label
-                            >Cara A<input
-                              v-model="draft.a"
-                              maxlength="300"
-                              placeholder="Título de la cara A" /></label
-                          ><label
-                            >Cara B<input
-                              v-model="draft.b"
-                              maxlength="300"
-                              placeholder="Título de la cara B"
-                          /></label>
-                          <div class="form-row">
-                            <label>Selección<input v-model="draft.number" maxlength="60" /></label
-                            ><label
-                              >Género<select v-model="draft.category" aria-label="Género del disco">
-                                <option v-for="g in genres" :value="g">{{ g }}</option>
-                                <option
-                                  v-if="draft.category && !genres.includes(draft.category)"
-                                  :value="draft.category"
-                                >
-                                  {{ draft.category }}
-                                </option>
-                                <option value="">Otro género…</option></select
-                              ><input
-                                v-if="!genres.includes(draft.category)"
-                                v-model="draft.category"
-                                aria-label="Escribir otro género"
-                                placeholder="Escribe un género"
-                                maxlength="100"
-                            /></label>
-                          </div>
-                          <details>
-                            <summary>Metadatos</summary>
-                            <label>Sello<input v-model="draft.label" maxlength="300" /></label
-                            ><label
-                              >Año<input v-model="draft.year" maxlength="20"
-                            /></label></details></template
-                      ></template>
-                    </div>
-                    <div class="modal-footer">
-                      <v-btn type="button" variant="text" @click="editorDialog = false"
-                        >Cancelar</v-btn
-                      ><v-btn
-                        type="submit"
-                        color="primary"
-                        :disabled="
-                          editorMode === 'create' && insertMode === 'existing' && !sourceRecordId
+                        <p v-if="!sourceRecords.length" class="small-muted">
+                          No hay discos que coincidan.
+                        </p>
+                      </div></template
+                    ><template
+                      v-if="editorMode !== 'create' || insertMode === 'new' || sourceRecordId"
+                      ><button
+                        type="button"
+                        class="card-form-preview preview-style-button"
+                        @click="openStyle(true)"
+                        aria-label="Cambiar estilo de la tarjeta"
+                      >
+                        <span v-html="svg(draft)"></span><small>◈ Cambiar estilo</small></button
+                      ><label v-if="editorMode === 'create' && insertMode === 'new'"
+                        >Guardar en<select v-model="destinationCollection">
+                          <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
+                        </select></label
+                      >
+                      <p
+                        v-if="
+                          editorMode === 'duplicate' ||
+                          (editorMode === 'create' && insertMode === 'existing')
                         "
-                        >{{
-                          editorMode === 'create'
-                            ? insertMode === 'existing'
+                        class="small-muted"
+                      >
+                        Se utiliza el disco de la lista de discos. El estilo y la posición
+                        pertenecen a esta composición.
+                      </p>
+                      <record-fields
+                        v-if="
+                          editorMode === 'edit' || (editorMode === 'create' && insertMode === 'new')
+                        "
+                        :record="draft"
+                        :genres="genres"
+                      ></record-fields
+                    ></template>
+                  </div>
+                  <div class="modal-footer">
+                    <v-btn type="button" variant="text" @click="editorDialog = false"
+                      >Cancelar</v-btn
+                    ><v-btn
+                      type="submit"
+                      color="primary"
+                      :disabled="
+                        editorMode === 'create' && insertMode === 'existing' && !sourceRecordId
+                      "
+                      >{{
+                        editorMode === 'create'
+                          ? editorContext === 'discs'
+                            ? 'Guardar disco'
+                            : insertMode === 'existing'
                               ? 'Insertar disco'
                               : 'Crear e insertar'
-                            : editorMode === 'duplicate'
-                              ? 'Crear copia'
-                              : 'Guardar cambios'
-                        }}</v-btn
+                          : editorMode === 'duplicate'
+                            ? 'Crear copia'
+                            : 'Guardar cambios'
+                      }}</v-btn
+                    >
+                  </div>
+                </form></v-dialog
+              >
+              <v-dialog v-model="deleteDialog" max-width="360"
+                ><section class="panel delete-card-modal">
+                  <div class="dialog-heading">
+                    <h3>Eliminar de la composición</h3>
+                    <button @click="deleteDialog = false" aria-label="Cerrar eliminación">×</button>
+                  </div>
+                  <p>
+                    Se vaciará el hueco de la tarjeta <b>{{ current.number }}</b>. El disco seguirá
+                    en tu lista de discos.
+                  </p>
+                  <div class="modal-footer">
+                    <v-btn variant="text" @click="deleteDialog = false">Cancelar</v-btn
+                    ><v-btn color="primary" @click="confirmDelete">Eliminar tarjeta</v-btn>
+                  </div>
+                </section></v-dialog
+              >
+              <!-- Estilo de una posición o del borrador abierto. -->
+              <v-dialog v-model="styleDialog" max-width="680" scrollable
+                ><section class="panel style-modal">
+                  <div class="dialog-heading">
+                    <h3>Estilo · {{ styleCard.number }}</h3>
+                    <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
+                  </div>
+                  <div class="style-modal-content">
+                    <div class="custom-style-preview" v-html="svg(styleCard)"></div>
+                    <div class="style-choices">
+                      <button
+                        v-for="t in templates"
+                        :key="t.id"
+                        :class="{ chosen: styleCard.style === t.id }"
+                        @click="useTemplate(t)"
+                        :aria-pressed="styleCard.style === t.id"
                       >
-                    </div>
-                  </form></v-dialog
-                >
-                <v-dialog v-model="deleteDialog" max-width="360"
-                  ><section class="panel delete-card-modal">
-                    <div class="dialog-heading">
-                      <h3>Eliminar de la composición</h3>
-                      <button @click="deleteDialog = false" aria-label="Cerrar eliminación">
-                        ×
+                        <div
+                          v-html="
+                            svg({
+                              ...styleCard,
+                              style: t.id,
+                              ink: t.ink,
+                              artistInk: t.artistInk || '#202020',
+                              paper: t.paper,
+                              font: t.font || styleCard.font,
+                              showMeta: t.showMeta !== false,
+                              showGenre: t.showMeta !== false,
+                              showRpm: t.showMeta !== false,
+                              showNumber: t.showMeta !== false,
+                            })
+                          "
+                        ></div>
+                        <span>{{ t.name }}</span>
                       </button>
                     </div>
-                    <p>
-                      Se vaciará el hueco de la tarjeta <b>{{ current.number }}</b>. El disco
-                      seguirá en tu colección.
-                    </p>
-                    <div class="modal-footer">
-                      <v-btn variant="text" @click="deleteDialog = false">Cancelar</v-btn
-                      ><v-btn color="primary" @click="confirmDelete">Eliminar tarjeta</v-btn>
+                    <div class="form-row">
+                      <label>Canciones<input type="color" v-model="styleCard.ink" /></label
+                      ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
+                      ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
                     </div>
-                  </section></v-dialog
-                >
-                <!-- Estilo de una posición o del borrador abierto. -->
-                <v-dialog v-model="styleDialog" max-width="680" scrollable
-                  ><section class="panel style-modal">
-                    <div class="dialog-heading">
-                      <h3>Estilo · {{ styleCard.number }}</h3>
-                      <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
-                    </div>
-                    <div class="style-modal-content">
-                      <div class="custom-style-preview" v-html="svg(styleCard)"></div>
-                      <div class="style-choices">
-                        <button
-                          v-for="t in templates"
-                          :key="t.id"
-                          :class="{ chosen: styleCard.style === t.id }"
-                          @click="useTemplate(t)"
-                          :aria-pressed="styleCard.style === t.id"
-                        >
-                          <div
-                            v-html="
-                              svg({
-                                ...styleCard,
-                                style: t.id,
-                                ink: t.ink,
-                                artistInk: t.artistInk || '#202020',
-                                paper: t.paper,
-                                font: t.font || styleCard.font,
-                                showMeta: t.showMeta !== false,
-                              })
-                            "
-                          ></div>
-                          <span>{{ t.name }}</span>
-                        </button>
-                      </div>
-                      <div class="form-row">
-                        <label>Canciones<input type="color" v-model="styleCard.ink" /></label
-                        ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
-                        ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
-                      </div>
+                    <font-picker
+                      label="Fuente de las canciones"
+                      v-model="styleCard.font"
+                      :options="fontOptions"
+                      :sample="styleCard.a || 'Canción A · ÁÉÍÓÚ Ñ'"
+                    ></font-picker>
+                    <font-picker
+                      label="Fuente del artista"
+                      v-model="styleCard.artistFont"
+                      :options="fontOptions"
+                      :sample="artistName(styleCard) || 'Artista A / Artista B'"
+                      inherit
+                    ></font-picker>
+                    <div class="form-row pixel-sizes">
                       <label
-                        >Fuente de las canciones<select v-model="styleCard.font">
-                          <option v-for="f in fontOptions" :value="f.value">{{ f.label }}</option>
-                        </select></label
-                      ><label
-                        >Fuente del artista<select v-model="styleCard.artistFont">
-                          <option value="">La misma que las canciones</option>
-                          <option v-for="f in fontOptions" :value="f.value">{{ f.label }}</option>
-                        </select></label
-                      ><label
-                        >Tamaño del artista · {{ styleCard.artistSize || 100 }} %<input
-                          type="range"
-                          min="60"
-                          max="150"
-                          v-model.number="styleCard.artistSize" /></label
-                      ><label class="metadata-toggle"
-                        ><input type="checkbox" v-model="styleCard.showMeta" /> Mostrar género,
-                        selección y RPM</label
-                      ><label
-                        >Tamaño de las canciones · {{ styleCard.size }} %<input
-                          type="range"
-                          min="60"
-                          max="140"
-                          v-model="styleCard.size"
+                        >Letra de canciones · px<input
+                          type="number"
+                          min="6"
+                          max="48"
+                          step="1"
+                          v-model.number="styleCard.titlePx"
+                      /></label>
+                      <label
+                        >Letra del artista · px<input
+                          type="number"
+                          min="6"
+                          max="48"
+                          step="1"
+                          v-model.number="styleCard.artistPx"
                       /></label>
                     </div>
-                    <v-btn color="primary" block @click="styleDialog = false">Listo</v-btn>
-                  </section></v-dialog
-                >
-                <v-dialog v-model="picker" max-width="540"
-                  ><section class="panel picker-modal">
-                    <div class="dialog-heading">
-                      <h3>Discos para esta composición</h3>
-                      <button @click="picker = false" aria-label="Cerrar selector">×</button>
-                    </div>
-                    <label
-                      >Colección<select v-model="sourceCollection">
-                        <option value="">Todas las colecciones</option>
-                        <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
-                      </select></label
-                    ><input class="search" v-model="sourceQuery" placeholder="Buscar discos" />
-                    <div class="picker-list">
+                    <fieldset class="metadata-options">
+                      <legend>Mostrar en la tarjeta</legend>
                       <label
-                        v-for="c in sourceRecords.slice((pickerPage - 1) * 25, pickerPage * 25)"
-                        :key="c.id"
-                        class="check"
-                        ><input
-                          type="checkbox"
-                          :checked="picked.includes(c.id)"
-                          @change="togglePicked(c.id)"
-                        /><span
-                          ><b>{{ c.number }} · {{ c.artist }}</b
-                          ><small>{{ c.collectionName }} · {{ c.a }} / {{ c.b }}</small></span
-                        ></label
+                        ><input type="checkbox" v-model="styleCard.showGenre" /> Estilo
+                        musical</label
                       >
-                    </div>
-                    <div class="inline wrap">
-                      <v-btn size="small" @click="pickerPage--" :disabled="pickerPage <= 1"
-                        >Anterior</v-btn
-                      ><v-btn
-                        size="small"
-                        @click="pickerPage++"
-                        :disabled="pickerPage * 25 >= sourceRecords.length"
-                        >Siguiente</v-btn
-                      ><v-btn color="primary" @click="addToComposition()" :disabled="!picked.length"
-                        >Insertar {{ picked.length }}</v-btn
+                      <label
+                        ><input type="checkbox" v-model="styleCard.showRpm" /> Velocidad del
+                        disco</label
                       >
-                    </div>
-                  </section></v-dialog
-                >
-              </template>
-              <!-- Colecciones: edición de los vinilos originales y selección múltiple. -->
-              <template v-if="view === 'collection'"
-                ><section class="panel collection-manager">
+                      <label
+                        ><input type="checkbox" v-model="styleCard.showNumber" /> Número de
+                        selección</label
+                      >
+                    </fieldset>
+                  </div>
+                  <v-btn color="primary" block @click="styleDialog = false">Listo</v-btn>
+                </section></v-dialog
+              >
+              <v-dialog v-model="picker" max-width="540"
+                ><section class="panel picker-modal">
+                  <div class="dialog-heading">
+                    <h3>Discos para esta composición</h3>
+                    <button @click="picker = false" aria-label="Cerrar selector">×</button>
+                  </div>
+                  <label
+                    >Discos<select v-model="sourceCollection">
+                      <option value="">Todas las listas de discos</option>
+                      <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
+                    </select></label
+                  ><input
+                    class="search"
+                    v-model="sourceQuery"
+                    placeholder="Buscar discos"
+                    aria-label="Buscar discos para insertar"
+                  />
+                  <div class="picker-selection">
+                    <button @click="pickAllResults">
+                      Seleccionar resultados ({{ batchRecords.length }})</button
+                    ><button @click="picked = []" :disabled="!picked.length">
+                      Limpiar selección</button
+                    ><span>{{ picked.length }} elegidos</span>
+                  </div>
+                  <div class="picker-list">
+                    <label
+                      v-for="c in sourceRecords.slice((pickerPage - 1) * 25, pickerPage * 25)"
+                      :key="c.id"
+                      class="check"
+                      ><input
+                        type="checkbox"
+                        :checked="picked.includes(c.id)"
+                        :disabled="composition?.items.some((item) => item.cardId === c.id)"
+                        @change="togglePicked(c.id)"
+                      /><span
+                        ><b>{{ c.number }} · {{ artistName(c) }}</b
+                        ><small>{{ c.collectionName }} · {{ c.a }} / {{ c.b }}</small></span
+                      ></label
+                    >
+                  </div>
+                  <div class="inline wrap">
+                    <v-btn size="small" @click="pickerPage--" :disabled="pickerPage <= 1"
+                      >Anterior</v-btn
+                    ><v-btn
+                      size="small"
+                      @click="pickerPage++"
+                      :disabled="pickerPage * 25 >= sourceRecords.length"
+                      >Siguiente</v-btn
+                    ><v-btn color="primary" @click="addToComposition()" :disabled="!picked.length"
+                      >Insertar {{ picked.length }}</v-btn
+                    >
+                  </div>
+                </section></v-dialog
+              >
+              <!-- Discos originales: tabla de escritorio y fichas compactas en móvil. -->
+              <template v-if="view === 'collection'">
+                <section class="panel collection-manager">
                   <div class="manager-row">
                     <label
-                      >Colección<select v-model="activeCollection">
-                        <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
+                      >Discos<select v-model="activeCollection" aria-label="Lista de discos">
+                        <option v-for="group in collections" :value="group.id">
+                          {{ group.name }}
+                        </option>
                       </select></label
-                    ><label>Nombre<input v-model="collectionName" maxlength="100" /></label>
-                    <div class="inline">
-                      <v-btn size="small" @click="newCollection">＋ Nueva</v-btn
+                    >
+                    <div class="inline wrap">
+                      <v-btn size="small" @click="newCollection">＋ Nueva lista</v-btn
+                      ><v-btn size="small" variant="text" @click="renameCollection">Renombrar</v-btn
                       ><v-btn
                         size="small"
+                        variant="text"
                         @click="deleteCollection"
-                        :disabled="collections.length === 1"
-                        >Eliminar colección</v-btn
+                        v-if="collections.length > 1"
+                        >Eliminar lista</v-btn
                       >
                     </div>
                   </div>
                 </section>
-                <section class="panel">
+                <section class="panel disc-library">
                   <div class="table-tools">
-                    <input
-                      class="search"
-                      v-model="query"
-                      placeholder="Buscar artista, título o selección…"
-                    />
+                    <div class="disc-search">
+                      <input
+                        class="search"
+                        v-model="query"
+                        placeholder="Buscar artista, título o selección…"
+                        aria-label="Buscar discos"
+                      /><v-btn
+                        color="primary"
+                        @click="openNewDisc"
+                        aria-label="Añadir disco"
+                        title="Añadir disco"
+                        ><span class="add-disc-long">＋ Añadir disco</span
+                        ><span class="add-disc-short" aria-hidden="true">＋</span></v-btn
+                      >
+                    </div>
                     <div class="inline wrap">
                       <v-btn variant="outlined" @click="view = 'transfer'"
                         >⇅ Importar / exportar</v-btn
@@ -813,49 +802,42 @@
                           filters = {};
                         "
                         >Limpiar filtros</v-btn
-                      ><v-btn
-                        color="primary"
-                        :disabled="!picked.length"
-                        @click="
-                          addToComposition();
-                          view = 'compose';
-                        "
-                        >Insertar {{ picked.length }} en composición</v-btn
                       >
                     </div>
                   </div>
-                  <div class="table-scroll">
+                  <details class="mobile-disc-filters">
+                    <summary>Filtros y orden</summary>
+                    <div class="record-core">
+                      <label
+                        >Ordenar por<select v-model="sortKey">
+                          <option v-for="col in columns" :value="col.key">{{ col.label }}</option>
+                        </select></label
+                      >
+                      <label
+                        >Orden<select v-model.number="sortDirection">
+                          <option :value="1">Ascendente</option>
+                          <option :value="-1">Descendente</option>
+                        </select></label
+                      >
+                      <label v-for="col in columns"
+                        >{{ col.label
+                        }}<input v-model="filters[col.key]" :aria-label="'Filtrar ' + col.label"
+                      /></label>
+                    </div>
+                  </details>
+                  <div class="table-scroll desktop-disc-table">
                     <table>
                       <thead>
                         <tr>
-                          <th>
-                            <input
-                              type="checkbox"
-                              aria-label="Seleccionar página"
-                              :checked="
-                                pagedCards.length > 0 &&
-                                pagedCards.every((c) => picked.includes(c.id))
-                              "
-                              @change="
-                                pagedCards.forEach((c) => {
-                                  if ($event.target.checked && !picked.includes(c.id))
-                                    picked.push(c.id);
-                                  else if (!$event.target.checked)
-                                    picked = picked.filter((id) => id !== c.id);
-                                })
-                              "
-                            />
-                          </th>
                           <th v-for="col in columns">
-                            <button @click="sortColumn(col.key)">
+                            <button class="sort-head" @click="sortColumn(col.key)">
                               {{ col.label }}
                               {{ sortKey === col.key ? (sortDirection === 1 ? '↑' : '↓') : '↕' }}
                             </button>
                           </th>
                           <th>Acciones</th>
                         </tr>
-                        <tr class="column-filters">
-                          <th></th>
+                        <tr class="filter-row">
                           <th v-for="col in columns">
                             <input
                               v-model="filters[col.key]"
@@ -867,35 +849,43 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr v-for="c in pagedCards" :key="c.id">
-                          <td>
+                        <tr v-for="card in pagedCards" :key="card.id">
+                          <td v-for="col in columns" :data-label="col.label">
+                            <genre-select
+                              v-if="col.key === 'category'"
+                              v-model="card.category"
+                              :genres="genres"
+                              :label="'Estilo musical ' + card.number"
+                            ></genre-select>
+                            <select
+                              v-else-if="col.key === 'rpm'"
+                              v-model="card.rpm"
+                              :aria-label="'Velocidad ' + card.number"
+                            >
+                              <option value="">Proyecto</option>
+                              <option>33 RPM</option>
+                              <option>45 RPM</option>
+                              <option>78 RPM</option>
+                            </select>
                             <input
-                              type="checkbox"
-                              :aria-label="'Elegir ' + c.number"
-                              :checked="picked.includes(c.id)"
-                              @change="togglePicked(c.id)"
-                            />
-                          </td>
-                          <td v-for="col in columns">
-                            <input
-                              :aria-label="col.label + ' ' + c.number"
-                              v-model="c[col.key]"
-                              @change="changed"
+                              v-else
+                              :aria-label="col.label + ' ' + card.number"
+                              v-model="card[col.key]"
                               :class="{ selection: col.key === 'number' }"
                             />
                           </td>
                           <td>
                             <button
                               class="text-btn"
-                              @click="
-                                selectedItemId = null;
-                                selected = c.id;
-                                openCardEditor('edit');
-                              "
-                              title="Diseñar"
+                              @click="editDisc(card)"
+                              :aria-label="'Editar disco ' + card.number"
                             >
-                              ↗</button
-                            ><button class="text-btn danger" @click="remove(c.id)" title="Eliminar">
+                              Editar</button
+                            ><button
+                              class="text-btn danger"
+                              @click="remove(card.id)"
+                              :aria-label="'Eliminar disco ' + card.number"
+                            >
                               ×
                             </button>
                           </td>
@@ -903,11 +893,31 @@
                       </tbody>
                     </table>
                   </div>
+                  <div class="mobile-disc-list">
+                    <article v-for="card in pagedCards" :key="card.id" class="mobile-disc-card">
+                      <div class="mobile-disc-heading">
+                        <b>{{ artistName(card) || 'Sin artista' }}</b><span>{{ card.number }}</span>
+                      </div>
+                      <p><span>A</span> {{ card.a || 'Sin canción A' }}</p>
+                      <p><span>B</span> {{ card.b || 'Sin canción B' }}</p>
+                      <div class="mobile-disc-footer">
+                        <genre-select
+                          v-model="card.category"
+                          :genres="genres"
+                          :label="'Estilo musical ' + card.number"
+                        ></genre-select
+                        ><button
+                          class="text-btn"
+                          @click="editDisc(card)"
+                          :aria-label="'Editar disco ' + card.number"
+                        >
+                          Editar
+                        </button>
+                      </div>
+                    </article>
+                  </div>
                   <div class="table-footer wrap">
-                    <span
-                      >{{ filtered.length }} de {{ cards.length }} discos ·
-                      {{ picked.length }} elegidos</span
-                    >
+                    <span>{{ filtered.length }} de {{ cards.length }} discos</span>
                     <div class="inline">
                       <label
                         >Filas<select v-model.number="pageSize">
@@ -915,24 +925,20 @@
                           <option :value="50">50</option>
                           <option :value="100">100</option>
                         </select></label
-                      ><button class="text-btn" @click="page--" :disabled="page <= 1">
+                      >
+                      <button class="text-btn" @click="page--" :disabled="page <= 1">
                         ‹ Anterior</button
-                      ><span>Pág. {{ page }} / {{ totalPages }}</span
+                      ><span>{{ page }} / {{ totalPages }}</span
                       ><button class="text-btn" @click="page++" :disabled="page >= totalPages">
                         Siguiente ›
                       </button>
                     </div>
-                    <button class="text-btn" @click="add">＋ Nueva fila</button>
                   </div>
-                  <div v-if="!filtered.length" class="empty">
+                  <p v-if="!filtered.length" class="empty">
                     No hay discos que coincidan con los filtros.
-                  </div>
+                  </p>
                 </section>
-                <div class="tip">
-                  Desliza la tabla horizontalmente. Las cabeceras y las selecciones permanecen
-                  visibles. Puedes pegar filas desde Excel en «Importar y exportar».
-                </div></template
-              >
+              </template>
               <!-- Catálogo visual de diseños. -->
               <template v-if="view === 'templates'"
                 ><div class="filter-tabs">
@@ -962,6 +968,9 @@
                             paper: t.paper,
                             font: t.font || current.font,
                             showMeta: t.showMeta !== false,
+                            showGenre: t.showMeta !== false,
+                            showRpm: t.showMeta !== false,
+                            showNumber: t.showMeta !== false,
                           })
                         "
                       ></div>
@@ -985,13 +994,13 @@
                   <section class="panel print-controls">
                     <h3>Preparar salida</h3>
                     <label
-                      >Qué imprimir<select v-model="printSource">
-                        <option value="collection">Colección activa completa</option>
+                      >Qué imprimir<select v-model="printSource" aria-label="Qué imprimir">
+                        <option value="collection">Discos de la lista activa</option>
                         <option value="composition">Composición elegida</option>
                         <option value="selected">Etiqueta seleccionada</option>
                       </select></label
                     ><label v-if="printSource === 'collection'"
-                      >Colección<select v-model="activeCollection">
+                      >Discos<select v-model="activeCollection">
                         <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
                       </select></label
                     ><label v-if="printSource === 'composition'"
@@ -1108,7 +1117,7 @@
                 ><div class="transfer-grid">
                   <section class="panel transfer">
                     <span class="section-label">01 / ENTRADA</span>
-                    <h2>Trae tu colección.</h2>
+                    <h2>Trae tu lista de discos.</h2>
                     <p>Importa CSV, Excel (.xlsx / .xls), TSV o una copia JSON de Title Studio.</p>
                     <button
                       class="dropzone"
@@ -1136,7 +1145,7 @@
                             ? 'Se reemplazará el sistema completo.'
                             : pendingBackup.kind === 'settings'
                               ? 'Se cargarán los ajustes.'
-                              : 'Se añadirá el contenido como una colección o composición nueva.'
+                              : 'Se añadirá el contenido como una lista de discos o composición nueva.'
                         }}
                         Se guardará antes una versión recuperable.
                       </p>
@@ -1171,8 +1180,8 @@
                     <span class="section-label">02 / SALIDA</span>
                     <h2>Llévatela contigo.</h2>
                     <p>
-                      Exporta los {{ cards.length }} discos de tu colección. JSON conserva también
-                      diseños y ajustes.
+                      Exporta los {{ cards.length }} discos de tu lista de discos. JSON conserva
+                      también diseños y ajustes.
                     </p>
                     <button class="export-option" @click="exportData('xlsx')">
                       <span class="file-icon green">X</span
@@ -1189,7 +1198,7 @@
                     ><label
                       >Contenido de la copia<select v-model="backupScope">
                         <option value="system">Sistema completo</option>
-                        <option value="collection">Colección activa</option>
+                        <option value="collection">Lista de discos activa</option>
                         <option value="composition">Composición activa y sus discos</option>
                         <option value="settings">Solo configuración</option>
                       </select></label
@@ -1207,8 +1216,8 @@
                       ><span>↓</span>
                     </button>
                     <div class="inspector-note">
-                      La colección se guarda en este navegador. Descarga copias para conservarla o
-                      trasladarla a otro dispositivo.
+                      La lista de discos se guarda en este navegador. Descarga copias para
+                      conservarla o trasladarla a otro dispositivo.
                     </div>
                   </section>
                 </div></template
@@ -1267,16 +1276,16 @@
                   <div class="reference">
                     <h3>Historial de la aplicación · v7.0</h3>
                     <p>
-                      Las colecciones agrupan vinilos. Las composiciones reúnen discos de distintas
-                      colecciones y conservan sus propios estilos y posiciones. Esta revisión
-                      corrige las opciones, quita cabeceras y pies y amplía el zoom al 300 %. Para
-                      volver al programa anterior, pide en este chat «Restaura Title Studio a la
-                      versión 3». También están conservadas las versiones 2 y 1. Esto recupera el
-                      programa; para tus discos y composiciones usa las copias JSON o las versiones
-                      de datos.
+                      Las listas de discos agrupan vinilos. Las composiciones reúnen discos de
+                      distintas listas de discos y conservan sus propios estilos y posiciones. Esta
+                      revisión corrige las opciones, quita cabeceras y pies y amplía el zoom al 300
+                      %. Para volver al programa anterior, pide en este chat «Restaura Title Studio
+                      a la versión 3». También están conservadas las versiones 2 y 1. Esto recupera
+                      el programa; para tus discos y composiciones usa las copias JSON o las
+                      versiones de datos.
                     </p>
                     <p>
-                      Guardar todo descarga colecciones, composiciones, selección activa,
+                      Guardar todo descarga listas de discos, composiciones, selección activa,
                       preferencias de impresión y hasta diez versiones de datos. Para recuperarlo:
                       Importar y exportar → selecciona el JSON → Cargar copia. El guardado
                       automático solo permanece en este navegador.
@@ -1312,6 +1321,7 @@
     <script src="vendor/xlsx.js"></script>
     <script src="fonts.js"></script>
     <script src="pdf.js"></script>
+    <script src="components.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

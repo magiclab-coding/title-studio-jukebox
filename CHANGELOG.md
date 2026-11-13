@@ -1,3 +1,13 @@
+# 7.0.7
+
+- Aplicadas las 14 anotaciones de interfaz: Discos/Mis discos, cabeceras con los nombres de la barra lateral y acciones Guardar/Deshacer a la derecha.
+- Eliminado el nombre editable permanente; la creación y el cambio de nombre de listas se hacen en un modal.
+- Alta de discos junto a Buscar mediante el formulario común. Artista A/B y Canción A/B visibles en todos los editores.
+- Estilo musical con selector real también en la tabla; vista móvil en fichas con filtros y paginación.
+- Inserción múltiple desde Composición y una sola hoja visible, con navegación, alta y eliminación reversible.
+- Tamaños tipográficos en px, selección de fuentes con muestras y tres metadatos ocultables por separado.
+- Centrado solo horizontal, común a composición, vista previa, impresión y PDF; se conservan la altura de filas y el margen superior.
+
 # 7.0.6
 
 - Plantilla Pincel inspirada en El Río: artista central y canciones arriba y abajo, sin marcos exteriores.
