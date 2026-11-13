@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
@@ -51,3 +52,10 @@ for (const directory of ['src', 'dist']) {
   }
 }
 assert.doesNotMatch(builtHtml, /<datalist/);
+
+// Las URL publicadas deben coincidir con el contenido exacto de cada recurso.
+for (const match of builtHtml.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))\?v=([a-f0-9]+)"/g)) {
+  const bytes = await readFile('dist/' + match[1]);
+  assert.equal(match[2], createHash('sha256').update(bytes).digest('hex').slice(0, 12));
+}
+assert.doesNotMatch(builtHtml, /(?:src|href)="[^"?]+\.(?:js|css)"/);
