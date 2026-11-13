@@ -23,7 +23,7 @@ globalThis.StudioComponents = {
       </div>
       <details class="record-metadata"><summary>Datos musicales y selección</summary>
         <genre-select v-model="record.category" :genres="genres"></genre-select>
-        <label>Velocidad del disco<select v-model="record.rpm" aria-label="Velocidad del disco"><option value="">Usar ajuste del proyecto</option><option>33 RPM</option><option>45 RPM</option><option>78 RPM</option></select></label>
+        <label>Velocidad del disco<select v-model="record.rpm" aria-label="Velocidad del disco"><option>33 RPM</option><option>45 RPM</option><option>78 RPM</option></select></label>
         <label>Número de selección<input v-model="record.number" aria-label="Número de selección" maxlength="60" /></label>
         <label>Sello<input v-model="record.label" aria-label="Sello" maxlength="300" /></label>
         <label>Año<input v-model="record.year" aria-label="Año" maxlength="20" /></label>
