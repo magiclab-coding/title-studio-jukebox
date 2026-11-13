@@ -21,6 +21,9 @@ const context = {
           return this;
         },
         mount() {},
+        component() {
+          return this;
+        },
       };
     },
   },
@@ -44,6 +47,7 @@ const context = {
   setTimeout: () => {},
 };
 // --- Composición, geometría física e impresión ---
+vm.runInNewContext(readFileSync('src/components.js', 'utf8'), context);
 vm.runInNewContext(readFileSync('src/app.js', 'utf8'), context);
 assert.equal(app.cards.value.length, 6);
 assert.equal(app.compositionCards.value.length, 0);
@@ -56,7 +60,7 @@ app.printSource.value = 'composition';
 app.printAll();
 await nextTick();
 assert.equal(printed, 1);
-assert.match(output.innerHTML, /left:20mm/);
+assert.match(output.innerHTML, /left:37mm/);
 assert.equal((output.innerHTML.match(/<svg/g) || []).length, 2);
 app.settings.value.orientation = 'landscape';
 await nextTick();
@@ -106,6 +110,8 @@ assert.equal(app.cards.value.length, 8);
 assert.notEqual(app.composition.value.items[0].cardId, originalId);
 assert.equal(app.compositionCards.value.length, 2);
 app.newCollection();
+app.groupName.value = 'Otros discos';
+app.saveGroup();
 await nextTick();
 assert.equal(app.cards.value.length, 0);
 assert.equal(app.collections.value.length, 2);
@@ -215,7 +221,7 @@ assert.equal(app.compositionPages.value, 3);
 app.printSource.value = 'composition';
 app.printAll();
 await nextTick();
-assert.match(output.innerHTML, /left:170mm/);
+assert.match(output.innerHTML, /left:190.5mm/);
 assert.equal(
   JSON.parse(storage.get('title-studio-v3')).compositions.find(
     (c) => c.id === app.activeComposition.value,
@@ -311,8 +317,8 @@ const oldArtist = vm.runInNewContext(
   `normalize({artist:'Artista A', artistB:'Artista B'})`,
   context,
 );
-assert.equal(oldArtist.artist, 'Artista A / Artista B');
-assert.equal(oldArtist.artistB, '');
+assert.equal(oldArtist.artist, 'Artista A');
+assert.equal(oldArtist.artistB, 'Artista B');
 for (const t of app.templates) {
   const svg = app.svg({ ...app.cards.value[0], style: t.id });
   assert.doesNotMatch(svg, /<rect[^>]*stroke=/);
@@ -326,4 +332,99 @@ assert.notEqual(foreign.artistInk, '#663399');
 assert.equal(app.currentItem.value.appearance.artistFont, 'DM Sans');
 console.log(
   'PASS: custom layouts, separate inks, no outer frames, shared artist field and independent appearance',
+);
+
+// --- Anotaciones: alta sin composición, artistas A/B, lotes y hojas reversibles ---
+app.view.value = 'collection';
+const beforeNew = app.cards.value.length,
+  beforePlaces = app.composition.value.items.length;
+app.openNewDisc();
+assert.equal(app.cards.value.length, beforeNew);
+app.draft.value.artist = 'Artista de prueba A';
+app.draft.value.artistB = 'Artista de prueba B';
+app.draft.value.a = 'Canción de prueba A';
+app.draft.value.b = 'Canción de prueba B';
+app.saveCardEditor();
+await nextTick();
+assert.equal(app.cards.value.length, beforeNew + 1);
+assert.equal(app.composition.value.items.length, beforePlaces);
+const createdDisc = app.cards.value.at(-1);
+assert.equal(createdDisc.artistB, 'Artista de prueba B');
+assert.match(app.svg(createdDisc), /Artista de prueba A \/ Artista de prueba B/);
+assert.equal(vm.runInNewContext(`normalize({artist:'AC/DC'}).artist`, context), 'AC/DC');
+assert.equal(vm.runInNewContext(`normalize({artist:'Uno / Dos'}).artistB`, context), 'Dos');
+assert.equal(vm.runInNewContext(`normalize({size:120}).titlePx`, context), 24);
+
+app.newComposition();
+app.view.value = 'compose';
+app.settings.value = {
+  ...app.settings.value,
+  paper: 'A4',
+  orientation: 'portrait',
+  width: 76,
+  height: 38,
+  gap: 4,
+  margin: 10,
+};
+await nextTick();
+const sourceDiscs = app.cards.value.slice(0, 6);
+app.addToComposition(sourceDiscs.slice(0, 3).map((c) => c.id));
+await nextTick();
+assert.equal(app.composition.value.items.length, 3);
+app.printSource.value = 'composition';
+const centered = app.printJob();
+assert.equal(centered.pages[0][0].x, 27);
+assert.equal(centered.pages[0][1].x, 107);
+assert.equal(centered.pages[0][0].y, 10); // No centrar verticalmente.
+assert.equal(app.composition.value.items[0].x, 10); // No reescribir los huecos guardados.
+app.addSheet();
+await nextTick();
+assert.equal(app.composePage.value, 1);
+app.addToComposition(sourceDiscs.slice(3, 5).map((c) => c.id));
+await nextTick();
+assert.equal(app.composition.value.items.filter((i) => i.page === 1).length, 2);
+app.addSheet();
+app.addToComposition([sourceDiscs[5].id]);
+await nextTick();
+app.composePage.value = 1;
+await nextTick();
+const discsBeforeDelete = app.cards.value.length;
+app.deleteSheet();
+await nextTick();
+assert.equal(app.gridPages.value, 2);
+assert.equal(app.composition.value.items.length, 4);
+assert.equal(app.cards.value.length, discsBeforeDelete);
+assert.equal(app.composition.value.items.find((i) => i.cardId === sourceDiscs[5].id).page, 1);
+app.undo();
+await nextTick();
+assert.equal(app.gridPages.value, 3);
+assert.equal(app.composition.value.items.length, 6);
+app.printSource.value = 'selected';
+const singlePrint = app.printJob();
+assert.equal(singlePrint.pages[0][0].x, 67);
+assert.equal(singlePrint.pages[0][0].y, 10);
+const hiddenMetadata = app.svg({
+  ...createdDisc,
+  category: 'JAZZ',
+  rpm: '78 RPM',
+  number: 'Z99',
+  titlePx: 24,
+  showGenre: false,
+  showRpm: false,
+  showNumber: false,
+});
+assert.doesNotMatch(hiddenMetadata, />JAZZ<|>78 RPM<|>Z99</);
+const onlyGenre = app.svg({
+  ...createdDisc,
+  category: 'JAZZ',
+  rpm: '78 RPM',
+  number: 'Z99',
+  showGenre: true,
+  showRpm: false,
+  showNumber: false,
+});
+assert.match(onlyGenre, />JAZZ</);
+assert.doesNotMatch(onlyGenre, />78 RPM<|>Z99</);
+console.log(
+  'PASS: disc-only creation, A/B artists, batch insertion, reversible sheet deletion, horizontal-only centering and metadata toggles',
 );

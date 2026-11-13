@@ -89,18 +89,20 @@ const fontOptions = [
   { value: 'Arial', label: 'Arial · Sans' },
   { value: 'monospace', label: 'Monoespaciada' },
 ];
-// Une las copias antiguas con artista B sin perder el contenido original.
+// Solo el dibujo une ambos artistas; los formularios conservan dos campos.
 const artistName = (c) =>
-  [c.artist, c.artistB && !String(c.artist || '').includes(c.artistB) ? c.artistB : '']
+  [c.artist, c.artistB]
+    .map((name) => String(name || '').trim())
     .filter(Boolean)
     .join(' / ');
 const columns = [
   { key: 'number', label: 'Selección' },
-  { key: 'artist', label: 'Artista' },
-  { key: 'a', label: 'Cara A' },
-  { key: 'b', label: 'Cara B' },
+  { key: 'artist', label: 'Artista A' },
   { key: 'artistB', label: 'Artista B' },
-  { key: 'category', label: 'Categoría' },
+  { key: 'a', label: 'Canción A' },
+  { key: 'b', label: 'Canción B' },
+  { key: 'category', label: 'Estilo musical' },
+  { key: 'rpm', label: 'Velocidad' },
   { key: 'label', label: 'Sello' },
   { key: 'year', label: 'Año' },
 ];
@@ -110,6 +112,7 @@ const normalize = (c) => {
   const style =
     { classic: 'arrows', mint: 'ribbon', midnight: 'block' }[c.style] || c.style || 'arrows';
   const t = templates.find((t) => t.id === style) || templates[0];
+  const parts = !c.artistB ? String(c.artist || '').split(/\s+\/\s+/) : [c.artist || ''];
   return {
     id: uid(),
     artist: '',
@@ -120,6 +123,7 @@ const normalize = (c) => {
     category: 'HIT TUNES',
     label: '',
     year: '',
+    rpm: '',
     size: 100,
     font: t.font || 'Georgia',
     artistFont: '',
@@ -128,8 +132,13 @@ const normalize = (c) => {
     showMeta: t.showMeta !== false,
     ...c,
     style,
-    artist: artistName(c),
-    artistB: '',
+    artist: parts[0],
+    artistB: c.artistB || parts.slice(1).join(' / '),
+    titlePx: c.titlePx ?? (20 * (+c.size || 100)) / 100,
+    artistPx: c.artistPx ?? (19 * (+c.artistSize || 100)) / 100,
+    showGenre: c.showGenre ?? (c.showMeta ?? t.showMeta) !== false,
+    showRpm: c.showRpm ?? (c.showMeta ?? t.showMeta) !== false,
+    showNumber: c.showNumber ?? (c.showMeta ?? t.showMeta) !== false,
     ink: c.ink || t.ink,
     paper: c.paper || t.paper,
   };
@@ -162,18 +171,19 @@ function makeSvg(c, settings) {
   const font = c.font || 'Georgia';
   const artistFont = c.artistFont || font;
   const name = artistName(c);
-  const textSize = (text, size, scale = c.size) =>
-    Math.min((size * (+scale || 100)) / 100, 270 / Math.max(1, String(text || '').length) / 0.72) *
-    Math.min(1, sy);
-  const tx = (text, y, size, family = font, fill = ink, scale = c.size) =>
-    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, size, scale)}" font-weight="400" fill="${fill}">${esc(text)}</text>`;
+  const titlePx = c.titlePx ?? (20 * (+c.size || 100)) / 100;
+  const artistPx = c.artistPx ?? (19 * (+c.artistSize || 100)) / 100;
+  const textSize = (text, px) =>
+    Math.min(+px || 20, 270 / Math.max(1, String(text || '').length) / 0.72) * Math.min(1, sy);
+  const tx = (text, y, px, family = font, fill = ink) =>
+    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(text)}</text>`;
   // Las fuentes se incrustan también en el SVG: la exportación y el PDF usan el mismo dibujo.
   const fontCss = [...new Set([font, artistFont])]
     .map((f) => globalThis.StudioFonts?.[f] || '')
     .join('');
   let art = '';
   if (c.style === 'brush') {
-    const half = Math.min(132, name.length * textSize(name, 19, c.artistSize) * 0.36 + 8);
+    const half = Math.min(132, name.length * textSize(name, artistPx) * 0.36 + 8);
     const left = 150 - half;
     const right = 150 + half;
     // Trazos laterales interrumpidos por el nombre, sin marco exterior.
@@ -186,12 +196,15 @@ function makeSvg(c, settings) {
     art = `<path d="M14 ${58 * sy}h272 M14 ${91 * sy}h272" fill="none" stroke="${artistInk}" stroke-width="${c.style === 'block' ? 2 : 0.7}" stroke-dasharray="${c.style === 'stamp' ? '3 2' : '0'}"/>`;
   }
   const meta =
-    c.showMeta !== false
-      ? tx(c.category, 13, 7, 'Arial', artistInk) +
-        tx(settings.rpm, 139, 7, 'Arial', artistInk) +
-        `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
-      : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, 20)}${tx(name, 75, 19, artistFont, artistInk, c.artistSize)}${tx(c.b, 112, 20)}${meta}</svg>`;
+    ((c.showGenre ?? c.showMeta !== false) ? tx(c.category, 13, 7, 'Arial', artistInk) : '') +
+    ((c.showRpm ?? c.showMeta !== false)
+      ? tx(c.rpm || settings.rpm, 139, 7, 'Arial', artistInk)
+      : '') +
+    ((c.showNumber ?? c.showMeta !== false)
+      ? `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
+      : '');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistInk)}${tx(c.b, 112, titlePx)}${meta}</svg>`;
 }
 
 createApp({
@@ -210,13 +223,18 @@ createApp({
       saved?.collections || [
         {
           id: uid(),
-          name: 'Mi colección',
+          name: 'Mis discos',
           cards: (saved?.cards?.length ? saved.cards : demo).map(normalize),
         },
       ],
     );
     collections.value.forEach((group) => {
       group.cards = group.cards.map(normalize);
+    });
+    collections.value.forEach((group) => {
+      if (group.name === 'Mi colección') group.name = 'Mis discos';
+      else if (/^Colección \d+$/.test(group.name))
+        group.name = group.name.replace('Colección', 'Discos');
     });
     const activeCollection = ref(saved?.activeCollection || collections.value[0].id);
     const cards = computed({
@@ -261,6 +279,11 @@ createApp({
       'size',
       'artistSize',
       'showMeta',
+      'showGenre',
+      'showRpm',
+      'showNumber',
+      'titlePx',
+      'artistPx',
     ];
     const appearanceOf = (c) => Object.fromEntries(appearanceKeys.map((k) => [k, c[k]]));
     // Añade identidad y apariencia a las tarjetas creadas con esquemas antiguos.
@@ -271,6 +294,10 @@ createApp({
           i.appearance ||= appearanceOf(
             allCards.value.find((c) => c.id === i.cardId) || normalize({}),
           );
+          i.appearance.titlePx ??= (20 * (+i.appearance.size || 100)) / 100;
+          i.appearance.artistPx ??= (19 * (+i.appearance.artistSize || 100)) / 100;
+          for (const key of ['showGenre', 'showRpm', 'showNumber'])
+            i.appearance[key] ??= i.appearance.showMeta !== false;
         }),
       );
     }
@@ -320,6 +347,11 @@ createApp({
       pickerPage = ref(1),
       printSource = ref(saved?.printSource || 'collection'),
       printPage = ref(1),
+      composePage = ref(Math.max(0, Number(saved?.ui?.composePage) || 0)),
+      deleteSheetDialog = ref(false),
+      groupDialog = ref(false),
+      groupName = ref(''),
+      groupEditing = ref(false),
       backupScope = ref('system'),
       pendingBackup = ref(null),
       versions = ref([]);
@@ -336,6 +368,7 @@ createApp({
         mode: mode.value,
         zoom: zoom.value,
         pageSize: pageSize.value,
+        composePage: composePage.value,
       },
       printSource: printSource.value,
       collections: collections.value,
@@ -368,6 +401,7 @@ createApp({
         mode,
         zoom,
         pageSize,
+        composePage,
       ],
       () => {
         const next = JSON.stringify(snapshot());
@@ -403,7 +437,10 @@ createApp({
       if (!Array.isArray(s.collections) || !s.collections.length) throw Error('Copia no válida');
       hydrating = true;
       Vue.nextTick(() => (hydrating = false));
-      collections.value = s.collections;
+      collections.value = s.collections.map((group) => ({
+        ...group,
+        cards: group.cards.map(normalize),
+      }));
       compositions.value = s.compositions || [];
       migrateCompositions();
       selectedItemId.value = null;
@@ -423,6 +460,7 @@ createApp({
         )
           view.value = s.ui.view;
         mode.value = s.ui.mode === 'single' ? 'single' : 'grid';
+        composePage.value = Math.max(0, Number(s.ui.composePage) || 0);
         zoom.value = Math.max(0.65, Math.min(3, Number(s.ui.zoom) || 1));
         if ([25, 50, 100].includes(s.ui.pageSize)) pageSize.value = s.ui.pageSize;
       }
@@ -447,11 +485,27 @@ createApp({
       restore(JSON.parse(JSON.stringify(v.data)));
       notify('Versión recuperada');
     }
-    // --- Colecciones de vinilos y composiciones de salida ---
+    // --- Listas de discos de vinilos y composiciones de salida ---
     function newCollection() {
-      const c = { id: uid(), name: 'Colección ' + (collections.value.length + 1), cards: [] };
-      collections.value.push(c);
-      activeCollection.value = c.id;
+      groupEditing.value = false;
+      groupName.value = '';
+      groupDialog.value = true;
+    }
+    function renameCollection() {
+      groupEditing.value = true;
+      groupName.value = collectionName.value;
+      groupDialog.value = true;
+    }
+    function saveGroup() {
+      const name = groupName.value.trim().slice(0, 100);
+      if (!name) return;
+      if (groupEditing.value) collectionName.value = name;
+      else {
+        const group = { id: uid(), name, cards: [] };
+        collections.value.push(group);
+        activeCollection.value = group.id;
+      }
+      groupDialog.value = false;
     }
     function deleteCollection() {
       if (collections.value.length === 1) return;
@@ -510,7 +564,7 @@ createApp({
         occupied = new Set(composition.value.items.map(slotIndex));
       ids.forEach((id) => {
         if (!present.has(id) && allCards.value.some((c) => c.id === id)) {
-          let index = 0;
+          let index = composePage.value * capacity.value;
           while (occupied.has(index)) index++;
           composition.value.items.push({
             id: uid(),
@@ -524,6 +578,17 @@ createApp({
       });
       notify('Discos añadidos a la composición');
       picker.value = false;
+      picked.value = [];
+    }
+    function openPicker() {
+      picked.value = [];
+      sourceQuery.value = '';
+      sourceCollection.value = '';
+      pickerPage.value = 1;
+      picker.value = true;
+    }
+    function pickAllResults() {
+      picked.value = [...new Set([...picked.value, ...batchRecords.value.map((c) => c.id)])];
     }
     function removeFromComposition(id) {
       if (composition.value)
@@ -552,6 +617,7 @@ createApp({
       editorDialog = ref(false),
       deleteDialog = ref(false),
       editorMode = ref('edit'),
+      editorContext = ref('composition'),
       draft = ref(normalize({})),
       pendingSlot = ref(null),
       editorSource = ref(null);
@@ -598,16 +664,21 @@ createApp({
       if (slot.item) selectCard(slot.item.id);
       else createAtSlot(slot.index);
     }
-    // La búsqueda reúne discos de cualquier colección sin cambiar la colección activa.
+    // La búsqueda reúne discos de cualquier lista de discos sin cambiar la lista de discos activa.
     const sourceRecords = computed(() =>
       collections.value
         .filter((c) => !sourceCollection.value || c.id === sourceCollection.value)
         .flatMap((group) => group.cards.map((card) => ({ ...card, collectionName: group.name })))
         .filter((c) =>
-          plain(c.artist + ' ' + c.a + ' ' + c.b + ' ' + c.number).includes(
+          plain(artistName(c) + ' ' + c.a + ' ' + c.b + ' ' + c.number).includes(
             plain(sourceQuery.value),
           ),
         ),
+    );
+    const batchRecords = computed(() =>
+      sourceRecords.value.filter(
+        (card) => !composition.value?.items.some((item) => item.cardId === card.id),
+      ),
     );
     function chooseSource(id) {
       sourceRecordId.value = id;
@@ -631,11 +702,15 @@ createApp({
         artistFont: '',
         artistInk: t.artistInk || '#202020',
         showMeta: t.showMeta !== false,
+        showGenre: t.showMeta !== false,
+        showRpm: t.showMeta !== false,
+        showNumber: t.showMeta !== false,
       });
     }
 
     // El borrador separa los cambios pendientes del disco y de su posición.
     function openCardEditor(action = 'edit') {
+      editorContext.value = view.value === 'collection' ? 'discs' : 'composition';
       editorMode.value = action;
       editorSource.value = currentItem.value?.id || current.value.id;
       draft.value = normalize({
@@ -660,6 +735,7 @@ createApp({
       editingId.value = null;
     }
     function createAtSlot(index) {
+      editorContext.value = 'composition';
       if (!validPrint.value || composition.value?.items.some((i) => slotIndex(i) === index)) return;
       pendingSlot.value = index;
       insertMode.value = 'existing';
@@ -675,14 +751,38 @@ createApp({
       editorDialog.value = true;
       actionCardId.value = null;
     }
+    function openNewDisc() {
+      editorContext.value = 'discs';
+      editorMode.value = 'create';
+      insertMode.value = 'new';
+      destinationCollection.value = activeCollection.value;
+      draft.value = normalize({ number: 'A' + (cards.value.length + 1) });
+      selectedItemId.value = null;
+      editorDialog.value = true;
+    }
+    function editDisc(card) {
+      selected.value = card.id;
+      selectedItemId.value = null;
+      openCardEditor('edit');
+    }
     // Confirma por separado la creación del disco y la de su tarjeta en la composición.
     function saveCardEditor() {
+      if (editorMode.value === 'create' && editorContext.value === 'discs') {
+        const owner = collections.value.find((c) => c.id === destinationCollection.value);
+        if (!owner) return;
+        const card = normalize({ ...draft.value, id: uid() });
+        owner.cards.push(card);
+        selected.value = card.id;
+        editorDialog.value = false;
+        notify('Disco guardado');
+        return;
+      }
       if (editorMode.value === 'create') {
         if (
           insertMode.value === 'existing' &&
           !allCards.value.some((c) => c.id === sourceRecordId.value)
         ) {
-          notify('Elige un disco de una colección.');
+          notify('Elige un disco de una lista de discos.');
           return;
         }
         if (!composition.value) newComposition();
@@ -750,7 +850,24 @@ createApp({
     const gridPages = computed(() => Math.max(compositionPages.value, extraPages.value, 1));
     function addSheet() {
       if (!composition.value) newComposition();
-      composition.value.pages = gridPages.value + 1;
+      const next = gridPages.value;
+      composition.value.pages = next + 1;
+      composePage.value = next;
+    }
+    // Borrar una hoja elimina solo sus posiciones; los vinilos siguen en Discos.
+    function deleteSheet() {
+      if (gridPages.value <= 1 || !composition.value) return;
+      const page = composePage.value,
+        count = gridPages.value;
+      composition.value.items = composition.value.items.filter((item) => (item.page || 0) !== page);
+      composition.value.items.forEach((item) => {
+        if (item.page > page) item.page--;
+      });
+      composition.value.pages = count - 1;
+      extraPages.value = 0;
+      composePage.value = Math.min(page, count - 2);
+      selectedItemId.value = null;
+      deleteSheetDialog.value = false;
     }
     const compositionSlots = computed(() =>
       Array.from({ length: gridPages.value * capacity.value }, (_, index) => ({
@@ -787,27 +904,11 @@ createApp({
     });
     // --- Contextos de trabajo y operaciones sobre los discos ---
     const navigation = [
-      { id: 'collection', icon: '▤', name: 'Colección' },
+      { id: 'collection', icon: '▤', name: 'Discos' },
       { id: 'templates', icon: '◈', name: 'Diseños y plantillas' },
       { id: 'compose', icon: '▦', name: 'Composición' },
       { id: 'print', icon: '▧', name: 'Impresión y salida' },
     ];
-    const titles = {
-      compose: 'Dale forma a tu música.',
-      collection: 'Tu colección, en orden.',
-      templates: 'Un estilo para cada disco.',
-      print: 'Del estudio a tu jukebox.',
-      transfer: 'Tu colección, sin fronteras.',
-      settings: 'Ajustes del proyecto.',
-    };
-    const descriptions = {
-      compose: 'Diseña tus etiquetas, afina los detalles y haz que cada disco tenga su sitio.',
-      collection: 'Todos tus discos en una tabla. Haz clic, escribe y sigue creando.',
-      templates: 'Diseños con historia. Colores, formas y tipografías que puedes hacer tuyos.',
-      print: 'Compón hojas listas para imprimir, cortar y colocar.',
-      transfer: 'De tu hoja de cálculo al taller, y del taller a donde quieras.',
-      settings: 'Configura el formato y las medidas de tu colección.',
-    };
     function add() {
       const c = normalize({ number: 'A' + (cards.value.length + 1), style: current.value?.style });
       cards.value.push(c);
@@ -937,8 +1038,25 @@ createApp({
       },
     );
     const sheetStyle = computed(() => ({ aspectRatio: dimensions.value[0] / dimensions.value[1] }));
+    const horizontalOffset = (cols) =>
+      (dimensions.value[0] -
+        (cols * settings.value.width + Math.max(0, cols - 1) * settings.value.gap)) /
+        2 -
+      settings.value.margin;
+    const compositionOffset = computed(() => horizontalOffset(Math.max(1, printCols.value)));
+    const printOffset = computed(() =>
+      horizontalOffset(
+        printSource.value === 'composition'
+          ? Math.max(1, printCols.value)
+          : Math.max(1, Math.min(printCols.value, printCards.value.length)),
+      ),
+    );
     const itemStyle = (i) => ({
-      left: (i.x / dimensions.value[0]) * 100 + '%',
+      left:
+        ((i.x + (view.value === 'print' ? printOffset.value : compositionOffset.value)) /
+          dimensions.value[0]) *
+          100 +
+        '%',
       top: (i.y / dimensions.value[1]) * 100 + '%',
       width: (settings.value.width / dimensions.value[0]) * 100 + '%',
       height: (settings.value.height / dimensions.value[1]) * 100 + '%',
@@ -972,6 +1090,7 @@ createApp({
       }
       Object.assign(moving, slotPosition(to));
       items.sort((a, b) => slotIndex(a) - slotIndex(b));
+      composePage.value = Math.floor(to / capacity.value);
     }
     function cardKey(e, item) {
       if (e.target !== e.currentTarget) return;
@@ -1036,7 +1155,9 @@ createApp({
           Math.min(
             printCols.value - 1,
             Math.floor(
-              (((ev.clientX - r.left) / r.width) * dimensions.value[0] - s.margin) /
+              (((ev.clientX - r.left) / r.width) * dimensions.value[0] -
+                s.margin -
+                compositionOffset.value) /
                 (s.width + s.gap),
             ),
           ),
@@ -1051,7 +1172,7 @@ createApp({
             ),
           ),
         );
-        moveItem(item.id, best * capacity.value + row * printCols.value + col);
+        moveItem(item.id, composePage.value * capacity.value + row * printCols.value + col);
       };
       // Un gesto cancelado restaura el estado; un gesto completo añade un solo deshacer.
       const stop = (ev) => {
@@ -1095,7 +1216,7 @@ createApp({
       }
       gesture = null;
     }
-    // --- Tabla de colección: búsqueda, filtros y paginación ---
+    // --- Tabla de lista de discos: búsqueda, filtros y paginación ---
     const filtered = computed(() =>
       cards.value
         .filter(
@@ -1125,7 +1246,7 @@ createApp({
     watch(totalPages, (n) => (page.value = Math.min(page.value, n)));
     const pickerCards = computed(() =>
       cards.value.filter((c) =>
-        plain(c.artist + ' ' + c.a + ' ' + c.number).includes(plain(pickerQuery.value)),
+        plain(artistName(c) + ' ' + c.a + ' ' + c.number).includes(plain(pickerQuery.value)),
       ),
     );
     watch(pickerQuery, () => (pickerPage.value = 1));
@@ -1148,9 +1269,9 @@ createApp({
     const allNavigation = [
       ...navigation,
       { id: 'transfer', icon: '⇅', name: 'Importar y exportar' },
-      { id: 'settings', icon: '⚙', name: 'Ajustes y versiones' },
+      { id: 'settings', icon: '⚙', name: 'Ajustes del proyecto' },
     ];
-    // --- Copias transportables y exportación de colecciones ---
+    // --- Copias transportables y exportación de listas de discos ---
     function saveEverything() {
       checkpoint();
       download(
@@ -1227,7 +1348,7 @@ createApp({
         );
       } else {
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Colección');
+        XLSX.utils.book_append_sheet(wb, ws, 'Discos');
         XLSX.writeFile(wb, 'title-studio.xlsx');
       }
       notify('Archivo exportado');
@@ -1235,11 +1356,12 @@ createApp({
     // --- Importación de hojas de cálculo y copias JSON ---
     const aliases = {
       number: ['seleccion', 'selection', 'number', 'numero'],
-      artist: ['artista', 'artist', 'artista a'],
-      a: ['cara a', 'a', 'titulo', 'title', 'title a', 'sidea'],
-      b: ['cara b', 'b', 'title b', 'sideb'],
+      artist: ['artista a', 'artist a', 'artista', 'artist', 'artista a'],
+      a: ['cancion a', 'canción a', 'cara a', 'a', 'titulo', 'title', 'title a', 'sidea'],
+      b: ['cancion b', 'canción b', 'cara b', 'b', 'title b', 'sideb'],
       artistB: ['artista b', 'artist b', 'artistb'],
-      category: ['categoria', 'category', 'genre'],
+      category: ['estilo musical', 'genero', 'género', 'categoria', 'category', 'genre'],
+      rpm: ['velocidad', 'rpm', 'speed'],
       label: ['sello', 'label'],
       year: ['año', 'ano', 'year'],
     };
@@ -1326,7 +1448,7 @@ createApp({
       cards.value.push(...rows);
       selected.value = rows[0].id;
       importRows.value = [];
-      notify(rows.length + ' discos añadidos a la colección.');
+      notify(rows.length + ' discos añadidos a la lista de discos.');
       view.value = 'collection';
     }
     // Valida estructura, medidas e identificadores antes de sustituir datos locales.
@@ -1344,7 +1466,7 @@ createApp({
         s.collections || (s.collection ? [s.collection] : s.cards ? [{ cards: s.cards }] : []);
       for (const group of groups) {
         if (!Array.isArray(group.cards) || group.cards.length > 10000)
-          throw Error('Colección no válida');
+          throw Error('Lista de discos no válida');
         for (const c of group.cards) {
           if (
             !c ||
@@ -1360,7 +1482,7 @@ createApp({
           !s.collections.length ||
           s.collections.some((c) => typeof c.id !== 'string' || typeof c.name !== 'string')
         )
-          throw Error('Colecciones no válidas');
+          throw Error('Listas de discos no válidas');
         const ids = s.collections.flatMap((c) => c.cards.map((r) => r.id));
         if (ids.some((id) => typeof id !== 'string') || new Set(ids).size !== ids.length)
           throw Error('Identificadores de disco no válidos');
@@ -1389,7 +1511,7 @@ createApp({
         Vue.nextTick(() => (hydrating = false));
         if (s.collections) {
           if (!s.collections.length || s.collections.some((c) => !Array.isArray(c.cards)))
-            throw Error('Colecciones no válidas');
+            throw Error('Listas de discos no válidas');
           restore(s);
           if (Array.isArray(s.versions)) {
             versions.value = [
@@ -1429,7 +1551,7 @@ createApp({
           compositions.value.push(c);
           activeComposition.value = c.id;
         } else {
-          const old = s.collection || { name: 'Colección importada', cards: s.cards };
+          const old = s.collection || { name: 'Discos importados', cards: s.cards };
           const c = {
             id: uid(),
             name: old.name,
@@ -1459,7 +1581,15 @@ createApp({
               y: s.margin + Math.floor(k / printCols.value) * (s.height + s.gap),
             })),
       );
-      return { s, dims, pages: JSON.parse(JSON.stringify(pages)) };
+      return {
+        s,
+        dims,
+        pages: JSON.parse(
+          JSON.stringify(
+            pages.map((items) => items.map((item) => ({ ...item, x: item.x + printOffset.value }))),
+          ),
+        ),
+      };
     }
     const pdfBusy = ref(false);
     async function exportPdf() {
@@ -1518,8 +1648,33 @@ createApp({
             })),
     );
     watch([printSource, activeComposition, activeCollection], () => (printPage.value = 1));
+    watch(
+      gridPages,
+      (count) => {
+        composePage.value = Math.min(composePage.value, count - 1);
+      },
+      { immediate: true },
+    );
+    watch(activeComposition, () => {
+      if (!hydrating) composePage.value = 0;
+    });
     // --- API expuesta a la plantilla Vue ---
     return {
+      openPicker,
+      pickAllResults,
+      openNewDisc,
+      editDisc,
+      editorContext,
+      composePage,
+      deleteSheetDialog,
+      deleteSheet,
+      groupDialog,
+      groupName,
+      groupEditing,
+      renameCollection,
+      saveGroup,
+      artistName,
+      printJob,
       optionsDialog,
       selectedItemId,
       currentItem,
@@ -1529,6 +1684,7 @@ createApp({
       sourceRecordId,
       destinationCollection,
       sourceRecords,
+      batchRecords,
       chooseSource,
       movingItemId,
       beginMove,
@@ -1615,7 +1771,7 @@ createApp({
       restoreVersion,
       templates,
       fontOptions,
-      columns: columns.filter((c) => c.key !== 'artistB'),
+      columns,
       cards,
       settings,
       selected,
@@ -1647,8 +1803,7 @@ createApp({
         'WALTZ / VARIETY',
         'EXTENDED PLAY',
       ],
-      pageTitle: computed(() => titles[view.value]),
-      pageDescription: computed(() => descriptions[view.value]),
+      pageTitle: computed(() => allNavigation.find((n) => n.id === view.value)?.name || 'Discos'),
       filtered,
       visibleTemplates: computed(() =>
         templates.filter(
@@ -1728,4 +1883,7 @@ createApp({
       defaults: { VBtn: { rounded: 'lg', elevation: 0 } },
     }),
   )
+  .component('genre-select', globalThis.StudioComponents.GenreSelect)
+  .component('record-fields', globalThis.StudioComponents.RecordFields)
+  .component('font-picker', globalThis.StudioComponents.FontPicker)
   .mount('#app');
