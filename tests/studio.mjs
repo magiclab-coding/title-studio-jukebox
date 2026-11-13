@@ -577,3 +577,17 @@ assert.equal(app.moveAcrossPage(dragItem.id, -1, 0), true);
 console.log(
   'PASS: independent presets, metadata visibility, column persistence, bulk draft, desktop modal and pointer-drag page turning/cancel',
 );
+
+// Los valores del catálogo no reescriben discos ni posiciones existentes.
+const existingAppearance = JSON.stringify(app.composition.value.items.map((i) => i.appearance));
+app.editTemplateDefaults(app.templates[0]);
+app.styleCard.value.ink = '#123456';
+app.styleCard.value.showRpm = false;
+app.finishStyle();
+assert.equal(app.settings.value.templateDefaults[app.templates[0].id].ink, '#123456');
+assert.equal(
+  JSON.stringify(app.composition.value.items.map((i) => i.appearance)),
+  existingAppearance,
+);
+assert.match(app.templatePreview(app.templates[0], app.current.value), /#123456/);
+console.log('PASS: persistent template defaults preserve existing composition appearances');

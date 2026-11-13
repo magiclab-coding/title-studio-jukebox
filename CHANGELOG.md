@@ -1,3 +1,10 @@
+# 7.0.10
+
+- Datos de discos separados del diseño; confirmación de duplicados por artistas y canciones dentro de cada lista.
+- Catálogo editable con valores predeterminados persistentes; selección y edición de estilo en pasos separados.
+- Hasta tres hojas contiguas según espacio y zoom; arrastre directo entre las hojas visibles.
+- Filas sin color de selección en Discos.
+
 # 7.0.9
 
 - Recursos JavaScript y CSS identificados por el hash de su contenido para evitar mezclar archivos en caché de diferentes despliegues. Conserva los datos locales.
