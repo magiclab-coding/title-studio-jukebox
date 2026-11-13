@@ -5,10 +5,12 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+# Serializa publicaciones y evita cancelar una Release que ya se está creando.
 concurrency:
   group: release-pages
   cancel-in-progress: false
 jobs:
+  # --- Pruebas, versión y artefacto único de main ---
   release:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -59,6 +61,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/check-pages.mjs
+  # --- Despliegue del mismo artefacto, sin recompilar ni renumerar ---
   deploy:
     needs: release
     if: needs.release.outputs.pages_enabled == 'true'

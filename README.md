@@ -6,7 +6,7 @@ Aplicación: https://jukebox-title-studio-ruben.martint-rubens.chatgpt.site
 
 ## Organización
 
-- El código de la raíz corresponde a la revisión 7.0.1.
+- La raíz contiene el código activo; cada versión publicada se identifica por su tag y Release.
 - [Flujo de GitHub](docs/FLUJO_GITHUB.md): ramas, CI, Releases y publicación.
 - Las reglas para cada interacción están en AGENTS.md.
 - Las versiones reales se conservan como tags y Releases; las carpetas históricas se mantienen como material de procedencia.
@@ -48,3 +48,7 @@ npm run format:check
 ```
 
 La CI comprueba el formato antes de ejecutar las pruebas y publicar.
+
+## Comentarios y secciones
+
+Las áreas importantes del código se organizan con cabeceras de sección y comentarios breves que explican la intención, las unidades y los casos menos evidentes. La versión 7.0.3 aplica esta convención al código activo; las versiones históricas conservan sus originales. La regla queda documentada en AGENTS.md para las siguientes revisiones.

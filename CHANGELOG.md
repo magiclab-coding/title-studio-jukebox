@@ -1,3 +1,11 @@
+## 7.0.3 · Comentarios y secciones del código
+
+- Cabeceras de sección en aplicación, plantillas, estilos, PDF, pruebas y automatización.
+- Comentarios breves sobre propiedad de datos, compatibilidad, coordenadas, borradores y limpieza de recursos.
+- Garantías de publicación e idempotencia explicadas junto al código correspondiente.
+- Regla persistente para comentar el código futuro sin repetir lo evidente.
+- Revisión documental sin cambios de funcionamiento; versiones históricas intactas.
+
 ## 7.0.2 · Código fuente legible
 
 - Formato del código activo JavaScript, HTML y CSS con sangrado y saltos de línea.

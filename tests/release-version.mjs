@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nextVersion } from '../scripts/release-version.mjs';
+// La versión depende de los tags y del commit, no del número de reintentos del flujo.
 test('first release and legacy migration', () =>
   assert.equal(nextVersion('7.0.1', ['v1.0.0', 'v7.0.0']), 'v7.0.1'));
 test('each new main commit gets a unique version', () =>

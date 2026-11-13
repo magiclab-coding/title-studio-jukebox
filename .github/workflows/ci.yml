@@ -1,4 +1,5 @@
 name: CI
+# Valida ramas de trabajo y PR antes de integrar cambios.
 on:
   pull_request:
     branches: [develop, main]
@@ -21,6 +22,7 @@ jobs:
           PR_BASE: ${{ github.base_ref }}
           PR_HEAD: ${{ github.head_ref }}
         run: node scripts/check-flow.mjs
+      # Formato, comportamiento y compilación se comprueban sobre la misma revisión.
       - run: npm ci
       - run: npm run format:check
       - run: npm test

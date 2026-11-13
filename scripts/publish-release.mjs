@@ -1,7 +1,9 @@
+// --- Release del commit exacto de main ---
 import { gh, repo } from './github.mjs';
 const tag = process.env.RELEASE_VERSION,
   sha = process.env.GITHUB_SHA;
 if (!repo || !sha || !/^v\d+\.\d+\.\d+$/.test(tag)) throw Error('Missing release metadata');
+// Repetir el flujo permite regenerar el artefacto, pero no cambiar el commit del tag.
 const ref = gh(['api', `repos/${repo}/git/ref/tags/${tag}`], { allow404: true });
 if (ref && JSON.parse(ref).object.sha !== sha)
   throw Error(`Refusing to change existing tag ${tag}`);
