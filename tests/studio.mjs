@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { ref, computed, watch, nextTick } from 'vue';
 import XLSX from 'xlsx';
+// --- Entorno mínimo: ejecuta la lógica Vue sin abrir un navegador real ---
 let app,
   printed = 0;
 const storage = new Map(),
@@ -42,6 +43,7 @@ const context = {
   Blob,
   setTimeout: () => {},
 };
+// --- Composición, geometría física e impresión ---
 vm.runInNewContext(readFileSync('src/app.js', 'utf8'), context);
 assert.equal(app.cards.value.length, 6);
 assert.equal(app.compositionCards.value.length, 0);
@@ -70,6 +72,7 @@ assert.equal((output.innerHTML.match(/<svg/g) || []).length, 6);
 assert.match(output.innerHTML, /@page\{size:297mm 210mm/);
 app.composition.value.items[0].x = 23;
 await nextTick();
+// --- Recuperación completa y copias parciales ---
 app.checkpoint();
 const backup = JSON.parse(storage.get('title-studio-v3'));
 const originalId = app.cards.value[0].id;
@@ -106,6 +109,7 @@ app.newCollection();
 await nextTick();
 assert.equal(app.cards.value.length, 0);
 assert.equal(app.collections.value.length, 2);
+// --- Importación extensa y paginación ---
 app.pasted.value =
   'Artista;Cara A;Cara B;Selección\n' +
   Array.from({ length: 1000 }, (_, i) => `Artista ${i};Canción ${i};B;A${i}`).join('\n');

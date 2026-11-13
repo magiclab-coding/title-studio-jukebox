@@ -1,3 +1,4 @@
+// --- Identidad verificable del artefacto publicado ---
 import { writeFileSync } from 'node:fs';
 writeFileSync(
   'dist/version.json',
@@ -11,4 +12,5 @@ writeFileSync(
     2,
   ) + '\n',
 );
+// Pages recibe el sitio estático terminado; no necesita una transformación de Jekyll.
 writeFileSync('dist/.nojekyll', '');

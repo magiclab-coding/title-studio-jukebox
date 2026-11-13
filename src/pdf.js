@@ -3,6 +3,7 @@
 globalThis.StudioPDF = {
   async create({ s, dims, pages }, makeSvg) {
     await document.fonts?.ready;
+    // --- Objetos PDF y conversión de milímetros a puntos ---
     const enc = new TextEncoder(),
       objects = [null],
       pt = (n) => ((n * 72) / 25.4).toFixed(5);
@@ -20,6 +21,7 @@ globalThis.StudioPDF = {
       }
       return out;
     };
+    // Length cuenta bytes, no caracteres: los datos de imagen también son binarios.
     const stream = (dict, data) =>
       cat([
         enc.encode(`<< ${dict} /Length ${data.length} >>\nstream\n`),
@@ -29,6 +31,7 @@ globalThis.StudioPDF = {
     const catalog = add(''),
       root = add(''),
       ids = [];
+    // --- Rasterización de etiquetas y composición de cada página ---
     for (const items of pages) {
       const resources = [],
         commands = [];
@@ -59,6 +62,7 @@ globalThis.StudioPDF = {
             ),
           );
           resources.push(`/L${index} ${id} 0 R`);
+          // PDF usa el origen inferior izquierdo; la composición usa el superior izquierdo.
           commands.push(
             `q ${pt(s.width)} 0 0 ${pt(s.height)} ${pt(item.x)} ${pt(dims[1] - item.y - s.height)} cm /L${index} Do Q`,
           );
@@ -67,6 +71,7 @@ globalThis.StudioPDF = {
               `q 0.55 G 0.25 w [2 2] 0 d ${pt(item.x)} ${pt(dims[1] - item.y - s.height)} ${pt(s.width)} ${pt(s.height)} re S Q`,
             );
         } finally {
+          // Libera cada imagen antes de procesar la siguiente para limitar memoria en móvil.
           URL.revokeObjectURL(url);
           canvas.width = canvas.height = 0;
         }
@@ -78,12 +83,15 @@ globalThis.StudioPDF = {
         ),
       );
     }
+    // --- Árbol de páginas y preferencia de impresión sin escalado ---
     objects[catalog] = enc.encode(
       `<< /Type /Catalog /Pages ${root} 0 R /ViewerPreferences << /PrintScaling /None >> >>`,
     );
     objects[root] = enc.encode(
       `<< /Type /Pages /Count ${ids.length} /Kids [${ids.map((i) => i + ' 0 R').join(' ')}] >>`,
     );
+    // --- Tabla de referencias cruzadas ---
+    // Cada desplazamiento apunta al primer byte de su objeto dentro del archivo final.
     const parts = [enc.encode('%PDF-1.4\n')],
       offsets = [0];
     let length = parts[0].length;

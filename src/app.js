@@ -1,4 +1,5 @@
 const { createApp, ref, computed, watch } = Vue;
+// --- Diseños disponibles y campos del disco ---
 const templates = [
   {
     id: 'arrows',
@@ -76,6 +77,7 @@ const columns = [
   { key: 'year', label: 'Año' },
 ];
 const uid = () => globalThis.crypto?.randomUUID?.() || Date.now() + '-' + Math.random();
+// Completa los campos y conserva los nombres de estilo de las copias antiguas.
 const normalize = (c) => {
   const style =
     { classic: 'arrows', mint: 'ribbon', midnight: 'block' }[c.style] || c.style || 'arrows';
@@ -98,6 +100,7 @@ const normalize = (c) => {
     paper: c.paper || t.paper,
   };
 };
+// Datos de ejemplo: solo se usan cuando el navegador no tiene un proyecto guardado.
 const demo = [
   ['ELVIS PRESLEY', 'Jailhouse Rock', 'Treat Me Nice', 'ROCK & ROLL', 'arrows'],
   ['CHUCK BERRY', 'Johnny B. Goode', 'Around and Around', 'HIT TUNES', 'ribbon'],
@@ -108,11 +111,13 @@ const demo = [
 ].map((v, i) =>
   normalize({ artist: v[0], a: v[1], b: v[2], category: v[3], style: v[4], number: 'A' + (i + 1) }),
 );
+// Los textos del usuario se escapan antes de incorporarlos al SVG.
 const esc = (s) =>
   String(s ?? '').replace(
     /[<>&"']/g,
     (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c],
   );
+// --- Renderizado común a pantalla, exportación e impresión ---
 function makeSvg(c, settings) {
   const ink = /^#[0-9a-f]{6}$/i.test(c.ink) ? c.ink : '#a44736',
     paper = /^#[0-9a-f]{6}$/i.test(c.paper) ? c.paper : '#fff9e9';
@@ -143,6 +148,7 @@ function makeSvg(c, settings) {
 }
 createApp({
   setup() {
+    // --- Estado inicial y compatibilidad con copias anteriores ---
     let saved;
     try {
       saved = JSON.parse(
@@ -193,8 +199,10 @@ createApp({
       compositions.value.find((c) => c.id === activeComposition.value),
     );
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
+    // El disco aporta el contenido; cada posición conserva su propio estilo.
     const appearanceKeys = ['style', 'ink', 'paper', 'font', 'size'];
     const appearanceOf = (c) => Object.fromEntries(appearanceKeys.map((k) => [k, c[k]]));
+    // Añade identidad y apariencia a las tarjetas creadas con esquemas antiguos.
     function migrateCompositions() {
       compositions.value.forEach((c) =>
         c.items.forEach((i) => {
@@ -217,6 +225,7 @@ createApp({
     const compositionCards = computed(
       () => composition.value?.items.map(renderedCard).filter(Boolean) || [],
     );
+    // --- Selección, navegación y estado temporal de la interfaz ---
     const selected = ref(saved?.ui?.selected || cards.value[0]?.id),
       view = ref(
         ['compose', 'collection', 'templates', 'print', 'transfer', 'settings'].includes(
@@ -256,6 +265,8 @@ createApp({
     try {
       versions.value = JSON.parse(localStorage.getItem('title-studio-versions') || '[]');
     } catch {}
+    // --- Persistencia y deshacer ---
+    // La instantánea incluye datos y preferencias, pero no los modales abiertos.
     const snapshot = () => ({
       schema: 5,
       ui: {
@@ -281,6 +292,7 @@ createApp({
       message.value = m;
       snackbar.value = true;
     };
+    // Durante el arrastre se guarda el estado, sin crear un paso de deshacer por píxel.
     watch(
       [
         collections,
@@ -325,6 +337,7 @@ createApp({
       filters.value = {};
       pickerPage.value = 1;
     });
+    // Evita redistribuir tarjetas mientras se recupera su geometría guardada.
     function restore(s) {
       if (!Array.isArray(s.collections) || !s.collections.length) throw Error('Copia no válida');
       hydrating = true;
@@ -353,6 +366,7 @@ createApp({
         if ([25, 50, 100].includes(s.ui.pageSize)) pageSize.value = s.ui.pageSize;
       }
     }
+    // Las diez copias locales complementan el JSON descargable; no lo sustituyen.
     function checkpoint() {
       versions.value.unshift({
         id: uid(),
@@ -372,6 +386,7 @@ createApp({
       restore(JSON.parse(JSON.stringify(v.data)));
       notify('Versión recuperada');
     }
+    // --- Colecciones de vinilos y composiciones de salida ---
     function newCollection() {
       const c = { id: uid(), name: 'Colección ' + (collections.value.length + 1), cards: [] };
       collections.value.push(c);
@@ -402,6 +417,8 @@ createApp({
       compositions.value.push(c);
       activeComposition.value = c.id;
     }
+    // --- Correspondencia entre huecos y coordenadas físicas ---
+    // Las posiciones se almacenan en milímetros; el zoom solo cambia su presentación.
     function slotPosition(index) {
       const k = index % capacity.value;
       return {
@@ -425,6 +442,7 @@ createApp({
         Math.round((item.x - settings.value.margin) / (settings.value.width + settings.value.gap))
       );
     }
+    // La inserción múltiple ocupa los primeros huecos libres sin cerrar otros huecos.
     function addToComposition(ids = picked.value) {
       if (!composition.value) newComposition();
       const present = new Set(composition.value.items.map((i) => i.cardId)),
@@ -456,6 +474,7 @@ createApp({
       cardActions.value = false;
       if (editingId.value === id) editingId.value = null;
     }
+    // --- Acciones contextuales y formularios de tarjeta ---
     const editingId = ref(null),
       cardActions = ref(false),
       styleDialog = ref(false),
@@ -499,6 +518,7 @@ createApp({
       selected.value = item.cardId;
       editCard();
     }
+    // Alternativa táctil al arrastre: elegir la tarjeta y después su destino.
     function beginMove() {
       if (suppressCardClick) return;
       movingItemId.value = currentItem.value?.id;
@@ -517,6 +537,7 @@ createApp({
       if (slot.item) selectCard(slot.item.id);
       else createAtSlot(slot.index);
     }
+    // La búsqueda reúne discos de cualquier colección sin cambiar la colección activa.
     const sourceRecords = computed(() =>
       collections.value
         .filter((c) => !sourceCollection.value || c.id === sourceCollection.value)
@@ -532,6 +553,7 @@ createApp({
       const c = allCards.value.find((c) => c.id === id);
       if (c) draft.value = normalize({ ...c });
     }
+    // En un formulario se cambia el borrador; cancelar no modifica la composición.
     const styleCard = computed(() => (styleOnDraft.value ? draft.value : current.value));
     function openStyle(onDraft = false) {
       styleOnDraft.value = onDraft;
@@ -548,6 +570,7 @@ createApp({
       });
     }
 
+    // El borrador separa los cambios pendientes del disco y de su posición.
     function openCardEditor(action = 'edit') {
       editorMode.value = action;
       editorSource.value = currentItem.value?.id || current.value.id;
@@ -588,6 +611,7 @@ createApp({
       editorDialog.value = true;
       actionCardId.value = null;
     }
+    // Confirma por separado la creación del disco y la de su tarjeta en la composición.
     function saveCardEditor() {
       if (editorMode.value === 'create') {
         if (
@@ -621,6 +645,7 @@ createApp({
         selected.value = c.id;
         selectedItemId.value = item.id;
       } else if (editorMode.value === 'duplicate') {
+        // Una copia reutiliza el vinilo original y recibe identidad, estilo y hueco propios.
         const source = composition.value?.items.find((i) => i.id === editorSource.value);
         if (!source) return;
         const occupied = new Set(composition.value.items.map(slotIndex));
@@ -680,6 +705,7 @@ createApp({
         if (c) c.name = v;
       },
     });
+    // El editor escribe los textos en el disco y el estilo en la posición seleccionada.
     const current = computed(() => {
       const base =
         allCards.value.find((c) => c.id === selected.value) || cards.value[0] || normalize({});
@@ -694,6 +720,7 @@ createApp({
         },
       });
     });
+    // --- Contextos de trabajo y operaciones sobre los discos ---
     const navigation = [
       { id: 'collection', icon: '▤', name: 'Colección' },
       { id: 'templates', icon: '◈', name: 'Diseños y plantillas' },
@@ -741,6 +768,7 @@ createApp({
       restore(JSON.parse(s));
       notify('Último cambio deshecho');
     }
+    // --- Geometría del papel y validación del formato ---
     const dimensions = computed(() => {
       const d = { A4: [210, 297], A3: [297, 420], Letter: [215.9, 279.4] }[
         settings.value.paper
@@ -795,6 +823,7 @@ createApp({
         ? compositionPages.value
         : Math.ceil(printCards.value.length / capacity.value),
     );
+    // La compactación es explícita: quitar una tarjeta conserva su hueco.
     function reflow(target) {
       const comp = target?.items ? target : composition.value;
       comp?.items.forEach((item, i) => {
@@ -811,6 +840,7 @@ createApp({
         });
       });
     }
+    // Al cambiar de papel se conserva el índice lógico de cada hueco, no su píxel.
     watch(
       () =>
         [
@@ -894,8 +924,10 @@ createApp({
         selectCard(item.id);
       }
     }
+    // --- Reordenación por teclado, ratón y pantalla táctil ---
     let suppressCardClick = false;
     function dragStart(e, item) {
+      // En móvil solo el asa inicia un arrastre; el resto permite desplazar la página.
       if (e.pointerType === 'touch' && !e.target.closest('.move-handle')) return;
       if (
         e.button !== 0 ||
@@ -956,6 +988,7 @@ createApp({
         );
         moveItem(item.id, best * capacity.value + row * printCols.value + col);
       };
+      // Un gesto cancelado restaura el estado; un gesto completo añade un solo deshacer.
       const stop = (ev) => {
         if (moved) {
           if (ev.type === 'pointercancel') restore(JSON.parse(before));
@@ -975,6 +1008,7 @@ createApp({
       window.addEventListener('pointerup', stop);
       window.addEventListener('pointercancel', stop);
     }
+    // --- Gestos de navegación lateral ---
     let gesture;
     function gestureStart(e) {
       if (e.touches.length !== 1) return;
@@ -996,6 +1030,7 @@ createApp({
       }
       gesture = null;
     }
+    // --- Tabla de colección: búsqueda, filtros y paginación ---
     const filtered = computed(() =>
       cards.value
         .filter(
@@ -1050,6 +1085,7 @@ createApp({
       { id: 'transfer', icon: '⇅', name: 'Importar y exportar' },
       { id: 'settings', icon: '⚙', name: 'Ajustes y versiones' },
     ];
+    // --- Copias transportables y exportación de colecciones ---
     function saveEverything() {
       checkpoint();
       download(
@@ -1131,6 +1167,7 @@ createApp({
       }
       notify('Archivo exportado');
     }
+    // --- Importación de hojas de cálculo y copias JSON ---
     const aliases = {
       number: ['seleccion', 'selection', 'number', 'numero'],
       artist: ['artista', 'artist', 'artista a'],
@@ -1227,6 +1264,7 @@ createApp({
       notify(rows.length + ' discos añadidos a la colección.');
       view.value = 'collection';
     }
+    // Valida estructura, medidas e identificadores antes de sustituir datos locales.
     function validateBackup(s) {
       if (!s || typeof s !== 'object') throw Error('Copia no válida');
       if (s.settings) {
@@ -1300,6 +1338,7 @@ createApp({
         } else if (s.kind === 'settings') {
           settings.value = { ...settings.value, ...s.settings };
         } else if (s.kind === 'composition') {
+          // Una copia parcial remapea referencias para evitar colisiones con los discos existentes.
           const idmap = new Map();
           const imported = (s.cards || []).map((c) => {
             const n = normalize({ ...c, id: uid() });
@@ -1340,6 +1379,8 @@ createApp({
         notify(e.message);
       }
     }
+    // --- Salida física: PDF e impresión del navegador ---
+    // Congela contenido y medidas para que la salida no cambie mientras se genera.
     function printJob() {
       const s = JSON.parse(JSON.stringify(settings.value)),
         dims = [...dimensions.value],
@@ -1374,6 +1415,7 @@ createApp({
         pdfBusy.value = false;
       }
     }
+    // El CSS fija milímetros; el escalado final sigue dependiendo del diálogo de impresión.
     function printAll() {
       if (!validPrint.value || !printCards.value.length) return;
       const { s, dims, pages } = printJob();
@@ -1411,6 +1453,7 @@ createApp({
             })),
     );
     watch([printSource, activeComposition, activeCollection], () => (printPage.value = 1));
+    // --- API expuesta a la plantilla Vue ---
     return {
       optionsDialog,
       selectedItemId,
