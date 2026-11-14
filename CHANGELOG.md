@@ -1,3 +1,12 @@
+# 7.0.12
+
+- Barras de Colecciones, Añadir discos y Tabla con iconos uniformes y controles alineados.
+- Selección múltiple, eliminación de seleccionados y vaciado de la colección con confirmación y deshacer.
+- Textos largos truncados en las etiquetas sin reducir el cuerpo; datos completos conservados y celdas avisadas en color.
+- Metadatos opcionales desactivados por defecto para tarjetas nuevas.
+- Navegación por los extremos del conjunto de hojas visibles durante un arrastre.
+- Opciones y estilo de composición con modales compactos y sin pie explicativo.
+
 # 7.0.11
 
 - Corrige el arrastre entre hojas contiguas: el destino se calcula con ambas coordenadas del puntero.
