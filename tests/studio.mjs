@@ -313,8 +313,8 @@ assert.match(rendered, /fill="#111111">MIGUEL RÍOS/);
 assert.ok(rendered.indexOf('>EL RIO</text>') < rendered.indexOf('>MIGUEL RÍOS</text>'));
 assert.ok(rendered.indexOf('>MIGUEL RÍOS</text>') < rendered.indexOf('>VUELVO A GRANADA</text>'));
 assert.doesNotMatch(rendered, /stroke="/);
-assert.match(rendered, />HIT TUNES</);
-assert.match(rendered, />45 RPM</);
+assert.doesNotMatch(rendered, />HIT TUNES</);
+assert.doesNotMatch(rendered, />45 RPM</);
 const oldArtist = vm.runInNewContext(
   `normalize({artist:'Artista A', artistB:'Artista B'})`,
   context,
@@ -622,3 +622,50 @@ assert.equal(crossItem.page, 0, 'Arrastrar a la izquierda debe volver a la prime
 listeners.get('pointerup')({ type: 'pointerup' });
 assert.equal(listeners.size, 0);
 console.log('PASS: horizontal drag between adjacent sheets in both directions');
+
+// Los datos conservan el texto completo; la etiqueta trunca con un tamaño constante.
+const longSvg = vm.runInNewContext(
+  `makeSvg(normalize({a:'Une chanson beaucoup trop longue pour une seule étiquette',titlePx:20}),{width:76,height:38,rpm:'45 RPM'})`,
+  context,
+);
+assert.match(longSvg, /font-size="20px"/);
+assert.match(longSvg, /…<\/text>/);
+assert.equal(vm.runInNewContext('normalize({}).showGenre', context), false);
+assert.equal(vm.runInNewContext('normalize({}).showRpm', context), false);
+assert.equal(vm.runInNewContext('normalize({}).showNumber', context), false);
+console.log('PASS: fixed text size, ellipsis and optional metadata hidden by default');
+// El extremo derecho del grupo visible permite entrar en una hoja aún oculta.
+app.composition.value.pages = 4;
+app.composePage.value = 0;
+app.dragStart(
+  {
+    button: 0,
+    target: { closest: () => null },
+    currentTarget: element,
+    clientX: 220,
+    clientY: 160,
+    pointerId: 3,
+  },
+  crossItem,
+);
+listeners.get('pointermove')({ clientX: 915, clientY: 190, preventDefault() {} });
+assert.equal(app.dragEdge.value, 1);
+[...timers.values()]
+  .filter((t) => t.delay === 650)
+  .at(-1)
+  .fn();
+assert.equal(crossItem.page, 2);
+listeners.get('pointercancel')({ type: 'pointercancel' });
+const beforeBulk = app.cards.value.length;
+const bulkId = app.cards.value[0].id;
+app.checkedDiscs.value = [bulkId];
+context.window.confirm = () => false;
+app.deleteDiscs();
+assert.equal(app.cards.value.length, beforeBulk);
+context.window.confirm = () => true;
+app.deleteDiscs();
+assert.equal(app.cards.value.length, beforeBulk - 1);
+assert.ok(app.compositions.value.every((c) => c.items.every((i) => i.cardId !== bulkId)));
+console.log(
+  'PASS: outer edge turns hidden pages; bulk deletion respects cancellation and references',
+);

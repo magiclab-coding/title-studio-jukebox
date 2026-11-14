@@ -53,3 +53,11 @@ Durante un arrastre, permanecer 650 ms a 24 px del borde cambia a la hoja contig
 Los formularios de discos contienen solo datos musicales. La creación de una tarjeta en composición ofrece estilo; editar sus datos no abre controles de diseño. El diálogo de estilo separa selección y parámetros. El catálogo edita valores en `settings.templateDefaults`, incluidos en las copias completas, y cada nueva asignación recibe sus propios valores. Cambiar un predeterminado no modifica posiciones existentes.
 
 Crear un disco compara Artista A/B y Canción A/B dentro de la lista destino, normalizando espacios y mayúsculas; si coincide solicita confirmación antes de repetirlo. Las hojas visibles se calculan según anchura disponible y zoom, hasta tres, y el arrastre calcula el destino sobre la hoja bajo el puntero. Se mantiene el centrado exclusivamente horizontal.
+
+## Interfaz 7.0.12
+
+La selección múltiple de Tabla es temporal e independiente de la composición. El borrado actúa sobre los discos seleccionados o sobre la colección activa completa, pide confirmación, retira sus referencias y conserva la posibilidad de deshacer.
+
+Los textos completos se guardan y exportan sin cambios. Solo la representación SVG acorta con puntos suspensivos cuando excede el ancho, manteniendo el tamaño de letra. Las celdas largas se avisan con fondo ámbar. Las tarjetas nuevas ocultan estilo musical, RPM y selección; los valores explícitos guardados se conservan.
+
+El arrastre utiliza los extremos exteriores del conjunto de hojas visibles para pasar a una página todavía oculta. Mantiene el cambio entre hojas contiguas sin activar el temporizador en bordes interiores.

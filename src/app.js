@@ -167,7 +167,7 @@ const normalize = (c) => {
     artistFont: '',
     artistSize: 100,
     artistInk: t.artistInk || '#202020',
-    showMeta: t.showMeta !== false,
+    showMeta: false,
     ...c,
     style,
     rpm: c.rpm || '45 RPM',
@@ -175,9 +175,9 @@ const normalize = (c) => {
     artistB: c.artistB || parts.slice(1).join(' / '),
     titlePx: c.titlePx ?? (20 * (+c.size || 100)) / 100,
     artistPx: c.artistPx ?? (19 * (+c.artistSize || 100)) / 100,
-    showGenre: c.showGenre ?? (c.showMeta ?? t.showMeta) !== false,
-    showRpm: c.showRpm ?? (c.showMeta ?? t.showMeta) !== false,
-    showNumber: c.showNumber ?? (c.showMeta ?? t.showMeta) !== false,
+    showGenre: c.showGenre ?? c.showMeta === true,
+    showRpm: c.showRpm ?? c.showMeta === true,
+    showNumber: c.showNumber ?? c.showMeta === true,
     ink: c.ink || t.ink,
     paper: c.paper || t.paper,
   };
@@ -212,10 +212,15 @@ function makeSvg(c, settings) {
   const name = artistName(c);
   const titlePx = c.titlePx ?? (20 * (+c.size || 100)) / 100;
   const artistPx = c.artistPx ?? (19 * (+c.artistSize || 100)) / 100;
-  const textSize = (text, px) =>
-    Math.min(+px || 20, 270 / Math.max(1, String(text || '').length) / 0.72) * Math.min(1, sy);
+  // Mantener el cuerpo tipográfico; truncar solo la representación de la etiqueta.
+  const textSize = (_, px) => (+px || 20) * Math.min(1, sy);
+  const shorten = (text, px, width = 280) => {
+    const value = String(text || '');
+    const limit = Math.max(3, Math.floor(width / ((+px || 20) * 0.62)));
+    return value.length > limit ? value.slice(0, limit - 1).trimEnd() + '…' : value;
+  };
   const tx = (text, y, px, family = font, fill = ink) =>
-    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(text)}</text>`;
+    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(shorten(text, px, y === 75 && ['stars', 'stamp', 'two'].includes(c.style) ? 240 : 280))}</text>`;
   // Las fuentes se incrustan también en el SVG: la exportación y el PDF usan el mismo dibujo.
   const fontCss = [...new Set([font, artistFont])]
     .map((f) => globalThis.StudioFonts?.[f] || '')
@@ -224,7 +229,7 @@ function makeSvg(c, settings) {
     artistFill = artistInk;
   const line = (y, weight = 1, dash = '0') =>
     `<path d="M10 ${y * sy}H290" stroke="${artistInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
-  const centerHalf = Math.min(130, name.length * textSize(name, artistPx) * 0.36 + 8);
+  const centerHalf = Math.min(140, name.length * textSize(name, artistPx) * 0.36 + 8);
   if (c.style === 'brush') {
     art = `<path d="M4 ${76 * sy}L${150 - centerHalf} ${72 * sy}L${150 - centerHalf} ${75 * sy}Z M296 ${76 * sy}L${150 + centerHalf} ${72 * sy}L${150 + centerHalf} ${75 * sy}Z" fill="${artistInk}"/>`;
   } else if (c.style === 'ribbon' || c.style === 'chevron') {
@@ -241,7 +246,7 @@ function makeSvg(c, settings) {
   } else if (c.style === 'block') {
     art = line(55, 5) + line(95, 5) + line(49, 1) + line(101, 1);
   } else if (c.style === 'arrows') {
-    art = `<path d="M10 ${55 * sy}H124L140 ${61 * sy}L124 ${67 * sy}H10Z M290 ${83 * sy}H176L160 ${89 * sy}L176 ${95 * sy}H290Z" fill="${artistInk}"/>`;
+    art = `<path d="M10 ${50 * sy}H124L140 ${54 * sy}L124 ${58 * sy}H10Z M290 ${92 * sy}H176L160 ${96 * sy}L176 ${100 * sy}H290Z" fill="${artistInk}"/>`;
   } else if (c.style === 'stars') {
     art = `<path d="M12 ${56 * sy}H288 M12 ${94 * sy}H288" stroke="${artistInk}"/>`;
     for (const x of [20, 40, 260, 280])
@@ -1086,6 +1091,31 @@ createApp({
       selected.value = n.id;
       notify('Etiqueta duplicada');
     }
+    // Selección de tabla independiente de las posiciones de composición.
+    const checkedDiscs = ref([]);
+    const longCell = (card, key) =>
+      ['artist', 'artistB', 'a', 'b'].includes(key) &&
+      String(card[key] || '').length > (key.startsWith('artist') ? 23 : 22);
+    function toggleVisibleDiscs(event) {
+      const ids = filtered.value.map((c) => c.id);
+      checkedDiscs.value = event.target.checked
+        ? [...new Set([...checkedDiscs.value, ...ids])]
+        : checkedDiscs.value.filter((id) => !ids.includes(id));
+    }
+    function deleteDiscs(all = false) {
+      const ids = new Set(all ? cards.value.map((c) => c.id) : checkedDiscs.value);
+      if (
+        !ids.size ||
+        !window.confirm(
+          `¿Eliminar ${ids.size} discos${all ? ' de esta colección' : ' seleccionados'} y sus tarjetas en las composiciones? Puedes deshacerlo.`,
+        )
+      )
+        return;
+      cards.value = cards.value.filter((c) => !ids.has(c.id));
+      for (const composition of compositions.value)
+        composition.items = composition.items.filter((i) => !ids.has(i.cardId));
+      checkedDiscs.value = [];
+    }
     function remove(id) {
       cards.value = cards.value.filter((c) => c.id !== id);
       compositions.value.forEach((c) => (c.items = c.items.filter((i) => i.cardId !== id)));
@@ -1401,15 +1431,22 @@ createApp({
           ),
         );
         const sheetPage = Number(sheets[best].dataset?.page ?? composePage.value);
-        const direction = sheets.length === 1 ? edgeDirection(ev.clientX, r) : 0;
+        const firstRect = sheets[0].getBoundingClientRect();
+        const lastRect = sheets[sheets.length - 1].getBoundingClientRect();
+        const direction = edgeDirection(ev.clientX, {
+          left: firstRect.left,
+          right: lastRect.right,
+        });
+        const edgePage = Number(
+          (direction > 0 ? sheets[sheets.length - 1] : sheets[0]).dataset?.page ??
+            composePage.value,
+        );
         if (!direction) {
           clearEdge();
           edgeLatched = false;
         }
         const canTurn =
-          direction &&
-          composePage.value + direction >= 0 &&
-          composePage.value + direction < gridPages.value;
+          direction && edgePage + direction >= 0 && edgePage + direction < gridPages.value;
         if (canTurn && !edgeLatched && direction !== pendingEdge) {
           clearEdge();
           pendingEdge = direction;
@@ -1419,6 +1456,7 @@ createApp({
             pendingEdge = 0;
             dragEdge.value = 0;
             edgeLatched = true;
+            composePage.value = edgePage;
             moveAcrossPage(item.id, direction, row);
           }, 650);
         } else if (!canTurn) clearEdge();
@@ -2043,6 +2081,10 @@ createApp({
       sortColumn,
       totalPages,
       pagedCards,
+      checkedDiscs,
+      longCell,
+      toggleVisibleDiscs,
+      deleteDiscs,
       picked,
       togglePicked,
       picker,
