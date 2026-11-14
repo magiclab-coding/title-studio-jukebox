@@ -474,10 +474,6 @@
                         >Imprimir</v-btn
                       ><v-btn @click="saveEverything">Guardar todo</v-btn>
                     </div>
-                    <p class="small-muted">
-                      Selecciona discos de cualquier lista de discos. Cada composición conserva sus
-                      posiciones y estilos.
-                    </p>
                   </section></v-dialog
                 >
                 <!-- Creación y edición con borrador; los cambios se confirman al guardar. -->
@@ -793,26 +789,51 @@
                 <section class="panel collection-manager">
                   <div class="manager-row">
                     <label
-                      >Discos<select v-model="activeCollection" aria-label="Lista de discos">
+                      >Colecciones<select v-model="activeCollection" aria-label="Lista de discos">
                         <option v-for="group in collections" :value="group.id">
                           {{ group.name }}
                         </option>
                       </select></label
                     >
                     <div class="inline wrap">
-                      <v-btn size="small" @click="newCollection">＋ Nueva lista</v-btn
-                      ><v-btn size="small" variant="text" @click="renameCollection">Renombrar</v-btn
+                      <button
+                        class="control-icon"
+                        @click="newCollection"
+                        title="Nueva colección"
+                        aria-label="Nueva colección"
+                      >
+                        ＋</button
+                      ><button
+                        class="control-icon"
+                        @click="renameCollection"
+                        title="Renombrar colección"
+                        aria-label="Renombrar colección"
+                      >
+                        ✎</button
                       ><v-btn
                         size="small"
                         variant="text"
                         @click="deleteCollection"
                         v-if="collections.length > 1"
-                        >Eliminar lista</v-btn
-                      >
+                        class="control-icon"
+                        title="Eliminar colección"
+                        aria-label="Eliminar colección"
+                        ><svg
+                          viewBox="0 0 24 24"
+                          width="21"
+                          height="21"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.7"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" /></svg
+                      ></v-btn>
                     </div>
                   </div>
                 </section>
                 <section class="panel disc-library">
+                  <h2 class="section-title">Añadir discos</h2>
                   <div class="table-tools">
                     <div class="disc-search">
                       <input
@@ -820,26 +841,66 @@
                         v-model="query"
                         placeholder="Buscar artista, título o selección…"
                         aria-label="Buscar discos"
-                      /><v-btn
-                        color="primary"
+                      /><button
+                        class="control-icon primary"
                         @click="openNewDisc"
                         aria-label="Añadir disco"
                         title="Añadir disco"
-                        ><span class="add-disc-long">＋ Añadir disco</span
-                        ><span class="add-disc-short" aria-hidden="true">＋</span></v-btn
                       >
+                        ＋
+                      </button>
+                      <button
+                        class="control-icon"
+                        @click="view = 'transfer'"
+                        aria-label="Importar / exportar"
+                        title="Importar / exportar"
+                      >
+                        ⇅
+                      </button>
                     </div>
-                    <div class="inline wrap">
-                      <v-btn variant="outlined" @click="view = 'transfer'"
-                        >⇅ Importar / exportar</v-btn
-                      ><v-btn
-                        variant="text"
+                  </div>
+                  <div class="table-heading">
+                    <h2>Tabla</h2>
+                    <div class="inline">
+                      <button
+                        class="control-icon"
                         @click="
                           query = '';
                           filters = {};
                         "
-                        >Limpiar filtros</v-btn
+                        aria-label="Limpiar filtros"
+                        title="Limpiar filtros"
                       >
+                        ⎚
+                      </button>
+                      <button
+                        class="control-icon danger"
+                        @click="deleteDiscs(false)"
+                        :disabled="!checkedDiscs.length"
+                        aria-label="Eliminar selección"
+                        title="Eliminar selección"
+                      >
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="21"
+                          height="21"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.7"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+                        </svg>
+                      </button>
+                      <button
+                        class="control-icon danger"
+                        @click="deleteDiscs(true)"
+                        :disabled="!cards.length"
+                        aria-label="Vaciar tabla"
+                        title="Vaciar tabla de esta colección"
+                      >
+                        ▤×
+                      </button>
                     </div>
                   </div>
                   <details class="column-chooser">
@@ -884,6 +945,17 @@
                     <table :style="{ minWidth: visibleColumns.length * 160 + 96 + 'px' }">
                       <thead>
                         <tr>
+                          <th class="check-cell">
+                            <input
+                              type="checkbox"
+                              aria-label="Seleccionar discos filtrados"
+                              :checked="
+                                filtered.length > 0 &&
+                                filtered.every((c) => checkedDiscs.includes(c.id))
+                              "
+                              @change="toggleVisibleDiscs"
+                            />
+                          </th>
                           <th v-for="col in visibleColumns">
                             <button class="sort-head" @click="sortColumn(col.key)">
                               {{ col.label }}
@@ -893,6 +965,7 @@
                           <th>Acciones</th>
                         </tr>
                         <tr class="filter-row">
+                          <th></th>
                           <th v-for="col in visibleColumns">
                             <input
                               v-model="filters[col.key]"
@@ -905,6 +978,14 @@
                       </thead>
                       <tbody>
                         <tr v-for="card in pagedCards" :key="card.id">
+                          <td class="check-cell">
+                            <input
+                              type="checkbox"
+                              v-model="checkedDiscs"
+                              :value="card.id"
+                              :aria-label="'Seleccionar disco ' + card.number"
+                            />
+                          </td>
                           <td v-for="col in visibleColumns" :data-label="col.label">
                             <genre-select
                               v-if="col.key === 'category'"
@@ -925,7 +1006,15 @@
                               v-else
                               :aria-label="col.label + ' ' + card.number"
                               v-model="card[col.key]"
-                              :class="{ selection: col.key === 'number' }"
+                              :class="{
+                                selection: col.key === 'number',
+                                'long-value': longCell(card, col.key),
+                              }"
+                              :title="
+                                longCell(card, col.key)
+                                  ? 'Texto acortado en la tarjeta; se conserva el texto completo'
+                                  : ''
+                              "
                             />
                           </td>
                           <td>
@@ -949,6 +1038,10 @@
                   </div>
                   <div class="mobile-disc-list">
                     <article v-for="card in pagedCards" :key="card.id" class="mobile-disc-card">
+                      <label class="disc-check"
+                        ><input type="checkbox" v-model="checkedDiscs" :value="card.id" />
+                        Seleccionar disco</label
+                      >
                       <div
                         class="mobile-disc-heading"
                         v-if="
