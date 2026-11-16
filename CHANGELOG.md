@@ -1,3 +1,10 @@
+# 7.0.13
+
+- Traslado individual y múltiple entre colecciones conservando referencias de composición.
+- Gestión de composiciones mediante iconos y acciones de inserción, compactación e impresión en su barra de edición.
+- Editor de estilo con filas compactas de fuente, tamaño y color; papel centrado bajo la tarjeta.
+- Retirada de la plantilla de flechas del catálogo, manteniendo lectura de datos anteriores; seis diseños nuevos independientes.
+
 # 7.0.12
 
 - Barras de Colecciones, Añadir discos y Tabla con iconos uniformes y controles alineados.

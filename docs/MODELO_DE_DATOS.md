@@ -61,3 +61,7 @@ La selección múltiple de Tabla es temporal e independiente de la composición.
 Los textos completos se guardan y exportan sin cambios. Solo la representación SVG acorta con puntos suspensivos cuando excede el ancho, manteniendo el tamaño de letra. Las celdas largas se avisan con fondo ámbar. Las tarjetas nuevas ocultan estilo musical, RPM y selección; los valores explícitos guardados se conservan.
 
 El arrastre utiliza los extremos exteriores del conjunto de hojas visibles para pasar a una página todavía oculta. Mantiene el cambio entre hojas contiguas sin activar el temporizador en bordes interiores.
+
+## Interfaz 7.0.13
+
+Mover discos entre colecciones conserva sus identificadores y sus referencias en las composiciones. La selección de tabla y las acciones por fila tienen alcances independientes. El catálogo oculta el diseño histórico arrows y añade cartela, cinta exterior, notas, sello rock, estrella retro y medianoche. El renderizador histórico se conserva para abrir copias antiguas.
