@@ -1,3 +1,13 @@
+# 7.4.0
+
+- Publicación de avisos y acciones completos en móvil y restauración sin superponer caracteres.
+
+# 7.3.1
+
+- Avisos de recorte tipográfico también en los campos de la lista móvil.
+- Acciones móviles de editar, cambiar de colección y eliminar iguales a escritorio.
+- Restablecer ocupa su propio espacio, separado de los caracteres del campo.
+
 # 7.3.0
 
 - Publicación de edición integrada, avisos tipográficos reales y adaptación móvil de Colecciones.
