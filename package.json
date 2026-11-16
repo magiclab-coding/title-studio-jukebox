@@ -1,6 +1,6 @@
 {
   "name": "title-studio",
-  "version": "7.0.15",
+  "version": "7.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,8 @@
     "test": "node tests/studio.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:build": "node tests/build.mjs"
+    "test:build": "node tests/build.mjs",
+    "dev": "node scripts/dev-server.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "5.3.0",

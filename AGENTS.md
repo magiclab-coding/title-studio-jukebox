@@ -6,7 +6,7 @@ These rules apply to every future interaction that changes this project.
 2. Start a unique `feature/YYYYMMDD-HHMMSS-description` branch from the latest `origin/develop`. Use `bash scripts/new-interaction.sh description` in a clean checkout, or the equivalent GitHub connector operations.
 3. Never reuse the previous interaction branch or commit work directly to develop/main.
 4. Update documentation and tests appropriate to the change. Run `npm ci`, `npm test`, `node --test tests/release-version.mjs`, and `npm run build`.
-5. Open and merge a feature -> develop pull request after checks pass. Publish by opening and merging a develop -> main pull request. Main is the production branch.
+5. Open and merge a feature -> develop pull request after checks pass. Stop after integrating into develop. Do not merge to main or publish unless the user explicitly requests publication.
 6. Each main commit runs Release and GitHub Pages. Wait for the run and report the actual release and deployment result. Never claim deployment when Pages was skipped or failed.
 7. After a release merge, fast-forward develop to main if possible, otherwise merge main back through a PR. The next interaction starts from this updated develop.
 8. Keep historical release tags immutable. The `archive/legacy-versions` branch exists only to migrate the original v1-v7 revisions into real tags/Releases; it is not a development base.
@@ -36,3 +36,11 @@ Use short section comments to organize significant areas of authored code. Add c
 - Mantener el formulario de datos en src/components.js para que Artista A/B y Canción A/B sean iguales en todos los contextos.
 - Conservar las claves JSON históricas collections/collection para compatibilidad; la interfaz usa Discos.
 - Centrar las etiquetas solo en horizontal. La posición vertical y las medidas físicas no cambian.
+
+## Local development and release policy
+
+- Each feature starts from latest develop, increments the patch number and merges only into develop.
+- develop runs validation only; it must never publish Pages.
+- Start the user-local server with npm run dev when the user computer terminal is available. A remote preview is not the user computer.
+- Only an explicit publication request authorizes develop -> main. Prepare the version as major.(minor+1).0 before merging; then synchronize develop with main.
+- See docs/DESARROLLO_LOCAL.md for installation and testing. Never claim a server runs on the user computer without observing it there.

@@ -16,10 +16,10 @@ globalThis.StudioComponents = {
     props: { record: Object, genres: Array },
     template: `<div class="record-fields">
       <div class="record-core">
-        <label>Artista A<input v-model="record.artist" aria-label="Artista A" maxlength="300" placeholder="Artista principal" /></label>
+        <label>Artista A<input v-model="record.artist" aria-label="Artista A" maxlength="300" placeholder="Artista A" /></label>
         <label>Artista B<input v-model="record.artistB" aria-label="Artista B" maxlength="300" placeholder="Opcional" /></label>
         <label>Título cara A<input v-model="record.a" aria-label="Canción A" maxlength="300" placeholder="Título de la cara A" /></label>
-        <label>Canción B<input v-model="record.b" aria-label="Canción B" maxlength="300" placeholder="Título de la cara B" /></label>
+        <label>Título cara B<input v-model="record.b" aria-label="Canción B" maxlength="300" placeholder="Título de la cara B" /></label>
       </div>
       <details class="record-metadata"><summary>Datos musicales y selección</summary>
         <genre-select v-model="record.category" :genres="genres"></genre-select>

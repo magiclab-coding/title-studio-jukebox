@@ -1,3 +1,32 @@
+# 7.1.0
+
+- Publicación de los cambios validados en develop (7.0.16–7.0.19).
+- Entorno local, muestras de plantillas, formularios y controles visuales consistentes.
+
+# 7.0.19
+
+- Selector de columnas como icono en las acciones de Tabla.
+- Colores de papel y elementos con el mismo formato que los de fuentes.
+
+# 7.0.18
+
+- Campos nuevos vacíos con marcadores de posición.
+- Muestras completas y separadas de los datos del disco.
+- Metadatos con controles uniformes.
+
+# 7.0.17
+
+- Controles de fuente, tamaño y color con altura común y cuadros de tamaño/color iguales.
+- Etiquetas Papel y Elementos colocadas sobre sus controles.
+- Título del editor sin separador sobrante.
+- La muestra abre un modal de plantillas con indicación de selección en hover y foco; elegir una plantilla cierra la selección.
+
+# 7.0.16
+
+- Desarrollo local con reconstrucción y recarga automática, escuchando solo en localhost.
+- Arranque Windows y guía de instalación, actualización y traslado de datos.
+- Nuevo flujo: funciones a develop con incremento de parche; publicación explícita a main con incremento menor y parche cero.
+
 # 7.0.15
 
 - Shuffle asigna un diseño disponible a cada posición de composición conservando textos y huecos.

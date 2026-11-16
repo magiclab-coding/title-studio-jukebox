@@ -4070,3 +4070,160 @@ select:disabled {
 .type-row input[type='number'] {
   font-size: 16px;
 }
+
+/* Medidas comunes para controles y etiquetas apiladas. */
+.style-editor-fields .type-row {
+  grid-template-columns: minmax(0, 1fr) 72px 72px;
+  align-items: end;
+}
+.style-editor-fields .type-row input,
+.style-editor-fields .type-row .font-picker summary {
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  margin: 0;
+}
+.style-editor-fields .type-row input[type='color'] {
+  width: 72px;
+  padding: 4px;
+}
+.style-editor-fields .type-row > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.style-editor-fields .style-paper label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+.style-editor-fields .style-paper input {
+  width: 72px;
+  height: 40px;
+  box-sizing: border-box;
+}
+.style-preview-header {
+  position: relative;
+  padding-bottom: 18px;
+}
+.style-preview-header::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #547663;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.style-preview-header:hover::after,
+.style-preview-header:focus-within::after {
+  opacity: 1;
+}
+.template-picker-modal {
+  padding: 20px;
+  border-radius: 16px;
+}
+.template-picker-modal .style-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 3px;
+}
+.template-picker-modal .style-choices button {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d7e1da;
+}
+.template-picker-modal .style-choices button.chosen {
+  border: 2px solid #416e57;
+}
+@media (max-width: 480px) {
+  .style-editor-fields .type-row {
+    grid-template-columns: minmax(0, 1fr) 60px 60px;
+    gap: 8px;
+  }
+  .style-editor-fields .type-row input[type='color'] {
+    width: 60px;
+  }
+  .template-picker-modal .style-choices {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Metadatos: misma caja y alineación para texto y desplegables. */
+.record-fields .record-metadata > label,
+.record-fields .record-metadata > .genre-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.record-fields .record-metadata input,
+.record-fields .record-metadata select {
+  box-sizing: border-box;
+  height: 42px;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #c4cec7;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #233b31;
+  font: inherit;
+}
+
+/* Selector de columnas integrado en las acciones de tabla. */
+.disc-library .table-heading .column-chooser {
+  position: relative;
+  padding: 0;
+  border: 0;
+}
+.disc-library .table-heading .column-chooser summary {
+  padding: 0;
+  min-height: 40px;
+  list-style: none;
+}
+.column-chooser summary::-webkit-details-marker {
+  display: none;
+}
+.column-menu {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(340px, calc(100vw - 48px));
+  padding: 16px;
+  border: 1px solid #d7e1da;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px #203b3126;
+}
+.column-menu .column-options {
+  margin-top: 0;
+}
+/* Todos los colores usan el mismo control, incluidas sus etiquetas. */
+.style-editor-fields .style-paper label {
+  align-items: stretch;
+  gap: 4px;
+  font-size: 12px;
+}
+.style-editor-fields .style-paper input[type='color'] {
+  width: 72px;
+  height: 40px;
+  min-height: 40px;
+  padding: 4px;
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .style-editor-fields .style-paper input[type='color'] {
+    width: 60px;
+  }
+}
