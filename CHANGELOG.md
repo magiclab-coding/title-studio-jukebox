@@ -1,3 +1,9 @@
+# 7.0.16
+
+- Desarrollo local con reconstrucción y recarga automática, escuchando solo en localhost.
+- Arranque Windows y guía de instalación, actualización y traslado de datos.
+- Nuevo flujo: funciones a develop con incremento de parche; publicación explícita a main con incremento menor y parche cero.
+
 # 7.0.15
 
 - Shuffle asigna un diseño disponible a cada posición de composición conservando textos y huecos.
