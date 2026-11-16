@@ -13,13 +13,36 @@ globalThis.StudioComponents = {
     </label>`,
   },
   RecordFields: {
-    props: { record: Object, genres: Array },
+    props: { record: Object, genres: Array, overflow: Object, original: Object },
+    methods: {
+      isCustom(key) {
+        return this.original && String(this.record[key] || '') !== String(this.original[key] || '');
+      },
+      fieldHint(key) {
+        const messages = [];
+        if (this.overflow?.[key])
+          messages.push('Se acorta en la tarjeta con esta fuente y tamaño.');
+        if (this.original) messages.push('Original: ' + (this.original[key] || 'Sin texto'));
+        return messages.join(' ');
+      },
+    },
     template: `<div class="record-fields">
       <div class="record-core">
-        <label>Artista A<input v-model="record.artist" aria-label="Artista A" maxlength="300" placeholder="Artista A" /></label>
-        <label>Artista B<input v-model="record.artistB" aria-label="Artista B" maxlength="300" placeholder="Opcional" /></label>
-        <label>Título cara A<input v-model="record.a" aria-label="Canción A" maxlength="300" placeholder="Título de la cara A" /></label>
-        <label>Título cara B<input v-model="record.b" aria-label="Canción B" maxlength="300" placeholder="Título de la cara B" /></label>
+        <label v-for="field in [
+          {key:'artist', label:'Artista A', aria:'Artista A', placeholder:'Artista A'},
+          {key:'artistB', label:'Artista B', aria:'Artista B', placeholder:'Opcional'},
+          {key:'a', label:'Título cara A', aria:'Canción A', placeholder:'Título de la cara A'},
+          {key:'b', label:'Título cara B', aria:'Canción B', placeholder:'Título de la cara B'}
+        ]" :key="field.key">{{ field.label }}
+          <span class="record-input-wrap">
+            <input v-model="record[field.key]" :aria-label="field.aria" maxlength="300"
+              :placeholder="field.placeholder" :class="{'long-value': overflow?.[field.key]}"
+              :title="fieldHint(field.key)" :aria-description="fieldHint(field.key)" />
+            <button v-if="isCustom(field.key)" type="button" class="field-restore"
+              @click="record[field.key] = original[field.key] || ''"
+              :aria-label="'Restaurar original de ' + field.label" title="Volver al original">↶</button>
+          </span>
+        </label>
       </div>
       <details class="record-metadata"><summary>Datos musicales y selección</summary>
         <genre-select v-model="record.category" :genres="genres"></genre-select>

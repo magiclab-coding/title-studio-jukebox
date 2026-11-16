@@ -51,3 +51,11 @@ Los elementos adyacentes deben compartir altura, eje central, márgenes, bordes,
 tipografía y respuesta de foco/hover. Los iconos de una sección usan el mismo
 componente visual; los contenedores details no pueden desalinearlos.
 Verificar las medidas reales y la alineación en pantalla antes de entregar.
+
+## Recorte tipográfico y edición
+
+Usar el mismo cálculo de ancho para recortar etiquetas y señalar campos.
+Tener en cuenta glifos, fuente, tamaño y espacio interior del diseño, nunca
+un límite fijo de caracteres. Recalcular al cargar las fuentes.
+La edición de Composición personaliza los textos de la posición; la de Discos
+modifica los originales. No añadir campos duplicados ni un editor de textos separado.
