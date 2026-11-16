@@ -818,6 +818,7 @@ assert.equal(
   true,
 );
 app.editCard();
+app.draft.value.style = 'block';
 app.draft.value.font = 'Georgia';
 app.draft.value.titlePx = 20;
 app.draft.value.a = 'WWWWWWWWWWWWWWWWWWWW';
