@@ -1,3 +1,7 @@
+# 7.3.0
+
+- Publicación de edición integrada, avisos tipográficos reales y adaptación móvil de Colecciones.
+
 # 7.2.1
 
 - Personalización de textos integrada en los cuatro campos habituales; se retiran el icono T y el modal separado.
