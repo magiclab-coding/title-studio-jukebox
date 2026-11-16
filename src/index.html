@@ -643,19 +643,7 @@
                         @click="openStyle(true)"
                         aria-label="Cambiar estilo de la tarjeta"
                       >
-                        <span
-                          v-html="
-                            svg({
-                              ...draft,
-                              artist: draft.artist || 'Artista A',
-                              a:
-                                !draft.a || draft.a === 'Nuevo título'
-                                  ? 'Título de la cara A'
-                                  : draft.a,
-                              b: draft.b || 'Canción B',
-                            })
-                          "
-                        ></span
+                        <span v-html="svg(previewRecord(draft))"></span
                         ><small>◈ Cambiar estilo</small></button
                       ><label v-if="editorMode === 'create' && insertMode === 'new'"
                         >Guardar en<select v-model="destinationCollection">
@@ -744,7 +732,7 @@
                         @click="stylePanel = stylePanel === 'select' ? 'edit' : 'select'"
                         aria-label="Seleccionar estilo"
                         title="Seleccionar plantilla"
-                        v-html="svg(styleCard)"
+                        v-html="svg(previewRecord(styleCard))"
                       ></button>
                     </div>
                     <v-dialog
@@ -773,7 +761,7 @@
                             "
                             :aria-pressed="styleCard.style === t.id"
                           >
-                            <div v-html="templatePreview(t, styleCard)"></div>
+                            <div v-html="templatePreview(t, styleCard, true)"></div>
                             <span>{{ t.name }}</span>
                           </button>
                         </div>

@@ -1,3 +1,9 @@
+# 7.0.18
+
+- Campos nuevos vacíos con marcadores de posición.
+- Muestras completas y separadas de los datos del disco.
+- Metadatos con controles uniformes.
+
 # 7.0.17
 
 - Controles de fuente, tamaño y color con altura común y cuadros de tamaño/color iguales.

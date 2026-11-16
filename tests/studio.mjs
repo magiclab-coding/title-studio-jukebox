@@ -710,3 +710,18 @@ assert.match(graphicSvg, /fill="#abcdef"/);
 assert.match(graphicSvg, /fill="#112233">ARTISTA/);
 assert.match(graphicSvg, /fill="#445566">TITULO/);
 console.log('PASS: shuffle preserves records and positions; graphic ink is independent of text');
+
+// Los textos de muestra no contaminan el borrador ni los datos guardados.
+app.openNewDisc();
+assert.equal(app.draft.value.a, '');
+assert.equal(app.draft.value.artist, '');
+const emptyRecord = { artist: '', artistB: '', a: '', b: '', number: '', category: '' };
+const sampleRecord = app.previewRecord(emptyRecord);
+assert.equal(sampleRecord.artistB, 'Artista B');
+assert.equal(sampleRecord.b, 'Título de la cara B');
+assert.equal(emptyRecord.a, '');
+const catalogSample = app.templatePreview(app.templates[1], emptyRecord, true);
+assert.match(catalogSample, />45 RPM</);
+assert.match(catalogSample, />A1</);
+assert.match(catalogSample, />ROCK</);
+console.log('PASS: empty drafts and isolated complete template samples');
