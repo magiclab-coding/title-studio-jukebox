@@ -74,3 +74,19 @@ o iguales al original se eliminan para recuperar la herencia del disco.
 Los originales permanecen en `collections[].cards`; estilos globales y Shuffle
 no modifican los textos alternativos. SVG, impresión y PDF usan el mismo
 renderizador. Las copias JSON y las composiciones duplicadas conservan estos textos.
+
+## Edición integrada y medición tipográfica
+
+En Composición, los cuatro campos habituales editan únicamente la posición.
+`items[].text` guarda diferencias mediante `artistA`, `artistB`, `a` y `b`;
+los originales se mantienen en Discos. Volver al valor original elimina la
+diferencia. Un botón de restauración aparece dentro del campo solo si difiere.
+El campo central antiguo `text.artist` se sigue leyendo y se convierte al guardar.
+
+El SVG y los avisos de Tabla y formulario comparten la medición Canvas de
+glifos con familia y tamaño reales. Se respeta el ancho disponible del diseño,
+incluida la línea central con decoraciones. Las fuentes locales se cargan
+antes de invalidar y recalcular la caché. El recorte mantiene el tamaño y usa
+puntos suspensivos; nunca modifica el contenido guardado.
+Tabla evalúa las posiciones de la composición activa; si el disco no está
+insertado, utiliza su apariencia predeterminada.
