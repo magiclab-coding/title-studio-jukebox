@@ -215,7 +215,7 @@ const normalize = (c) => {
   return {
     id: uid(),
     artist: '',
-    a: 'Nuevo título',
+    a: '',
     b: '',
     number: '',
     artistB: '',
@@ -361,10 +361,19 @@ function makeSvg(c, settings) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(c.b, 112, titlePx)}${meta}</svg>`;
 }
 
-function templatePreview(t, card, settings) {
+// Los ejemplos solo se dibujan; nunca se guardan en el disco.
+const previewRecord = (card) => ({
+  ...card,
+  artist: card.artist || 'Artista A',
+  artistB: card.artistB || (!card.artist ? 'Artista B' : ''),
+  a: card.a || 'Título de la cara A',
+  b: card.b || 'Título de la cara B',
+});
+
+function templatePreview(t, card, settings, sampleMeta = false) {
   return makeSvg(
     {
-      ...card,
+      ...previewRecord(card),
       style: t.id,
       ink: t.ink,
       paper: t.paper,
@@ -377,6 +386,17 @@ function templatePreview(t, card, settings) {
           .filter((k) => t[k] !== undefined)
           .map((k) => [k, t[k]]),
       ),
+      // El catálogo muestra todos los elementos disponibles del diseño.
+      ...(sampleMeta
+        ? {
+            showGenre: true,
+            showRpm: true,
+            showNumber: true,
+            category: card.category || 'ROCK',
+            rpm: card.rpm || '45 RPM',
+            number: card.number || 'A1',
+          }
+        : {}),
     },
     settings,
   );
@@ -2122,11 +2142,13 @@ createApp({
       dragEdge,
       edgeDirection,
       moveAcrossPage,
-      templatePreview: (t, c) =>
+      previewRecord,
+      templatePreview: (t, c, sampleMeta = false) =>
         templatePreview(
           { ...t, ...(settings.value.templateDefaults?.[t.id] || {}) },
           c,
           settings.value,
+          sampleMeta,
         ),
       selectedItemId,
       currentItem,

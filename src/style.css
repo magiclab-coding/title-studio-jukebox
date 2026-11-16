@@ -4158,3 +4158,24 @@ select:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+/* Metadatos: misma caja y alineación para texto y desplegables. */
+.record-fields .record-metadata > label,
+.record-fields .record-metadata > .genre-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.record-fields .record-metadata input,
+.record-fields .record-metadata select {
+  box-sizing: border-box;
+  height: 42px;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #c4cec7;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #233b31;
+  font: inherit;
+}
