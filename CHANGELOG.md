@@ -1,3 +1,8 @@
+# 7.1.0
+
+- Publicación de los cambios validados en develop (7.0.16–7.0.19).
+- Entorno local, muestras de plantillas, formularios y controles visuales consistentes.
+
 # 7.0.19
 
 - Selector de columnas como icono en las acciones de Tabla.
