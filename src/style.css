@@ -4272,7 +4272,8 @@ select:disabled {
   font-size: 18px;
   line-height: 1;
 }
-.field-restore:hover, .field-restore:focus-visible {
+.field-restore:hover,
+.field-restore:focus-visible {
   background: #dfe9e2;
   outline: 2px solid #678d78;
 }

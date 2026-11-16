@@ -281,8 +281,13 @@ function measureLabelText(value, family, px) {
     width = textMeasureContext.measureText(text).width;
   } else {
     // Respaldo para exportaciones sin DOM; el navegador mide los glifos reales.
-    width = Array.from(text).reduce((sum, char) =>
-      sum + (/\s/.test(char) ? 0.3 : /[ilI.,'!]/.test(char) ? 0.28 : /[MW@]/.test(char) ? 0.9 : 0.6), 0) * px;
+    width =
+      Array.from(text).reduce(
+        (sum, char) =>
+          sum +
+          (/\s/.test(char) ? 0.3 : /[ilI.,'!]/.test(char) ? 0.28 : /[MW@]/.test(char) ? 0.9 : 0.6),
+        0,
+      ) * px;
   }
   if (textWidthCache.size > 4000) textWidthCache.clear();
   textWidthCache.set(key, width);
@@ -292,7 +297,8 @@ function fitLabelText(value, family, px, available) {
   const text = String(value || '');
   if (measureLabelText(text, family, px) <= available) return { text, truncated: false };
   const chars = Array.from(text);
-  let low = 0, high = chars.length;
+  let low = 0,
+    high = chars.length;
   while (low < high) {
     const mid = Math.ceil((low + high) / 2);
     const candidate = chars.slice(0, mid).join('').trimEnd() + '…';
@@ -304,22 +310,38 @@ function fitLabelText(value, family, px, available) {
 function labelAvailable(style, artist) {
   if (style === 'retro-stamp') return 210;
   if (!artist) return 280;
-  return {
-    stars: 200, stamp: 240, two: 240,
-    'classic-box': 220, notes: 220, 'star-round': 216,
-    ghosts: 220, 'out-ribbon': 232, ribbon: 252, chevron: 252,
-    inverse: 264, pill: 264,
-  }[style] || 280;
+  return (
+    {
+      stars: 200,
+      stamp: 240,
+      two: 240,
+      'classic-box': 220,
+      notes: 220,
+      'star-round': 216,
+      ghosts: 220,
+      'out-ribbon': 232,
+      ribbon: 252,
+      chevron: 252,
+      inverse: 264,
+      pill: 264,
+    }[style] || 280
+  );
 }
 function labelField(card, key, settings) {
   const artist = key === 'artist' || key === 'artistB';
   const family = artist ? card.artistFont || card.font || 'Georgia' : card.font || 'Georgia';
-  const basePx = artist ? card.artistPx ?? 19 * (+card.artistSize || 100) / 100 :
-    card.titlePx ?? 20 * (+card.size || 100) / 100;
-  const scale = Math.min(1, (300 * settings.height / settings.width) / 150);
+  const basePx = artist
+    ? (card.artistPx ?? (19 * (+card.artistSize || 100)) / 100)
+    : (card.titlePx ?? (20 * (+card.size || 100)) / 100);
+  const scale = Math.min(1, (300 * settings.height) / settings.width / 150);
   const px = (+basePx || 20) * scale;
   const available = labelAvailable(card.style, artist);
-  return { ...fitLabelText(artist ? artistName(card) : card[key], family, px, available), family, px, available };
+  return {
+    ...fitLabelText(artist ? artistName(card) : card[key], family, px, available),
+    family,
+    px,
+    available,
+  };
 }
 // Los textos de posiciones antiguas siguen siendo compatibles.
 function labelContent(record, text = {}) {
@@ -362,7 +384,16 @@ function makeSvg(c, settings) {
     artistFill = artistInk;
   const line = (y, weight = 1, dash = '0') =>
     `<path d="M10 ${y * sy}H290" stroke="${decorationInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
-  const centerHalf = Math.min(140, measureLabelText(fitLabelText(name, artistFont, textSize(name, artistPx), labelAvailable(c.style, true)).text, artistFont, textSize(name, artistPx)) / 2 + 8);
+  const centerHalf = Math.min(
+    140,
+    measureLabelText(
+      fitLabelText(name, artistFont, textSize(name, artistPx), labelAvailable(c.style, true)).text,
+      artistFont,
+      textSize(name, artistPx),
+    ) /
+      2 +
+      8,
+  );
   if (['classic-box', 'out-ribbon', 'notes', 'star-round', 'ghosts'].includes(c.style)) {
     art = `<path d="M0 ${4 * sy}H300 M0 ${146 * sy}H300" stroke="${decorationInk}" stroke-width="${6 * sy}"/>`;
     if (c.style === 'out-ribbon')
@@ -914,16 +945,21 @@ createApp({
       fontRevision.value++;
     }
     if (document.fonts?.ready) {
-      Promise.all(Object.keys(globalThis.StudioFonts || {}).map((family) =>
-        document.fonts.load('400 20px "' + family + '"'),
-      )).then(refreshFontMetrics, refreshFontMetrics);
+      Promise.all(
+        Object.keys(globalThis.StudioFonts || {}).map((family) =>
+          document.fonts.load('400 20px "' + family + '"'),
+        ),
+      ).then(refreshFontMetrics, refreshFontMetrics);
       document.fonts.addEventListener?.('loadingdone', refreshFontMetrics);
     }
     const editorOverflow = computed(() => {
       fontRevision.value;
-      return Object.fromEntries(['artist', 'artistB', 'a', 'b'].map((key) => [
-        key, Boolean(draft.value[key]) && labelField(draft.value, key, settings.value).truncated,
-      ]));
+      return Object.fromEntries(
+        ['artist', 'artistB', 'a', 'b'].map((key) => [
+          key,
+          Boolean(draft.value[key]) && labelField(draft.value, key, settings.value).truncated,
+        ]),
+      );
     });
     watch(activeComposition, () => {
       selectedItemId.value = null;
@@ -1220,16 +1256,20 @@ createApp({
         if (item && editorContext.value === 'composition') {
           // Solo se guardan diferencias de esta tarjeta; los originales siguen en Discos.
           const keys = { artist: 'artistA', artistB: 'artistB', a: 'a', b: 'b' };
-          item.text = Object.fromEntries(Object.entries(keys)
-            .map(([key, stored]) => [key, stored, String(draft.value[key] || '').trim()])
-            .filter(([key, , value]) => value !== String(original[key] || ''))
-            .map(([, stored, value]) => [stored, value]));
+          item.text = Object.fromEntries(
+            Object.entries(keys)
+              .map(([key, stored]) => [key, stored, String(draft.value[key] || '').trim()])
+              .filter(([key, , value]) => value !== String(original[key] || ''))
+              .map(([, stored, value]) => [stored, value]),
+          );
           item.appearance = appearanceOf(draft.value);
           for (const column of columns) {
             if (!(column.key in keys)) original[column.key] = draft.value[column.key];
           }
         } else {
-          const content = Object.fromEntries(columns.map((column) => [column.key, draft.value[column.key]]));
+          const content = Object.fromEntries(
+            columns.map((column) => [column.key, draft.value[column.key]]),
+          );
           Object.assign(original, content, appearanceOf(draft.value));
         }
         selected.value = original.id;
@@ -1299,8 +1339,8 @@ createApp({
             : ['artist', 'artistB', 'a', 'b'].includes(key)
               ? labelContent(target, item.text)[key]
               : appearanceKeys.includes(key)
-              ? (item.appearance[key] ?? target[key])
-              : target[key],
+                ? (item.appearance[key] ?? target[key])
+                : target[key],
         set: (target, key, value) => {
           if (appearanceKeys.includes(key)) item.appearance[key] = value;
           else target[key] = value;
@@ -1334,7 +1374,9 @@ createApp({
       if (!['artist', 'artistB', 'a', 'b'].includes(key) || !card[key]) return false;
       const positions = composition.value?.items.filter((item) => item.cardId === card.id) || [];
       const examples = positions.length ? positions.map(renderedCard) : [card];
-      return examples.some((example) => Boolean(example[key]) && labelField(example, key, settings.value).truncated);
+      return examples.some(
+        (example) => Boolean(example[key]) && labelField(example, key, settings.value).truncated,
+      );
     };
     function toggleVisibleDiscs(event) {
       const ids = filtered.value.map((c) => c.id);

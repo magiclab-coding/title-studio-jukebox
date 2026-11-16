@@ -20,7 +20,8 @@ globalThis.StudioComponents = {
       },
       fieldHint(key) {
         const messages = [];
-        if (this.overflow?.[key]) messages.push('Se acorta en la tarjeta con esta fuente y tamaño.');
+        if (this.overflow?.[key])
+          messages.push('Se acorta en la tarjeta con esta fuente y tamaño.');
         if (this.original) messages.push('Original: ' + (this.original[key] || 'Sin texto'));
         return messages.join(' ');
       },

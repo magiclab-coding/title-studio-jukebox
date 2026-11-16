@@ -40,18 +40,31 @@ const context = {
   document: {
     querySelector: () => null,
     getElementById: () => output,
-    createElement: (tag) => tag === 'canvas' ? {
-      getContext: () => ({
-        font: '',
-        measureText(text) {
-          const px = Number(/([0-9.]+)px/.exec(this.font)?.[1]) || 20;
-          const familyScale = this.font.includes('Oswald') ? 0.7 : 1;
-          const units = Array.from(text).reduce((sum, char) =>
-            sum + (/\s/.test(char) ? 0.3 : /[ilI.,'!]/.test(char) ? 0.28 : /[MW@]/.test(char) ? 0.9 : 0.6), 0);
-          return { width: units * px * familyScale };
-        },
-      }),
-    } : { click() {} },
+    createElement: (tag) =>
+      tag === 'canvas'
+        ? {
+            getContext: () => ({
+              font: '',
+              measureText(text) {
+                const px = Number(/([0-9.]+)px/.exec(this.font)?.[1]) || 20;
+                const familyScale = this.font.includes('Oswald') ? 0.7 : 1;
+                const units = Array.from(text).reduce(
+                  (sum, char) =>
+                    sum +
+                    (/\s/.test(char)
+                      ? 0.3
+                      : /[ilI.,'!]/.test(char)
+                        ? 0.28
+                        : /[MW@]/.test(char)
+                          ? 0.9
+                          : 0.6),
+                  0,
+                );
+                return { width: units * px * familyScale };
+              },
+            }),
+          }
+        : { click() {} },
   },
   URL: { createObjectURL: () => '', revokeObjectURL() {} },
   Blob,
@@ -742,7 +755,8 @@ app.view.value = 'compose';
 const textPosition = app.composition.value.items[0];
 app.selectedItemId.value = textPosition.id;
 app.selected.value = textPosition.cardId;
-const originalDisc = app.collections.value.flatMap((group) => group.cards)
+const originalDisc = app.collections.value
+  .flatMap((group) => group.cards)
   .find((card) => card.id === textPosition.cardId);
 const originalContent = JSON.stringify(originalDisc);
 app.editCard();
@@ -786,18 +800,23 @@ assert.equal(textPosition.text.artistA, 'Central anterior');
 assert.equal(JSON.stringify(originalDisc), originalContent);
 
 // Igual número de letras, distinto ancho real; la fuente y el tamaño importan.
-const metrics = (font, px, value, style = 'block') => vm.runInNewContext(
-  `labelField({font:${JSON.stringify(font)},titlePx:${px},a:${JSON.stringify(value)},style:${JSON.stringify(style)}},'a',{width:76,height:38})`,
-  context,
-);
+const metrics = (font, px, value, style = 'block') =>
+  vm.runInNewContext(
+    `labelField({font:${JSON.stringify(font)},titlePx:${px},a:${JSON.stringify(value)},style:${JSON.stringify(style)}},'a',{width:76,height:38})`,
+    context,
+  );
 assert.equal(metrics('Georgia', 20, 'iiiiiiiiiiiiiiiiiiii').truncated, false);
 assert.equal(metrics('Georgia', 20, 'WWWWWWWWWWWWWWWWWWWW').truncated, true);
 assert.equal(metrics('Oswald', 20, 'WWWWWWWWWWWWWWWWWWWW').truncated, false);
 assert.equal(metrics('Georgia', 12, 'WWWWWWWWWWWWWWWWWWWW').truncated, false);
 const fitted = metrics('Georgia', 20, 'WWWWWWWWWWWWWWWWWWWW');
-assert.equal(vm.runInNewContext(
-  `measureLabelText(${JSON.stringify(fitted.text)},'Georgia',20) <= 280`, context,
-), true);
+assert.equal(
+  vm.runInNewContext(
+    `measureLabelText(${JSON.stringify(fitted.text)},'Georgia',20) <= 280`,
+    context,
+  ),
+  true,
+);
 app.editCard();
 app.draft.value.font = 'Georgia';
 app.draft.value.titlePx = 20;
@@ -806,4 +825,6 @@ assert.equal(app.editorOverflow.value.a, true);
 app.draft.value.titlePx = 12;
 assert.equal(app.editorOverflow.value.a, false);
 app.editorDialog.value = false;
-console.log('PASS: integrated editing preserves originals; clipping uses glyphs, font, size and layout');
+console.log(
+  'PASS: integrated editing preserves originals; clipping uses glyphs, font, size and layout',
+);
