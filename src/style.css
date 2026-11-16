@@ -4070,3 +4070,91 @@ select:disabled {
 .type-row input[type='number'] {
   font-size: 16px;
 }
+
+/* Medidas comunes para controles y etiquetas apiladas. */
+.style-editor-fields .type-row {
+  grid-template-columns: minmax(0, 1fr) 72px 72px;
+  align-items: end;
+}
+.style-editor-fields .type-row input,
+.style-editor-fields .type-row .font-picker summary {
+  box-sizing: border-box;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  margin: 0;
+}
+.style-editor-fields .type-row input[type='color'] {
+  width: 72px;
+  padding: 4px;
+}
+.style-editor-fields .type-row > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.style-editor-fields .style-paper label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+}
+.style-editor-fields .style-paper input {
+  width: 72px;
+  height: 40px;
+  box-sizing: border-box;
+}
+.style-preview-header {
+  position: relative;
+  padding-bottom: 18px;
+}
+.style-preview-header::after {
+  content: attr(data-hint);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #547663;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.style-preview-header:hover::after,
+.style-preview-header:focus-within::after {
+  opacity: 1;
+}
+.template-picker-modal {
+  padding: 20px;
+  border-radius: 16px;
+}
+.template-picker-modal .style-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 3px;
+}
+.template-picker-modal .style-choices button {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d7e1da;
+}
+.template-picker-modal .style-choices button.chosen {
+  border: 2px solid #416e57;
+}
+@media (max-width: 480px) {
+  .style-editor-fields .type-row {
+    grid-template-columns: minmax(0, 1fr) 60px 60px;
+    gap: 8px;
+  }
+  .style-editor-fields .type-row input[type='color'] {
+    width: 60px;
+  }
+  .template-picker-modal .style-choices {
+    grid-template-columns: 1fr;
+  }
+}
