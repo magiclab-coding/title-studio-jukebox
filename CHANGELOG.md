@@ -1,3 +1,8 @@
+# 7.0.19
+
+- Selector de columnas como icono en las acciones de Tabla.
+- Colores de papel y elementos con el mismo formato que los de fuentes.
+
 # 7.0.18
 
 - Campos nuevos vacíos con marcadores de posición.
