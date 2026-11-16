@@ -686,3 +686,27 @@ app.templateFilter.value = 'Todos';
 assert.ok(!app.visibleTemplates.value.some((t) => t.id === 'arrows'));
 assert.ok(app.visibleTemplates.value.some((t) => t.id === 'classic-box'));
 console.log('PASS: collection transfer preserves identities and retired design is excluded');
+// Shuffle conserva el contenido y la geometría, y excluye diseños retirados.
+const beforeMix = JSON.stringify(
+  app.composition.value.items.map(({ appearance, ...item }) => item),
+);
+const beforeRecords = JSON.stringify(app.collections.value);
+app.shuffleStyles();
+assert.equal(
+  JSON.stringify(app.composition.value.items.map(({ appearance, ...item }) => item)),
+  beforeMix,
+);
+assert.equal(JSON.stringify(app.collections.value), beforeRecords);
+assert.ok(
+  app.composition.value.items.every((i) =>
+    app.templates.some((t) => !t.hidden && t.id === i.appearance.style),
+  ),
+);
+const graphicSvg = vm.runInNewContext(
+  `makeSvg(normalize({style:'brush',artist:'ARTISTA',a:'TITULO',artistInk:'#112233',ink:'#445566',graphicsInk:'#abcdef'}),{width:76,height:38,rpm:'45 RPM'})`,
+  context,
+);
+assert.match(graphicSvg, /fill="#abcdef"/);
+assert.match(graphicSvg, /fill="#112233">ARTISTA/);
+assert.match(graphicSvg, /fill="#445566">TITULO/);
+console.log('PASS: shuffle preserves records and positions; graphic ink is independent of text');
