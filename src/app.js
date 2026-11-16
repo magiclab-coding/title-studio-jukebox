@@ -4,6 +4,7 @@ const templates = [
   {
     id: 'arrows',
     font: 'Oswald',
+    hidden: true,
     name: 'Classic Arrows',
     group: 'Clásicos',
     description: 'Flechas junto al artista',
@@ -114,6 +115,66 @@ const templates = [
     paper: '#fff8eb',
     font: 'Space Grotesk',
   },
+  {
+    id: 'classic-box',
+    name: 'Cartela clásica',
+    group: 'Clásicos',
+    description: 'Banda central y cartela blanca',
+    font: 'Oswald',
+    ink: '#175d39',
+    artistInk: '#175d39',
+    paper: '#ffffff',
+  },
+  {
+    id: 'out-ribbon',
+    name: 'Cinta exterior',
+    group: 'Clásicos',
+    description: 'Remates en punta y centro abierto',
+    font: 'Space Grotesk',
+    ink: '#b52b37',
+    artistInk: '#b52b37',
+    paper: '#fffdf5',
+  },
+  {
+    id: 'notes',
+    name: 'Notas de jukebox',
+    group: 'Clásicos',
+    description: 'Notas musicales a ambos lados',
+    font: 'DM Sans',
+    ink: '#214c8c',
+    artistInk: '#214c8c',
+    paper: '#ffffff',
+  },
+  {
+    id: 'retro-stamp',
+    name: 'Sello Rock',
+    group: 'Vintage',
+    description: 'Sello lateral y canciones en franjas claras',
+    font: 'Oswald',
+    ink: '#303030',
+    artistInk: '#303030',
+    paper: '#efb36c',
+  },
+  {
+    id: 'star-round',
+    name: 'Estrella retro',
+    group: 'Vintage',
+    description: 'Cartela redonda y estrellas geométricas',
+    font: 'Playfair Display',
+    ink: '#ac286b',
+    artistInk: '#ac286b',
+    paper: '#fff8f0',
+  },
+  {
+    id: 'ghosts',
+    name: 'Medianoche',
+    group: 'Vintage',
+    description: 'Fantasmas geométricos y banda central',
+    font: 'Permanent Marker',
+    ink: '#222222',
+    artistInk: '#222222',
+    paper: '#ffffff',
+  },
 ];
 // Fuentes libres incluidas en el build; no dependen de servicios externos.
 const fontOptions = [
@@ -148,7 +209,7 @@ const uid = () => globalThis.crypto?.randomUUID?.() || Date.now() + '-' + Math.r
 // Completa los campos y conserva los nombres de estilo de las copias antiguas.
 const normalize = (c) => {
   const style =
-    { classic: 'arrows', mint: 'ribbon', midnight: 'block' }[c.style] || c.style || 'arrows';
+    { classic: 'arrows', mint: 'ribbon', midnight: 'block' }[c.style] || c.style || 'classic-box';
   const t = templates.find((t) => t.id === style) || templates[0];
   const parts = !c.artistB ? String(c.artist || '').split(/\s+\/\s+/) : [c.artist || ''];
   return {
@@ -230,7 +291,26 @@ function makeSvg(c, settings) {
   const line = (y, weight = 1, dash = '0') =>
     `<path d="M10 ${y * sy}H290" stroke="${artistInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
   const centerHalf = Math.min(140, name.length * textSize(name, artistPx) * 0.36 + 8);
-  if (c.style === 'brush') {
+  if (['classic-box', 'out-ribbon', 'notes', 'star-round', 'ghosts'].includes(c.style)) {
+    art = `<path d="M0 ${4 * sy}H300 M0 ${146 * sy}H300" stroke="${ink}" stroke-width="${6 * sy}"/>`;
+    if (c.style === 'out-ribbon')
+      art += `<path d="M0 ${75 * sy}H300" stroke="${ink}" stroke-width="${15 * sy}"/><path d="M28 ${57 * sy}H272L286 ${75 * sy}L272 ${93 * sy}H28L14 ${75 * sy}Z" fill="${paper}" stroke="${ink}" stroke-width="3"/>`;
+    else if (c.style === 'ghosts') {
+      art += `<rect x="32" y="${58 * sy}" width="236" height="${34 * sy}" fill="${ink}" opacity=".16"/>`;
+      for (const x of [8, 278])
+        art += `<path d="M${x} ${85 * sy}v-${25 * sy}a7 7 0 0 1 14 0v${25 * sy}l-4 -4 -3 4 -3 -4z" fill="${ink}"/><circle cx="${x + 5}" cy="${60 * sy}" r="1.5" fill="${paper}"/><circle cx="${x + 10}" cy="${60 * sy}" r="1.5" fill="${paper}"/>`;
+    } else {
+      art += `<path d="M0 ${75 * sy}H300" stroke="${ink}" stroke-width="${c.style === 'classic-box' ? 14 : 2}"/><rect x="30" y="${57 * sy}" width="240" height="${36 * sy}" rx="${c.style === 'star-round' ? 18 : 0}" fill="${paper}" stroke="${ink}" stroke-width="2.5"/>`;
+      if (c.style === 'notes')
+        for (const x of [8, 280])
+          art += `<text x="${x}" y="${81 * sy}" fill="${ink}" font-size="23">♪</text>`;
+      if (c.style === 'star-round')
+        for (const x of [13, 287])
+          art += `<text x="${x}" y="${82 * sy}" text-anchor="middle" fill="${ink}" font-size="22">✦</text>`;
+    }
+  } else if (c.style === 'retro-stamp') {
+    art = `<rect x="4" y="${10 * sy}" width="35" height="${130 * sy}" rx="9" fill="${artistInk}" opacity=".12"/><text transform="translate(28 ${130 * sy}) rotate(-90)" fill="${artistInk}" font-family="Oswald" font-size="22">ROCK</text><rect x="44" y="${14 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/><rect x="44" y="${94 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/>`;
+  } else if (c.style === 'brush') {
     art = `<path d="M4 ${76 * sy}L${150 - centerHalf} ${72 * sy}L${150 - centerHalf} ${75 * sy}Z M296 ${76 * sy}L${150 + centerHalf} ${72 * sy}L${150 + centerHalf} ${75 * sy}Z" fill="${artistInk}"/>`;
   } else if (c.style === 'ribbon' || c.style === 'chevron') {
     art = `<path d="M6 ${58 * sy}L20 ${75 * sy}L6 ${92 * sy}H294L280 ${75 * sy}L294 ${58 * sy}Z" fill="${artistInk}"/>`;
@@ -1115,6 +1195,30 @@ createApp({
       for (const composition of compositions.value)
         composition.items = composition.items.filter((i) => !ids.has(i.cardId));
       checkedDiscs.value = [];
+    }
+    // Mover el disco conserva su identidad y todas sus referencias de composición.
+    const moveDialog = ref(false),
+      moveIds = ref([]),
+      moveDestination = ref('');
+    function openMove(ids = checkedDiscs.value) {
+      moveIds.value = [...ids];
+      moveDestination.value =
+        collections.value.find((c) => c.id !== activeCollection.value)?.id || '';
+      moveDialog.value = !!moveIds.value.length && !!moveDestination.value;
+    }
+    function confirmMove() {
+      const destination = collections.value.find((c) => c.id === moveDestination.value);
+      if (!destination || destination.id === activeCollection.value) return;
+      const ids = new Set(moveIds.value);
+      destination.cards.push(...cards.value.filter((c) => ids.has(c.id)));
+      cards.value = cards.value.filter((c) => !ids.has(c.id));
+      checkedDiscs.value = [];
+      moveDialog.value = false;
+      notify('Discos trasladados');
+    }
+    function renameComposition() {
+      const name = window.prompt('Nombre de la composición', composition.value?.name || '');
+      if (name?.trim() && composition.value) composition.value.name = name.trim();
     }
     function remove(id) {
       cards.value = cards.value.filter((c) => c.id !== id);
@@ -2082,6 +2186,12 @@ createApp({
       totalPages,
       pagedCards,
       checkedDiscs,
+      moveDialog,
+      moveIds,
+      moveDestination,
+      openMove,
+      confirmMove,
+      renameComposition,
       longCell,
       toggleVisibleDiscs,
       deleteDiscs,
@@ -2138,7 +2248,8 @@ createApp({
       filtered,
       visibleTemplates: computed(() =>
         templates.filter(
-          (t) => templateFilter.value === 'Todos' || t.group === templateFilter.value,
+          (t) =>
+            !t.hidden && (templateFilter.value === 'Todos' || t.group === templateFilter.value),
         ),
       ),
       printCols,

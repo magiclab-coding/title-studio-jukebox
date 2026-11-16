@@ -3843,3 +3843,116 @@ select:disabled {
   padding: 0;
   min-height: 20px;
 }
+
+/* Gestores con cabecera y controles de altura común. */
+.collection-manager .manager-row,
+.composition-manager .manager-row {
+  padding-top: 12px;
+  align-items: center;
+}
+.collection-manager .manager-row label,
+.composition-manager .manager-row label {
+  flex: 1;
+  margin: 0;
+}
+.composition-manager .composition-select select {
+  height: 42px;
+  margin: 0;
+}
+.composition-manager .section-title {
+  padding: 16px 18px 0;
+}
+.composition-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.workspace-toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.row-icon {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  font-size: 17px;
+  border: 0;
+  background: transparent;
+}
+.transfer-dialog {
+  padding: 20px;
+}
+.transfer-dialog .modal-footer button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #d4dcd7;
+}
+.transfer-dialog .primary {
+  background: #29473d;
+  color: white;
+}
+/* Typographie, corps et couleur restent sur le même axe. */
+.type-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 68px 46px;
+  gap: 10px;
+  align-items: end;
+  margin: 12px 0;
+}
+.type-row > label {
+  margin: 0;
+  font-size: 11px;
+  color: #64776e;
+}
+.type-row input,
+.type-row .font-picker summary {
+  height: 36px;
+  min-height: 36px;
+  padding: 6px 8px;
+  margin: 0;
+  border-radius: 7px;
+}
+.type-row input[type='color'] {
+  width: 46px;
+  padding: 3px;
+}
+.type-row .font-picker {
+  margin: 0;
+  min-width: 0;
+}
+.type-row .font-picker summary span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.type-row .font-picker .field-caption {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+.style-paper {
+  display: flex;
+  justify-content: center;
+}
+.style-paper label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 12px;
+}
+.style-paper input {
+  width: 46px;
+  height: 32px;
+  padding: 3px;
+  margin: 0;
+}
+.type-row .font-options {
+  max-height: 230px;
+  overflow: auto;
+}
+.type-row .font-options button {
+  padding: 8px 10px;
+}
+.type-row .font-options button span {
+  font-size: 16px;
+}

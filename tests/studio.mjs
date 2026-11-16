@@ -323,7 +323,7 @@ assert.equal(oldArtist.artist, 'Artista A');
 assert.equal(oldArtist.artistB, 'Artista B');
 for (const t of app.templates) {
   const svg = app.svg({ ...app.cards.value[0], style: t.id });
-  assert.doesNotMatch(svg, /<rect[^>]*stroke=/);
+  assert.doesNotMatch(svg, /<rect[^>]*width="300"[^>]*stroke=/);
 }
 // Los nuevos atributos viven en cada posición, no en el disco compartido.
 app.useTemplate(app.templates.find((t) => t.id === 'brush'));
@@ -669,3 +669,20 @@ assert.ok(app.compositions.value.every((c) => c.items.every((i) => i.cardId !== 
 console.log(
   'PASS: outer edge turns hidden pages; bulk deletion respects cancellation and references',
 );
+// El traslado conserva la identidad usada por todas las composiciones.
+const transferred = app.cards.value[0];
+app.collections.value.push({ id: 'destination-test', name: 'Destino', cards: [] });
+app.openMove([transferred.id]);
+app.moveDestination.value = 'destination-test';
+app.confirmMove();
+assert.ok(
+  app.collections.value
+    .find((c) => c.id === 'destination-test')
+    .cards.some((c) => c.id === transferred.id),
+);
+assert.ok(!app.cards.value.some((c) => c.id === transferred.id));
+assert.equal(app.moveDialog.value, false);
+app.templateFilter.value = 'Todos';
+assert.ok(!app.visibleTemplates.value.some((t) => t.id === 'arrows'));
+assert.ok(app.visibleTemplates.value.some((t) => t.id === 'classic-box'));
+console.log('PASS: collection transfer preserves identities and retired design is excluded');

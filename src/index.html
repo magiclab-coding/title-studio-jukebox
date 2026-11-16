@@ -190,21 +190,76 @@
               <!-- Composición: posiciones, huecos y acciones de cada tarjeta. -->
               <template v-if="view === 'compose'">
                 <section class="panel composition-manager compact-manager">
+                  <h2 class="section-title">Composiciones</h2>
                   <div class="manager-row">
                     <label class="composition-select"
-                      >Composición<select v-model="activeComposition">
+                      ><select v-model="activeComposition" aria-label="Composición">
                         <option v-for="c in compositions" :value="c.id">{{ c.name }}</option>
                       </select></label
-                    ><v-btn size="small" color="primary" @click="openPicker"
-                      >＋ Insertar discos</v-btn
-                    ><button class="composition-options-button" @click="optionsDialog = true">
-                      Opciones ···
-                    </button>
+                    >
+                    <div class="inline wrap">
+                      <button
+                        class="control-icon"
+                        @click="newComposition"
+                        title="Nueva composición"
+                        aria-label="Nueva composición"
+                      >
+                        ＋</button
+                      ><button
+                        class="control-icon"
+                        @click="renameComposition"
+                        title="Renombrar composición"
+                        aria-label="Renombrar composición"
+                      >
+                        ✎</button
+                      ><button
+                        class="control-icon"
+                        @click="copyComposition"
+                        title="Duplicar composición"
+                        aria-label="Duplicar composición"
+                      >
+                        ⧉</button
+                      ><button
+                        class="control-icon danger"
+                        @click="deleteComposition"
+                        title="Eliminar composición"
+                        aria-label="Eliminar composición"
+                      >
+                        ⌫
+                      </button>
+                    </div>
                   </div>
                 </section>
                 <div class="composition no-inspector">
                   <section class="workspace panel">
                     <div class="workspace-toolbar">
+                      <div class="composition-edit-actions">
+                        <button
+                          class="control-icon"
+                          @click="openPicker"
+                          title="Insertar discos"
+                          aria-label="Insertar discos"
+                        >
+                          ＋</button
+                        ><button
+                          class="control-icon"
+                          @click="reflow"
+                          title="Compactar huecos"
+                          aria-label="Compactar huecos"
+                        >
+                          ▦</button
+                        ><button
+                          class="control-icon"
+                          @click="
+                            view = 'print';
+                            printSource = 'composition';
+                          "
+                          title="Imprimir composición"
+                          aria-label="Imprimir composición"
+                        >
+                          ▤
+                        </button>
+                      </div>
                       <div>
                         <span class="status-pill">{{ compositionCards.length }} TARJETAS</span
                         ><button
@@ -661,7 +716,7 @@
                     </div>
                     <div class="style-choices" v-if="stylePanel === 'select'">
                       <button
-                        v-for="t in templates"
+                        v-for="t in templates.filter((t) => !t.hidden)"
                         :key="t.id"
                         :class="{ chosen: styleCard.style === t.id }"
                         @click="useTemplate(t)"
@@ -672,40 +727,55 @@
                       </button>
                     </div>
                     <div v-if="stylePanel === 'edit'">
-                      <div class="form-row">
-                        <label>Canciones<input type="color" v-model="styleCard.ink" /></label
-                        ><label>Artista<input type="color" v-model="styleCard.artistInk" /></label
-                        ><label>Papel<input type="color" v-model="styleCard.paper" /></label>
-                      </div>
-                      <font-picker
-                        label="Fuente de las canciones"
-                        v-model="styleCard.font"
-                        :options="fontOptions"
-                        :sample="styleCard.a || 'Canción A · ÁÉÍÓÚ Ñ'"
-                      ></font-picker>
-                      <font-picker
-                        label="Fuente del artista"
-                        v-model="styleCard.artistFont"
-                        :options="fontOptions"
-                        :sample="artistName(styleCard) || 'Artista A / Artista B'"
-                        inherit
-                      ></font-picker>
-                      <div class="form-row pixel-sizes">
+                      <div class="style-paper">
                         <label
-                          >Letra de canciones · px<input
-                            type="number"
-                            min="6"
-                            max="48"
-                            step="1"
-                            v-model.number="styleCard.titlePx"
+                          >Papel<input
+                            type="color"
+                            v-model="styleCard.paper"
+                            aria-label="Color del papel"
                         /></label>
-                        <label
-                          >Letra del artista · px<input
+                      </div>
+                      <div class="type-row">
+                        <font-picker
+                          label="Fuente canciones"
+                          v-model="styleCard.font"
+                          :options="fontOptions"
+                          :sample="styleCard.a"
+                        ></font-picker
+                        ><label
+                          >Tamaño<input
                             type="number"
                             min="6"
                             max="48"
-                            step="1"
+                            v-model.number="styleCard.titlePx"
+                            aria-label="Tamaño canciones" /></label
+                        ><label
+                          >Color<input
+                            type="color"
+                            v-model="styleCard.ink"
+                            aria-label="Color canciones"
+                        /></label>
+                      </div>
+                      <div class="type-row">
+                        <font-picker
+                          label="Fuente artista"
+                          v-model="styleCard.artistFont"
+                          :options="fontOptions"
+                          :sample="artistName(styleCard)"
+                          inherit
+                        ></font-picker
+                        ><label
+                          >Tamaño<input
+                            type="number"
+                            min="6"
+                            max="48"
                             v-model.number="styleCard.artistPx"
+                            aria-label="Tamaño artista" /></label
+                        ><label
+                          >Color<input
+                            type="color"
+                            v-model="styleCard.artistInk"
+                            aria-label="Color artista"
                         /></label>
                       </div>
                       <fieldset class="metadata-options">
@@ -784,12 +854,35 @@
                   </div>
                 </section></v-dialog
               >
-              <!-- Discos originales: tabla de escritorio y fichas compactas en móvil. -->
+              <v-dialog v-model="moveDialog" max-width="420"
+                ><section class="panel transfer-dialog">
+                  <div class="dialog-heading">
+                    <h3>Cambiar de colección</h3>
+                    <button @click="moveDialog = false" aria-label="Cerrar traslado">×</button>
+                  </div>
+                  <p>{{ moveIds.length }} discos seleccionados</p>
+                  <label
+                    >Colección de destino<select v-model="moveDestination">
+                      <option
+                        v-for="c in collections.filter((c) => c.id !== activeCollection)"
+                        :value="c.id"
+                      >
+                        {{ c.name }}
+                      </option>
+                    </select></label
+                  >
+                  <div class="modal-footer">
+                    <button @click="moveDialog = false">Cancelar</button
+                    ><button class="primary" @click="confirmMove">Mover discos</button>
+                  </div>
+                </section></v-dialog
+              ><!-- Discos originales: tabla de escritorio y fichas compactas en móvil. -->
               <template v-if="view === 'collection'">
                 <section class="panel collection-manager">
+                  <h2 class="section-title">Colecciones</h2>
                   <div class="manager-row">
                     <label
-                      >Colecciones<select v-model="activeCollection" aria-label="Lista de discos">
+                      ><select v-model="activeCollection" aria-label="Lista de discos">
                         <option v-for="group in collections" :value="group.id">
                           {{ group.name }}
                         </option>
@@ -810,15 +903,14 @@
                         aria-label="Renombrar colección"
                       >
                         ✎</button
-                      ><v-btn
-                        size="small"
-                        variant="text"
+                      ><button
                         @click="deleteCollection"
                         v-if="collections.length > 1"
                         class="control-icon"
                         title="Eliminar colección"
                         aria-label="Eliminar colección"
-                        ><svg
+                      >
+                        <svg
                           viewBox="0 0 24 24"
                           width="21"
                           height="21"
@@ -827,8 +919,9 @@
                           stroke-width="1.7"
                           aria-hidden="true"
                         >
-                          <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" /></svg
-                      ></v-btn>
+                          <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </section>
@@ -862,6 +955,16 @@
                   <div class="table-heading">
                     <h2>Tabla</h2>
                     <div class="inline">
+                      <button
+                        class="control-icon"
+                        v-if="collections.length > 1"
+                        :disabled="!checkedDiscs.length"
+                        @click="openMove()"
+                        title="Cambiar selección de colección"
+                        aria-label="Cambiar selección de colección"
+                      >
+                        ⇥
+                      </button>
                       <button
                         class="control-icon"
                         @click="
@@ -1019,13 +1122,23 @@
                           </td>
                           <td>
                             <button
-                              class="text-btn"
+                              class="control-icon row-icon"
+                              title="Editar disco"
                               @click="editDisc(card)"
                               :aria-label="'Editar disco ' + card.number"
                             >
-                              Editar</button
+                              ✎</button
                             ><button
-                              class="text-btn danger"
+                              v-if="collections.length > 1"
+                              class="control-icon row-icon"
+                              @click="openMove([card.id])"
+                              :aria-label="'Cambiar colección de ' + card.number"
+                              title="Cambiar colección"
+                            >
+                              ⇥</button
+                            ><button
+                              class="control-icon row-icon danger"
+                              title="Eliminar disco"
                               @click="remove(card.id)"
                               :aria-label="'Eliminar disco ' + card.number"
                             >
