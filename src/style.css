@@ -3956,3 +3956,81 @@ select:disabled {
 .type-row .font-options button span {
   font-size: 16px;
 }
+
+/* Una misma columna de inicio para títulos y controles de todas las secciones. */
+.collection-manager,
+.composition-manager {
+  padding: 0 !important;
+}
+.collection-manager > .section-title,
+.composition-manager > .section-title,
+.workspace > .section-title {
+  margin: 0;
+  padding: 16px 18px 0;
+  text-align: left;
+}
+.collection-manager .manager-row,
+.composition-manager .manager-row {
+  padding: 12px 18px 16px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: 100%;
+}
+.composition-manager .manager-row .composition-select {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+.composition-manager .composition-select select {
+  width: 100%;
+}
+.composition-manager .manager-row > .inline {
+  flex: none;
+  margin-left: auto;
+}
+.workspace .workspace-toolbar {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+.style-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.style-preview-header .custom-style-preview {
+  margin: 0;
+  flex: 1;
+  max-width: 340px;
+}
+.style-modal .style-preview-header .style-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  flex: none;
+}
+.style-modal .style-preview-header .style-tabs .control-icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  font-size: 21px;
+}
+@media (max-width: 520px) {
+  .style-preview-header {
+    flex-direction: column;
+  }
+  .style-modal .style-preview-header .style-tabs {
+    flex-direction: row;
+  }
+  .composition-manager .manager-row {
+    flex-wrap: wrap;
+  }
+  .composition-manager .manager-row .composition-select {
+    flex-basis: 100%;
+  }
+}

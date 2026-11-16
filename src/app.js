@@ -874,7 +874,7 @@ createApp({
     }
     // En un formulario se cambia el borrador; cancelar no modifica la composición.
     const defaultStyleId = ref(''),
-      stylePanel = ref('select');
+      stylePanel = ref('edit');
     const styleCard = computed(() =>
       defaultStyleId.value
         ? batchStyle.value
@@ -884,7 +884,7 @@ createApp({
             ? draft.value
             : current.value,
     );
-    function openStyle(onDraft = false, panel = 'select') {
+    function openStyle(onDraft = false, panel = 'edit') {
       defaultStyleId.value = '';
       stylePanel.value = panel;
       styleAll.value = false;
@@ -894,7 +894,7 @@ createApp({
     }
     function openStyleAll() {
       defaultStyleId.value = '';
-      stylePanel.value = 'select';
+      stylePanel.value = 'edit';
       if (!compositionCards.value.length) return;
       styleAll.value = true;
       batchStyle.value = normalize({ ...current.value });
