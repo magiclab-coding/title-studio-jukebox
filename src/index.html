@@ -1231,14 +1231,41 @@
                           columnKeys.some((key) => ['artist', 'artistB', 'number'].includes(key))
                         "
                       >
-                        <b v-if="columnKeys.includes('artist') || columnKeys.includes('artistB')">{{
-                          mobileArtist(card) || 'Sin artista'
-                        }}</b><span v-if="columnKeys.includes('number')">{{ card.number }}</span>
+                        <b
+                          v-if="columnKeys.includes('artist') || columnKeys.includes('artistB')"
+                          :class="{
+                            'long-value': longCell(card, 'artist') || longCell(card, 'artistB'),
+                          }"
+                          :title="
+                            longCell(card, 'artist') || longCell(card, 'artistB')
+                              ? 'El artista se acorta en una tarjeta con esta fuente y tamaño'
+                              : ''
+                          "
+                          >{{ mobileArtist(card) || 'Sin artista' }}</b><span
+                          v-if="columnKeys.includes('number')"
+                          >{{ card.number }}</span
+                        >
                       </div>
-                      <p v-if="columnKeys.includes('a')">
+                      <p
+                        v-if="columnKeys.includes('a')"
+                        :class="{ 'long-value': longCell(card, 'a') }"
+                        :title="
+                          longCell(card, 'a')
+                            ? 'Este título se acorta en una tarjeta con esta fuente y tamaño'
+                            : ''
+                        "
+                      >
                         <span>A</span> {{ card.a || 'Sin canción A' }}
                       </p>
-                      <p v-if="columnKeys.includes('b')">
+                      <p
+                        v-if="columnKeys.includes('b')"
+                        :class="{ 'long-value': longCell(card, 'b') }"
+                        :title="
+                          longCell(card, 'b')
+                            ? 'Este título se acorta en una tarjeta con esta fuente y tamaño'
+                            : ''
+                        "
+                      >
                         <span>B</span> {{ card.b || 'Sin canción B' }}
                       </p>
                       <p v-if="columnKeys.includes('rpm')" class="mobile-disc-extra">
@@ -1259,14 +1286,36 @@
                           v-model="card.category"
                           :genres="genres"
                           :label="'Estilo musical ' + card.number"
-                        ></genre-select
-                        ><button
-                          class="text-btn"
-                          @click="editDisc(card)"
-                          :aria-label="'Editar disco ' + card.number"
+                        ></genre-select>
+                        <div
+                          class="mobile-disc-actions"
+                          role="group"
+                          aria-label="Acciones del disco"
                         >
-                          Editar
-                        </button>
+                          <button
+                            class="control-icon row-icon"
+                            title="Editar disco"
+                            @click="editDisc(card)"
+                            :aria-label="'Editar disco ' + card.number"
+                          >
+                            ✎</button
+                          ><button
+                            v-if="collections.length > 1"
+                            class="control-icon row-icon"
+                            @click="openMove([card.id])"
+                            :aria-label="'Cambiar colección de ' + card.number"
+                            title="Cambiar colección"
+                          >
+                            ⇥</button
+                          ><button
+                            class="control-icon row-icon danger"
+                            title="Eliminar disco"
+                            @click="remove(card.id)"
+                            :aria-label="'Eliminar disco ' + card.number"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                     </article>
                   </div>
