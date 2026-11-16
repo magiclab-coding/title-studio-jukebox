@@ -1,3 +1,7 @@
+# 7.2.0
+
+- Publicación de textos personalizados por tarjeta, alineación de Tabla y limpieza de Ajustes.
+
 # 7.1.1
 
 - Textos propios de cada tarjeta sin modificar el vinilo original.
