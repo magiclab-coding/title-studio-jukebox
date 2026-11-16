@@ -59,3 +59,18 @@ for (const match of builtHtml.matchAll(/(?:src|href)="([^"?]+\.(?:js|css))\?v=([
   assert.equal(match[2], createHash('sha256').update(bytes).digest('hex').slice(0, 12));
 }
 assert.doesNotMatch(builtHtml, /(?:src|href)="[^"?]+\.(?:js|css)"/);
+
+// Las dos vistas deben ofrecer las mismas operaciones y condiciones por disco.
+for (const directory of ['src', 'dist']) {
+  const { document } = parseHTML(await readFile(directory + '/index.html', 'utf8'));
+  const actions = (selector) => Array.from(document.querySelectorAll(selector)).map((button) => ({
+    action: button.getAttribute('@click'),
+    condition: button.getAttribute('v-if'),
+    label: button.getAttribute(':aria-label'),
+  }));
+  assert.deepEqual(
+    actions('.mobile-disc-actions button'),
+    actions('.desktop-disc-table tbody td:last-child button'),
+    'La lista móvil debe conservar todas las acciones por fila',
+  );
+}

@@ -4246,34 +4246,39 @@ select:disabled {
 }
 
 /* Campos habituales: aviso discreto y restauración solo cuando hay una diferencia. */
-.record-input-wrap {
+/* El botón ocupa una columna propia: nunca comparte espacio con los glifos. */
+.record-fields .record-input-wrap {
   display: flex;
   align-items: center;
-  position: relative;
+  gap: 6px;
   min-width: 0;
 }
-.record-input-wrap input {
+.record-fields .record-input-wrap > input {
+  flex: 1 1 0;
+  width: 0;
   min-width: 0;
-  padding-right: 34px;
+  height: 42px;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 8px 10px;
   margin: 0;
 }
-.field-restore {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 26px;
-  height: 26px;
+.record-fields .record-input-wrap > .field-restore {
+  position: static;
+  transform: none;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
   padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
+  border: 1px solid #d4dcd7;
+  border-radius: 8px;
+  background: #f4f7f4;
   color: #547363;
   font-size: 18px;
   line-height: 1;
 }
-.field-restore:hover,
-.field-restore:focus-visible {
+.record-fields .field-restore:hover,
+.record-fields .field-restore:focus-visible {
   background: #dfe9e2;
   outline: 2px solid #678d78;
 }
@@ -4334,5 +4339,39 @@ select:disabled {
     justify-content: flex-end;
     min-width: 0;
     max-width: 100%;
+  }
+}
+
+/* En móvil se conservan los avisos y todas las acciones de la fila de escritorio. */
+.mobile-disc-heading > b {
+  flex: 1;
+  min-width: 0;
+}
+.mobile-disc-heading > b.long-value,
+.mobile-disc-card > p.long-value {
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.mobile-disc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.mobile-disc-actions .control-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+}
+@media (max-width: 720px) {
+  .mobile-disc-footer.with-genre {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+  }
+  .mobile-disc-footer .genre-field {
+    min-width: 0;
   }
 }
