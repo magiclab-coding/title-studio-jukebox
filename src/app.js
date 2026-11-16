@@ -271,7 +271,9 @@ function makeSvg(c, settings) {
   const sy = H / 150;
   const font = c.font || 'Georgia';
   const artistFont = c.artistFont || font;
-  const name = artistName(c);
+  const name = c.displayText?.artist || artistName(c);
+  const titleA = c.displayText?.a || c.a;
+  const titleB = c.displayText?.b || c.b;
   const titlePx = c.titlePx ?? (20 * (+c.size || 100)) / 100;
   const artistPx = c.artistPx ?? (19 * (+c.artistSize || 100)) / 100;
   // Mantener el cuerpo tipográfico; truncar solo la representación de la etiqueta.
@@ -358,7 +360,7 @@ function makeSvg(c, settings) {
       ? `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
       : '');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(c.a, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(c.b, 112, titlePx)}${meta}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(titleA, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(titleB, 112, titlePx)}${meta}</svg>`;
 }
 
 // Los ejemplos solo se dibujan; nunca se guardan en el disco.
@@ -504,7 +506,7 @@ createApp({
       );
     const renderedCard = (i) => {
       const c = allCards.value.find((c) => c.id === i.cardId);
-      return c ? { ...c, ...i.appearance } : null;
+      return c ? { ...c, ...i.appearance, displayText: i.text || {} } : null;
     };
     const compositionCards = computed(
       () => composition.value?.items.map(renderedCard).filter(Boolean) || [],
@@ -831,6 +833,38 @@ createApp({
       draft = ref(normalize({})),
       pendingSlot = ref(null),
       editorSource = ref(null);
+    // Textos de impresión propios de la posición; el vinilo conserva sus originales.
+    const textDialog = ref(false),
+      textItemId = ref(null),
+      textDraft = ref({ artist: '', a: '', b: '' });
+    const textItem = computed(() =>
+      composition.value?.items.find((item) => item.id === textItemId.value),
+    );
+    const textOriginal = computed(() => {
+      const record = allCards.value.find((card) => card.id === textItem.value?.cardId);
+      return { artist: record ? artistName(record) : '', a: record?.a || '', b: record?.b || '' };
+    });
+    const textPreview = computed(() => ({
+      ...(textItem.value ? renderedCard(textItem.value) : normalize({})),
+      displayText: textDraft.value,
+    }));
+    function openCardText() {
+      if (!currentItem.value) return;
+      textItemId.value = currentItem.value.id;
+      textDraft.value = { ...textOriginal.value, ...currentItem.value.text };
+      textDialog.value = true;
+      actionCardId.value = null;
+    }
+    function saveCardText() {
+      if (!textItem.value) return;
+      textItem.value.text = Object.fromEntries(
+        ['artist', 'a', 'b']
+          .map((key) => [key, textDraft.value[key].trim().slice(0, 300)])
+          .filter(([key, value]) => value && value !== textOriginal.value[key]),
+      );
+      textDialog.value = false;
+      notify('Textos de tarjeta guardados');
+    }
     watch(activeComposition, () => {
       selectedItemId.value = null;
       editingId.value = null;
@@ -1112,6 +1146,7 @@ createApp({
         const item = {
           id: uid(),
           cardId: source.cardId,
+          text: { ...source.text },
           appearance: appearanceOf(draft.value),
           ...slotPosition(index),
         };
@@ -1188,7 +1223,11 @@ createApp({
       if (!item || item.cardId !== base.id || view.value === 'collection') return base;
       return new Proxy(base, {
         get: (target, key) =>
-          appearanceKeys.includes(key) ? (item.appearance[key] ?? target[key]) : target[key],
+          key === 'displayText'
+            ? item.text || {}
+            : appearanceKeys.includes(key)
+              ? (item.appearance[key] ?? target[key])
+              : target[key],
         set: (target, key, value) => {
           if (appearanceKeys.includes(key)) item.appearance[key] = value;
           else target[key] = value;
@@ -2179,6 +2218,12 @@ createApp({
       draft,
       openCardEditor,
       saveCardEditor,
+      textDialog,
+      textDraft,
+      textOriginal,
+      textPreview,
+      openCardText,
+      saveCardText,
       requestDelete,
       confirmDelete,
       addSheet,

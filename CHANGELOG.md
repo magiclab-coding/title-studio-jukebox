@@ -1,3 +1,9 @@
+# 7.1.1
+
+- Textos propios de cada tarjeta sin modificar el vinilo original.
+- Alineación exacta del icono de columnas y limpieza de Ajustes.
+- Regla permanente de consistencia visual documentada.
+
 # 7.1.0
 
 - Publicación de los cambios validados en develop (7.0.16–7.0.19).

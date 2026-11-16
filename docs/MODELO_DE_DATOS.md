@@ -65,3 +65,12 @@ El arrastre utiliza los extremos exteriores del conjunto de hojas visibles para 
 ## Interfaz 7.0.13
 
 Mover discos entre colecciones conserva sus identificadores y sus referencias en las composiciones. La selección de tabla y las acciones por fila tienen alcances independientes. El catálogo oculta el diseño histórico arrows y añade cartela, cinta exterior, notas, sello rock, estrella retro y medianoche. El renderizador histórico se conserva para abrir copias antiguas.
+
+## Textos particulares de tarjeta
+
+Cada posición puede guardar `text: {artist, a, b}` con los textos alternativos
+de impresión. El artista central se edita como una sola línea. Valores vacíos
+o iguales al original se eliminan para recuperar la herencia del disco.
+Los originales permanecen en `collections[].cards`; estilos globales y Shuffle
+no modifican los textos alternativos. SVG, impresión y PDF usan el mismo
+renderizador. Las copias JSON y las composiciones duplicadas conservan estos textos.

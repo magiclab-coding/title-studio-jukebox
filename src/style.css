@@ -4227,3 +4227,52 @@ select:disabled {
     width: 60px;
   }
 }
+
+/* El contenedor no altera el eje ni el tamaño de los iconos adyacentes. */
+.disc-library .table-heading .column-chooser {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  align-self: center;
+}
+.disc-library .table-heading .column-chooser summary.control-icon {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  margin: 0;
+  box-sizing: border-box;
+}
+.card-text-modal {
+  padding: 20px;
+  border-radius: 16px;
+}
+.card-text-modal .custom-style-preview {
+  max-width: 330px;
+  margin: 0 auto 16px;
+}
+.card-text-fields {
+  display: grid;
+  gap: 14px;
+}
+.card-text-fields label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.card-text-fields small {
+  color: #67776e;
+  overflow-wrap: anywhere;
+}
+.card-text-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-text-row input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  margin: 0;
+}
