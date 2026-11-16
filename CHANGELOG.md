@@ -1,3 +1,11 @@
+# 7.0.15
+
+- Shuffle asigna un diseño disponible a cada posición de composición conservando textos y huecos.
+- Insertar discos es la primera acción.
+- Pulsar la muestra abre o cierra el catálogo; parámetros siempre visibles sin iconos redundantes.
+- Color independiente para elementos gráficos y fuentes más legibles.
+- Muestra de creación: Título de la cara A.
+
 # 7.0.14
 
 - Alinea títulos de Colecciones, Composiciones y Edición con los restantes bloques.

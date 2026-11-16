@@ -247,20 +247,27 @@
                       <div class="composition-edit-actions">
                         <button
                           class="control-icon"
-                          @click="openStyleAll"
-                          :disabled="!compositionCards.length"
-                          title="Estilo para todas"
-                          aria-label="Estilo para todas"
-                        >
-                          ◈
-                        </button>
-                        <button
-                          class="control-icon"
                           @click="openPicker"
                           title="Insertar discos"
                           aria-label="Insertar discos"
                         >
                           ＋</button
+                        ><button
+                          class="control-icon"
+                          @click="openStyleAll"
+                          :disabled="!compositionCards.length"
+                          title="Estilo para todas"
+                          aria-label="Estilo para todas"
+                        >
+                          ◈</button
+                        ><button
+                          class="control-icon"
+                          @click="shuffleStyles"
+                          :disabled="!compositionCards.length"
+                          title="Shuffle: mezclar estilos"
+                          aria-label="Mezclar estilos"
+                        >
+                          ⤨</button
                         ><button
                           class="control-icon"
                           @click="reflow"
@@ -641,7 +648,10 @@
                             svg({
                               ...draft,
                               artist: draft.artist || 'Artista A',
-                              a: !draft.a || draft.a === 'Nuevo título' ? 'Canción A' : draft.a,
+                              a:
+                                !draft.a || draft.a === 'Nuevo título'
+                                  ? 'Título de la cara A'
+                                  : draft.a,
                               b: draft.b || 'Canción B',
                             })
                           "
@@ -728,26 +738,14 @@
                   </div>
                   <div class="style-modal-content">
                     <div class="style-preview-header">
-                      <div class="custom-style-preview" v-html="svg(styleCard)"></div>
-                      <div class="style-tabs" v-if="!defaultStyleId">
-                        <button
-                          class="control-icon"
-                          title="Seleccionar estilo"
-                          aria-label="Seleccionar estilo"
-                          @click="stylePanel = 'select'"
-                          :class="{ on: stylePanel === 'select' }"
-                        >
-                          ◈</button
-                        ><button
-                          class="control-icon"
-                          title="Editar estilo"
-                          aria-label="Editar estilo"
-                          @click="stylePanel = 'edit'"
-                          :class="{ on: stylePanel === 'edit' }"
-                        >
-                          ✎
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        class="custom-style-preview style-preview-selector"
+                        @click="stylePanel = stylePanel === 'select' ? 'edit' : 'select'"
+                        aria-label="Seleccionar estilo"
+                        title="Seleccionar estilo"
+                        v-html="svg(styleCard)"
+                      ></button>
                     </div>
                     <div class="style-choices" v-if="stylePanel === 'select'">
                       <button
@@ -761,13 +759,20 @@
                         <span>{{ t.name }}</span>
                       </button>
                     </div>
-                    <div v-if="stylePanel === 'edit'">
+                    <div class="style-editor-fields">
                       <div class="style-paper">
                         <label
                           >Papel<input
                             type="color"
                             v-model="styleCard.paper"
                             aria-label="Color del papel"
+                        /></label>
+                        <label
+                          >Elementos<input
+                            type="color"
+                            :value="styleCard.graphicsInk || styleCard.artistInk || '#202020'"
+                            @input="styleCard.graphicsInk = $event.target.value"
+                            aria-label="Color de elementos gráficos"
                         /></label>
                       </div>
                       <div class="type-row">

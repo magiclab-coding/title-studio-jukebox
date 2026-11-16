@@ -266,6 +266,7 @@ function makeSvg(c, settings) {
   const ink = color(c.ink, '#005bbb');
   const artistInk = color(c.artistInk, '#202020');
   const paper = color(c.paper, '#ffffff');
+  const decorationInk = color(c.graphicsInk, artistInk);
   const H = (300 * settings.height) / settings.width;
   const sy = H / 150;
   const font = c.font || 'Georgia';
@@ -289,64 +290,64 @@ function makeSvg(c, settings) {
   let art = '',
     artistFill = artistInk;
   const line = (y, weight = 1, dash = '0') =>
-    `<path d="M10 ${y * sy}H290" stroke="${artistInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
+    `<path d="M10 ${y * sy}H290" stroke="${decorationInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
   const centerHalf = Math.min(140, name.length * textSize(name, artistPx) * 0.36 + 8);
   if (['classic-box', 'out-ribbon', 'notes', 'star-round', 'ghosts'].includes(c.style)) {
-    art = `<path d="M0 ${4 * sy}H300 M0 ${146 * sy}H300" stroke="${ink}" stroke-width="${6 * sy}"/>`;
+    art = `<path d="M0 ${4 * sy}H300 M0 ${146 * sy}H300" stroke="${decorationInk}" stroke-width="${6 * sy}"/>`;
     if (c.style === 'out-ribbon')
-      art += `<path d="M0 ${75 * sy}H300" stroke="${ink}" stroke-width="${15 * sy}"/><path d="M28 ${57 * sy}H272L286 ${75 * sy}L272 ${93 * sy}H28L14 ${75 * sy}Z" fill="${paper}" stroke="${ink}" stroke-width="3"/>`;
+      art += `<path d="M0 ${75 * sy}H300" stroke="${decorationInk}" stroke-width="${15 * sy}"/><path d="M28 ${57 * sy}H272L286 ${75 * sy}L272 ${93 * sy}H28L14 ${75 * sy}Z" fill="${paper}" stroke="${decorationInk}" stroke-width="3"/>`;
     else if (c.style === 'ghosts') {
-      art += `<rect x="32" y="${58 * sy}" width="236" height="${34 * sy}" fill="${ink}" opacity=".16"/>`;
+      art += `<rect x="32" y="${58 * sy}" width="236" height="${34 * sy}" fill="${decorationInk}" opacity=".16"/>`;
       for (const x of [8, 278])
-        art += `<path d="M${x} ${85 * sy}v-${25 * sy}a7 7 0 0 1 14 0v${25 * sy}l-4 -4 -3 4 -3 -4z" fill="${ink}"/><circle cx="${x + 5}" cy="${60 * sy}" r="1.5" fill="${paper}"/><circle cx="${x + 10}" cy="${60 * sy}" r="1.5" fill="${paper}"/>`;
+        art += `<path d="M${x} ${85 * sy}v-${25 * sy}a7 7 0 0 1 14 0v${25 * sy}l-4 -4 -3 4 -3 -4z" fill="${decorationInk}"/><circle cx="${x + 5}" cy="${60 * sy}" r="1.5" fill="${paper}"/><circle cx="${x + 10}" cy="${60 * sy}" r="1.5" fill="${paper}"/>`;
     } else {
-      art += `<path d="M0 ${75 * sy}H300" stroke="${ink}" stroke-width="${c.style === 'classic-box' ? 14 : 2}"/><rect x="30" y="${57 * sy}" width="240" height="${36 * sy}" rx="${c.style === 'star-round' ? 18 : 0}" fill="${paper}" stroke="${ink}" stroke-width="2.5"/>`;
+      art += `<path d="M0 ${75 * sy}H300" stroke="${decorationInk}" stroke-width="${c.style === 'classic-box' ? 14 : 2}"/><rect x="30" y="${57 * sy}" width="240" height="${36 * sy}" rx="${c.style === 'star-round' ? 18 : 0}" fill="${paper}" stroke="${decorationInk}" stroke-width="2.5"/>`;
       if (c.style === 'notes')
         for (const x of [8, 280])
-          art += `<text x="${x}" y="${81 * sy}" fill="${ink}" font-size="23">♪</text>`;
+          art += `<text x="${x}" y="${81 * sy}" fill="${decorationInk}" font-size="23">♪</text>`;
       if (c.style === 'star-round')
         for (const x of [13, 287])
-          art += `<text x="${x}" y="${82 * sy}" text-anchor="middle" fill="${ink}" font-size="22">✦</text>`;
+          art += `<text x="${x}" y="${82 * sy}" text-anchor="middle" fill="${decorationInk}" font-size="22">✦</text>`;
     }
   } else if (c.style === 'retro-stamp') {
-    art = `<rect x="4" y="${10 * sy}" width="35" height="${130 * sy}" rx="9" fill="${artistInk}" opacity=".12"/><text transform="translate(28 ${130 * sy}) rotate(-90)" fill="${artistInk}" font-family="Oswald" font-size="22">ROCK</text><rect x="44" y="${14 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/><rect x="44" y="${94 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/>`;
+    art = `<rect x="4" y="${10 * sy}" width="35" height="${130 * sy}" rx="9" fill="${decorationInk}" opacity=".12"/><text transform="translate(28 ${130 * sy}) rotate(-90)" fill="${decorationInk}" font-family="Oswald" font-size="22">ROCK</text><rect x="44" y="${14 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/><rect x="44" y="${94 * sy}" width="252" height="${42 * sy}" fill="${paper}" opacity=".8"/>`;
   } else if (c.style === 'brush') {
-    art = `<path d="M4 ${76 * sy}L${150 - centerHalf} ${72 * sy}L${150 - centerHalf} ${75 * sy}Z M296 ${76 * sy}L${150 + centerHalf} ${72 * sy}L${150 + centerHalf} ${75 * sy}Z" fill="${artistInk}"/>`;
+    art = `<path d="M4 ${76 * sy}L${150 - centerHalf} ${72 * sy}L${150 - centerHalf} ${75 * sy}Z M296 ${76 * sy}L${150 + centerHalf} ${72 * sy}L${150 + centerHalf} ${75 * sy}Z" fill="${decorationInk}"/>`;
   } else if (c.style === 'ribbon' || c.style === 'chevron') {
-    art = `<path d="M6 ${58 * sy}L20 ${75 * sy}L6 ${92 * sy}H294L280 ${75 * sy}L294 ${58 * sy}Z" fill="${artistInk}"/>`;
+    art = `<path d="M6 ${58 * sy}L20 ${75 * sy}L6 ${92 * sy}H294L280 ${75 * sy}L294 ${58 * sy}Z" fill="${decorationInk}"/>`;
     if (c.style === 'chevron')
-      art += `<path d="M9 ${52 * sy}H291 M9 ${98 * sy}H291" stroke="${ink}" stroke-width="3"/>`;
+      art += `<path d="M9 ${52 * sy}H291 M9 ${98 * sy}H291" stroke="${decorationInk}" stroke-width="3"/>`;
     artistFill = paper;
   } else if (c.style === 'inverse') {
     art =
-      `<rect x="10" y="${58 * sy}" width="280" height="${34 * sy}" rx="2" fill="${artistInk}"/>` +
+      `<rect x="10" y="${58 * sy}" width="280" height="${34 * sy}" rx="2" fill="${decorationInk}"/>` +
       line(54, 1) +
       line(96, 1);
     artistFill = paper;
   } else if (c.style === 'block') {
     art = line(55, 5) + line(95, 5) + line(49, 1) + line(101, 1);
   } else if (c.style === 'arrows') {
-    art = `<path d="M10 ${50 * sy}H124L140 ${54 * sy}L124 ${58 * sy}H10Z M290 ${92 * sy}H176L160 ${96 * sy}L176 ${100 * sy}H290Z" fill="${artistInk}"/>`;
+    art = `<path d="M10 ${50 * sy}H124L140 ${54 * sy}L124 ${58 * sy}H10Z M290 ${92 * sy}H176L160 ${96 * sy}L176 ${100 * sy}H290Z" fill="${decorationInk}"/>`;
   } else if (c.style === 'stars') {
-    art = `<path d="M12 ${56 * sy}H288 M12 ${94 * sy}H288" stroke="${artistInk}"/>`;
+    art = `<path d="M12 ${56 * sy}H288 M12 ${94 * sy}H288" stroke="${decorationInk}"/>`;
     for (const x of [20, 40, 260, 280])
-      art += `<text x="${x}" y="${78 * sy}" text-anchor="middle" font-size="12" fill="${artistInk}">✦</text>`;
+      art += `<text x="${x}" y="${78 * sy}" text-anchor="middle" font-size="12" fill="${decorationInk}">✦</text>`;
   } else if (c.style === 'stamp') {
     art =
       line(55, 2, '5 3') +
       line(95, 2, '5 3') +
-      `<path d="M10 ${63 * sy}l10 12 -10 12 M290 ${63 * sy}l-10 12 10 12" fill="none" stroke="${artistInk}" stroke-width="3"/>`;
+      `<path d="M10 ${63 * sy}l10 12 -10 12 M290 ${63 * sy}l-10 12 10 12" fill="none" stroke="${decorationInk}" stroke-width="3"/>`;
   } else if (c.style === 'pill') {
     art =
       line(75, 2) +
-      `<rect x="${150 - centerHalf}" y="${59 * sy}" width="${centerHalf * 2}" height="${32 * sy}" rx="${16 * sy}" fill="${paper}"/><path d="M${150 - centerHalf + 10} ${56 * sy}H${150 + centerHalf - 10} M${150 - centerHalf + 10} ${94 * sy}H${150 + centerHalf - 10}" stroke="${artistInk}"/>`;
+      `<rect x="${150 - centerHalf}" y="${59 * sy}" width="${centerHalf * 2}" height="${32 * sy}" rx="${16 * sy}" fill="${paper}"/><path d="M${150 - centerHalf + 10} ${56 * sy}H${150 + centerHalf - 10} M${150 - centerHalf + 10} ${94 * sy}H${150 + centerHalf - 10}" stroke="${decorationInk}"/>`;
   } else if (c.style === 'lines') {
-    art = `<path d="M8 ${75 * sy}H${150 - centerHalf} M${150 + centerHalf} ${75 * sy}H292" stroke="${artistInk}" stroke-width="1.5"/>`;
+    art = `<path d="M8 ${75 * sy}H${150 - centerHalf} M${150 + centerHalf} ${75 * sy}H292" stroke="${decorationInk}" stroke-width="1.5"/>`;
   } else if (c.style === 'two') {
     art =
       line(55, 0.7) +
       line(95, 0.7) +
-      `<path d="M14 ${69 * sy}l6 6 -6 6 -6 -6z M286 ${69 * sy}l6 6 -6 6 -6 -6z" fill="${artistInk}"/>`;
+      `<path d="M14 ${69 * sy}l6 6 -6 6 -6 -6z M286 ${69 * sy}l6 6 -6 6 -6 -6z" fill="${decorationInk}"/>`;
   } else if (c.style === 'mono') art = line(57, 0.6, '1 4') + line(93, 0.6, '1 4');
   const meta =
     ((c.showGenre ?? c.showMeta !== false) ? tx(c.category, 13, 7, 'Arial', artistInk) : '') +
@@ -368,6 +369,7 @@ function templatePreview(t, card, settings) {
       ink: t.ink,
       paper: t.paper,
       artistInk: t.artistInk || '#202020',
+      graphicsInk: t.graphicsInk,
       font: t.font || 'Georgia',
       artistFont: t.artistFont || '',
       ...Object.fromEntries(
@@ -446,6 +448,7 @@ createApp({
       'style',
       'ink',
       'artistInk',
+      'graphicsInk',
       'paper',
       'font',
       'artistFont',
@@ -892,6 +895,26 @@ createApp({
       styleDialog.value = true;
       actionCardId.value = null;
     }
+    // Cambia solo la apariencia de las posiciones; conserva discos, huecos y textos.
+    function shuffleStyles() {
+      const choices = templates.filter((t) => !t.hidden);
+      if (!choices.length) return;
+      for (const item of composition.value?.items || []) {
+        const template = choices[Math.floor(Math.random() * choices.length)];
+        item.appearance = {
+          ...item.appearance,
+          style: template.id,
+          ink: template.ink,
+          paper: template.paper,
+          artistInk: template.artistInk || '#202020',
+          font: template.font || 'Georgia',
+          artistFont: '',
+          graphicsInk: undefined,
+          ...(settings.value.templateDefaults?.[template.id] || {}),
+        };
+      }
+      notify('Estilos mezclados');
+    }
     function openStyleAll() {
       defaultStyleId.value = '';
       stylePanel.value = 'edit';
@@ -914,6 +937,7 @@ createApp({
         font: t.font || 'Georgia',
         artistFont: '',
         artistInk: t.artistInk || '#202020',
+        graphicsInk: t.graphicsInk,
         // Los predeterminados personalizados se copian a esta posición.
         ...(settings.value.templateDefaults?.[t.id] || {}),
       });
@@ -2091,6 +2115,7 @@ createApp({
       visibleColumns,
       mobileArtist,
       openStyleAll,
+      shuffleStyles,
       styleAll,
       dismissCardActions,
       dragActive,
