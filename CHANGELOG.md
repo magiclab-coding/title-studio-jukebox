@@ -1,3 +1,10 @@
+# 7.2.1
+
+- Personalización de textos integrada en los cuatro campos habituales; se retiran el icono T y el modal separado.
+- Avisos en vivo y recorte basados en la anchura de glifos, fuente, tamaño y espacio del diseño.
+- Botones de Colecciones adaptados al ancho móvil, con alineación y tamaños comunes.
+- Compatibilidad con los textos particulares guardados en versiones anteriores.
+
 # 7.2.0
 
 - Publicación de textos personalizados por tarjeta, alineación de Tabla y limpieza de Ajustes.

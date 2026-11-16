@@ -261,6 +261,77 @@ const esc = (s) =>
     (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c],
   );
 // --- Renderizado común a pantalla, exportación e impresión ---
+// --- Medición compartida: el aviso y el SVG usan exactamente el mismo ajuste ---
+const textWidthCache = new Map();
+let textMeasureContext;
+function measureLabelText(value, family, px) {
+  const text = String(value || '');
+  const key = family + '\0' + px + '\0' + text;
+  if (textWidthCache.has(key)) return textWidthCache.get(key);
+  if (textMeasureContext === undefined) {
+    try {
+      textMeasureContext = document.createElement('canvas').getContext?.('2d') || null;
+    } catch {
+      textMeasureContext = null;
+    }
+  }
+  let width;
+  if (textMeasureContext) {
+    textMeasureContext.font = '400 ' + px + 'px "' + family + '"';
+    width = textMeasureContext.measureText(text).width;
+  } else {
+    // Respaldo para exportaciones sin DOM; el navegador mide los glifos reales.
+    width = Array.from(text).reduce((sum, char) =>
+      sum + (/\s/.test(char) ? 0.3 : /[ilI.,'!]/.test(char) ? 0.28 : /[MW@]/.test(char) ? 0.9 : 0.6), 0) * px;
+  }
+  if (textWidthCache.size > 4000) textWidthCache.clear();
+  textWidthCache.set(key, width);
+  return width;
+}
+function fitLabelText(value, family, px, available) {
+  const text = String(value || '');
+  if (measureLabelText(text, family, px) <= available) return { text, truncated: false };
+  const chars = Array.from(text);
+  let low = 0, high = chars.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    const candidate = chars.slice(0, mid).join('').trimEnd() + '…';
+    if (measureLabelText(candidate, family, px) <= available) low = mid;
+    else high = mid - 1;
+  }
+  return { text: chars.slice(0, low).join('').trimEnd() + '…', truncated: true };
+}
+function labelAvailable(style, artist) {
+  if (style === 'retro-stamp') return 210;
+  if (!artist) return 280;
+  return {
+    stars: 200, stamp: 240, two: 240,
+    'classic-box': 220, notes: 220, 'star-round': 216,
+    ghosts: 220, 'out-ribbon': 232, ribbon: 252, chevron: 252,
+    inverse: 264, pill: 264,
+  }[style] || 280;
+}
+function labelField(card, key, settings) {
+  const artist = key === 'artist' || key === 'artistB';
+  const family = artist ? card.artistFont || card.font || 'Georgia' : card.font || 'Georgia';
+  const basePx = artist ? card.artistPx ?? 19 * (+card.artistSize || 100) / 100 :
+    card.titlePx ?? 20 * (+card.size || 100) / 100;
+  const scale = Math.min(1, (300 * settings.height / settings.width) / 150);
+  const px = (+basePx || 20) * scale;
+  const available = labelAvailable(card.style, artist);
+  return { ...fitLabelText(artist ? artistName(card) : card[key], family, px, available), family, px, available };
+}
+// Los textos de posiciones antiguas siguen siendo compatibles.
+function labelContent(record, text = {}) {
+  text ||= {};
+  return {
+    artist: text.artistA ?? text.artist ?? record.artist,
+    artistB: text.artistB ?? (text.artist !== undefined ? '' : record.artistB),
+    a: text.a ?? record.a,
+    b: text.b ?? record.b,
+  };
+}
+
 function makeSvg(c, settings) {
   const color = (value, fallback) => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
   const ink = color(c.ink, '#005bbb');
@@ -276,15 +347,13 @@ function makeSvg(c, settings) {
   const titleB = c.displayText?.b || c.b;
   const titlePx = c.titlePx ?? (20 * (+c.size || 100)) / 100;
   const artistPx = c.artistPx ?? (19 * (+c.artistSize || 100)) / 100;
-  // Mantener el cuerpo tipográfico; truncar solo la representación de la etiqueta.
+  // El dibujo mantiene el tamaño y solo acorta cuando los glifos exceden el ancho.
   const textSize = (_, px) => (+px || 20) * Math.min(1, sy);
-  const shorten = (text, px, width = 280) => {
-    const value = String(text || '');
-    const limit = Math.max(3, Math.floor(width / ((+px || 20) * 0.62)));
-    return value.length > limit ? value.slice(0, limit - 1).trimEnd() + '…' : value;
+  const tx = (text, y, px, family = font, fill = ink) => {
+    const available = labelAvailable(c.style, y === 75);
+    const fitted = fitLabelText(text, family, textSize(text, px), available);
+    return `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(fitted.text)}</text>`;
   };
-  const tx = (text, y, px, family = font, fill = ink) =>
-    `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(shorten(text, px, y === 75 && ['stars', 'stamp', 'two'].includes(c.style) ? 240 : 280))}</text>`;
   // Las fuentes se incrustan también en el SVG: la exportación y el PDF usan el mismo dibujo.
   const fontCss = [...new Set([font, artistFont])]
     .map((f) => globalThis.StudioFonts?.[f] || '')
@@ -293,7 +362,7 @@ function makeSvg(c, settings) {
     artistFill = artistInk;
   const line = (y, weight = 1, dash = '0') =>
     `<path d="M10 ${y * sy}H290" stroke="${decorationInk}" stroke-width="${weight}" stroke-dasharray="${dash}" fill="none"/>`;
-  const centerHalf = Math.min(140, name.length * textSize(name, artistPx) * 0.36 + 8);
+  const centerHalf = Math.min(140, measureLabelText(fitLabelText(name, artistFont, textSize(name, artistPx), labelAvailable(c.style, true)).text, artistFont, textSize(name, artistPx)) / 2 + 8);
   if (['classic-box', 'out-ribbon', 'notes', 'star-round', 'ghosts'].includes(c.style)) {
     art = `<path d="M0 ${4 * sy}H300 M0 ${146 * sy}H300" stroke="${decorationInk}" stroke-width="${6 * sy}"/>`;
     if (c.style === 'out-ribbon')
@@ -506,7 +575,7 @@ createApp({
       );
     const renderedCard = (i) => {
       const c = allCards.value.find((c) => c.id === i.cardId);
-      return c ? { ...c, ...i.appearance, displayText: i.text || {} } : null;
+      return c ? { ...c, ...i.appearance, ...labelContent(c, i.text), displayText: {} } : null;
     };
     const compositionCards = computed(
       () => composition.value?.items.map(renderedCard).filter(Boolean) || [],
@@ -833,38 +902,29 @@ createApp({
       draft = ref(normalize({})),
       pendingSlot = ref(null),
       editorSource = ref(null);
-    // Textos de impresión propios de la posición; el vinilo conserva sus originales.
-    const textDialog = ref(false),
-      textItemId = ref(null),
-      textDraft = ref({ artist: '', a: '', b: '' });
-    const textItem = computed(() =>
-      composition.value?.items.find((item) => item.id === textItemId.value),
-    );
-    const textOriginal = computed(() => {
-      const record = allCards.value.find((card) => card.id === textItem.value?.cardId);
-      return { artist: record ? artistName(record) : '', a: record?.a || '', b: record?.b || '' };
+    // El formulario habitual edita la posición sin alterar los textos del vinilo.
+    const editorOriginal = computed(() => {
+      if (editorContext.value !== 'composition' || editorMode.value !== 'edit') return null;
+      const item = composition.value?.items.find((entry) => entry.id === editorSource.value);
+      return item ? allCards.value.find((record) => record.id === item.cardId) : null;
     });
-    const textPreview = computed(() => ({
-      ...(textItem.value ? renderedCard(textItem.value) : normalize({})),
-      displayText: textDraft.value,
-    }));
-    function openCardText() {
-      if (!currentItem.value) return;
-      textItemId.value = currentItem.value.id;
-      textDraft.value = { ...textOriginal.value, ...currentItem.value.text };
-      textDialog.value = true;
-      actionCardId.value = null;
+    const fontRevision = ref(0);
+    function refreshFontMetrics() {
+      textWidthCache.clear();
+      fontRevision.value++;
     }
-    function saveCardText() {
-      if (!textItem.value) return;
-      textItem.value.text = Object.fromEntries(
-        ['artist', 'a', 'b']
-          .map((key) => [key, textDraft.value[key].trim().slice(0, 300)])
-          .filter(([key, value]) => value && value !== textOriginal.value[key]),
-      );
-      textDialog.value = false;
-      notify('Textos de tarjeta guardados');
+    if (document.fonts?.ready) {
+      Promise.all(Object.keys(globalThis.StudioFonts || {}).map((family) =>
+        document.fonts.load('400 20px "' + family + '"'),
+      )).then(refreshFontMetrics, refreshFontMetrics);
+      document.fonts.addEventListener?.('loadingdone', refreshFontMetrics);
     }
+    const editorOverflow = computed(() => {
+      fontRevision.value;
+      return Object.fromEntries(['artist', 'artistB', 'a', 'b'].map((key) => [
+        key, Boolean(draft.value[key]) && labelField(draft.value, key, settings.value).truncated,
+      ]));
+    });
     watch(activeComposition, () => {
       selectedItemId.value = null;
       editingId.value = null;
@@ -1157,10 +1217,21 @@ createApp({
         const item = composition.value?.items.find((i) => i.id === editorSource.value),
           original = allCards.value.find((c) => c.id === (item?.cardId || editorSource.value));
         if (!original) return;
-        const content = Object.fromEntries(columns.map((c) => [c.key, draft.value[c.key]]));
-        Object.assign(original, content);
-        if (item) item.appearance = appearanceOf(draft.value);
-        else Object.assign(original, appearanceOf(draft.value));
+        if (item && editorContext.value === 'composition') {
+          // Solo se guardan diferencias de esta tarjeta; los originales siguen en Discos.
+          const keys = { artist: 'artistA', artistB: 'artistB', a: 'a', b: 'b' };
+          item.text = Object.fromEntries(Object.entries(keys)
+            .map(([key, stored]) => [key, stored, String(draft.value[key] || '').trim()])
+            .filter(([key, , value]) => value !== String(original[key] || ''))
+            .map(([, stored, value]) => [stored, value]));
+          item.appearance = appearanceOf(draft.value);
+          for (const column of columns) {
+            if (!(column.key in keys)) original[column.key] = draft.value[column.key];
+          }
+        } else {
+          const content = Object.fromEntries(columns.map((column) => [column.key, draft.value[column.key]]));
+          Object.assign(original, content, appearanceOf(draft.value));
+        }
         selected.value = original.id;
         selectedItemId.value = item?.id || null;
       }
@@ -1224,8 +1295,10 @@ createApp({
       return new Proxy(base, {
         get: (target, key) =>
           key === 'displayText'
-            ? item.text || {}
-            : appearanceKeys.includes(key)
+            ? {}
+            : ['artist', 'artistB', 'a', 'b'].includes(key)
+              ? labelContent(target, item.text)[key]
+              : appearanceKeys.includes(key)
               ? (item.appearance[key] ?? target[key])
               : target[key],
         set: (target, key, value) => {
@@ -1256,9 +1329,13 @@ createApp({
     }
     // Selección de tabla independiente de las posiciones de composición.
     const checkedDiscs = ref([]);
-    const longCell = (card, key) =>
-      ['artist', 'artistB', 'a', 'b'].includes(key) &&
-      String(card[key] || '').length > (key.startsWith('artist') ? 23 : 22);
+    const longCell = (card, key) => {
+      fontRevision.value;
+      if (!['artist', 'artistB', 'a', 'b'].includes(key) || !card[key]) return false;
+      const positions = composition.value?.items.filter((item) => item.cardId === card.id) || [];
+      const examples = positions.length ? positions.map(renderedCard) : [card];
+      return examples.some((example) => Boolean(example[key]) && labelField(example, key, settings.value).truncated);
+    };
     function toggleVisibleDiscs(event) {
       const ids = filtered.value.map((c) => c.id);
       checkedDiscs.value = event.target.checked
@@ -2182,13 +2259,15 @@ createApp({
       edgeDirection,
       moveAcrossPage,
       previewRecord,
-      templatePreview: (t, c, sampleMeta = false) =>
-        templatePreview(
+      templatePreview: (t, c, sampleMeta = false) => {
+        fontRevision.value;
+        return templatePreview(
           { ...t, ...(settings.value.templateDefaults?.[t.id] || {}) },
           c,
           settings.value,
           sampleMeta,
-        ),
+        );
+      },
       selectedItemId,
       currentItem,
       insertMode,
@@ -2218,12 +2297,8 @@ createApp({
       draft,
       openCardEditor,
       saveCardEditor,
-      textDialog,
-      textDraft,
-      textOriginal,
-      textPreview,
-      openCardText,
-      saveCardText,
+      editorOriginal,
+      editorOverflow,
       requestDelete,
       confirmDelete,
       addSheet,
@@ -2369,7 +2444,10 @@ createApp({
         fontFamily: c.font,
         aspectRatio: settings.value.width / settings.value.height,
       }),
-      svg: (c) => makeSvg(c, settings.value),
+      svg: (c) => {
+        fontRevision.value;
+        return makeSvg(c, settings.value);
+      },
       applyAll: () => {
         const appearance = appearanceOf(styleAll.value ? batchStyle.value : current.value);
         composition.value?.items.forEach((i) => (i.appearance = { ...appearance }));

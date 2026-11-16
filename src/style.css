@@ -4244,35 +4244,94 @@ select:disabled {
   margin: 0;
   box-sizing: border-box;
 }
-.card-text-modal {
-  padding: 20px;
-  border-radius: 16px;
-}
-.card-text-modal .custom-style-preview {
-  max-width: 330px;
-  margin: 0 auto 16px;
-}
-.card-text-fields {
-  display: grid;
-  gap: 14px;
-}
-.card-text-fields label {
-  display: grid;
-  gap: 5px;
+
+/* Campos habituales: aviso discreto y restauración solo cuando hay una diferencia. */
+.record-input-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
   min-width: 0;
 }
-.card-text-fields small {
-  color: #67776e;
-  overflow-wrap: anywhere;
+.record-input-wrap input {
+  min-width: 0;
+  padding-right: 34px;
+  margin: 0;
 }
-.card-text-row {
+.field-restore {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #547363;
+  font-size: 18px;
+  line-height: 1;
+}
+.field-restore:hover, .field-restore:focus-visible {
+  background: #dfe9e2;
+  outline: 2px solid #678d78;
+}
+/* Sin anchos mínimos heredados que expulsen los botones en móvil. */
+.collection-manager .manager-row,
+.composition-manager .manager-row {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.card-text-row input {
-  flex: 1;
   min-width: 0;
-  height: 42px;
+  flex-wrap: nowrap;
+}
+.collection-manager .manager-row > label,
+.composition-manager .manager-row > .composition-select {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
   margin: 0;
+}
+.collection-manager .manager-row select,
+.composition-manager .manager-row select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.collection-manager .manager-row > .inline,
+.composition-manager .manager-row > .inline {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: auto;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .collection-manager .manager-row,
+  .composition-manager .manager-row {
+    flex-wrap: wrap;
+  }
+  .collection-manager .manager-row > label,
+  .composition-manager .manager-row > .composition-select {
+    flex: 1 0 100%;
+    width: 100%;
+  }
+  .collection-manager .manager-row > .inline,
+  .composition-manager .manager-row > .inline {
+    margin-left: auto;
+    justify-content: flex-end;
+    max-width: 100%;
+  }
+  .table-heading {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .table-heading > .inline {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    max-width: 100%;
+  }
 }

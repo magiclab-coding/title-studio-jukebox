@@ -40,7 +40,18 @@ const context = {
   document: {
     querySelector: () => null,
     getElementById: () => output,
-    createElement: () => ({ click() {} }),
+    createElement: (tag) => tag === 'canvas' ? {
+      getContext: () => ({
+        font: '',
+        measureText(text) {
+          const px = Number(/([0-9.]+)px/.exec(this.font)?.[1]) || 20;
+          const familyScale = this.font.includes('Oswald') ? 0.7 : 1;
+          const units = Array.from(text).reduce((sum, char) =>
+            sum + (/\s/.test(char) ? 0.3 : /[ilI.,'!]/.test(char) ? 0.28 : /[MW@]/.test(char) ? 0.9 : 0.6), 0);
+          return { width: units * px * familyScale };
+        },
+      }),
+    } : { click() {} },
   },
   URL: { createObjectURL: () => '', revokeObjectURL() {} },
   Blob,
@@ -726,29 +737,30 @@ assert.match(catalogSample, />A1</);
 assert.match(catalogSample, />ROCK</);
 console.log('PASS: empty drafts and isolated complete template samples');
 
-// Los textos de una posición nunca sustituyen los originales del disco.
+// La edición habitual de composición conserva los originales.
 app.view.value = 'compose';
 const textPosition = app.composition.value.items[0];
 app.selectedItemId.value = textPosition.id;
 app.selected.value = textPosition.cardId;
-const originalDisc = app.collections.value
-  .flatMap((collection) => collection.cards)
+const originalDisc = app.collections.value.flatMap((group) => group.cards)
   .find((card) => card.id === textPosition.cardId);
 const originalContent = JSON.stringify(originalDisc);
-app.openCardText();
-app.textDraft.value = { artist: 'Artista breve', a: 'Cara A breve', b: 'Cara B breve' };
-app.saveCardText();
+app.editCard();
+app.draft.value.artist = 'Artista breve';
+app.draft.value.a = 'Cara A breve';
+app.draft.value.b = 'Cara B breve';
+app.saveCardEditor();
 await nextTick();
 assert.equal(JSON.stringify(originalDisc), originalContent);
-const shortSvg = app.svg(app.compositionCards.value[0]);
-assert.match(shortSvg, />Artista breve</);
-assert.match(shortSvg, />Cara A breve</);
-assert.match(shortSvg, />Cara B breve</);
+assert.match(app.svg(app.compositionCards.value[0]), />Artista breve</);
+assert.match(app.svg(app.compositionCards.value[0]), />Cara A breve</);
+assert.match(app.svg(app.compositionCards.value[0]), />Cara B breve</);
 app.shuffleStyles();
 assert.equal(textPosition.text.a, 'Cara A breve');
-app.openCardText();
-app.textDraft.value.a = 'Cambio cancelado';
-app.textDialog.value = false;
+app.editCard();
+assert.equal(app.draft.value.a, 'Cara A breve');
+app.draft.value.a = 'Cambio cancelado';
+app.editorDialog.value = false;
 assert.equal(textPosition.text.a, 'Cara A breve');
 app.duplicateInComposition();
 app.saveCardEditor();
@@ -757,9 +769,41 @@ assert.equal(copiedTextPosition.text.a, 'Cara A breve');
 assert.notEqual(copiedTextPosition.text, textPosition.text);
 app.selectedItemId.value = textPosition.id;
 app.selected.value = textPosition.cardId;
-app.openCardText();
-app.textDraft.value = { artist: '', a: '', b: '' };
-app.saveCardText();
+app.editCard();
+for (const key of ['artist', 'artistB', 'a', 'b']) app.draft.value[key] = originalDisc[key] || '';
+app.saveCardEditor();
 assert.deepEqual(Object.keys(textPosition.text), []);
 assert.equal(JSON.stringify(originalDisc), originalContent);
-console.log('PASS: per-card text overrides preserve originals, cancel, duplicate and reset');
+
+// Compatibilidad con los textos centrales guardados en 7.2.0.
+textPosition.text = { artist: 'Central anterior', a: 'Título anterior' };
+app.editCard();
+assert.equal(app.draft.value.artist, 'Central anterior');
+assert.equal(app.draft.value.artistB, '');
+assert.equal(app.draft.value.a, 'Título anterior');
+app.saveCardEditor();
+assert.equal(textPosition.text.artistA, 'Central anterior');
+assert.equal(JSON.stringify(originalDisc), originalContent);
+
+// Igual número de letras, distinto ancho real; la fuente y el tamaño importan.
+const metrics = (font, px, value, style = 'block') => vm.runInNewContext(
+  `labelField({font:${JSON.stringify(font)},titlePx:${px},a:${JSON.stringify(value)},style:${JSON.stringify(style)}},'a',{width:76,height:38})`,
+  context,
+);
+assert.equal(metrics('Georgia', 20, 'iiiiiiiiiiiiiiiiiiii').truncated, false);
+assert.equal(metrics('Georgia', 20, 'WWWWWWWWWWWWWWWWWWWW').truncated, true);
+assert.equal(metrics('Oswald', 20, 'WWWWWWWWWWWWWWWWWWWW').truncated, false);
+assert.equal(metrics('Georgia', 12, 'WWWWWWWWWWWWWWWWWWWW').truncated, false);
+const fitted = metrics('Georgia', 20, 'WWWWWWWWWWWWWWWWWWWW');
+assert.equal(vm.runInNewContext(
+  `measureLabelText(${JSON.stringify(fitted.text)},'Georgia',20) <= 280`, context,
+), true);
+app.editCard();
+app.draft.value.font = 'Georgia';
+app.draft.value.titlePx = 20;
+app.draft.value.a = 'WWWWWWWWWWWWWWWWWWWW';
+assert.equal(app.editorOverflow.value.a, true);
+app.draft.value.titlePx = 12;
+assert.equal(app.editorOverflow.value.a, false);
+app.editorDialog.value = false;
+console.log('PASS: integrated editing preserves originals; clipping uses glyphs, font, size and layout');
