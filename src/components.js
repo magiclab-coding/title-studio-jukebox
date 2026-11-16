@@ -18,7 +18,7 @@ globalThis.StudioComponents = {
       <div class="record-core">
         <label>Artista A<input v-model="record.artist" aria-label="Artista A" maxlength="300" placeholder="Artista principal" /></label>
         <label>Artista B<input v-model="record.artistB" aria-label="Artista B" maxlength="300" placeholder="Opcional" /></label>
-        <label>Canción A<input v-model="record.a" aria-label="Canción A" maxlength="300" placeholder="Título de la cara A" /></label>
+        <label>Título cara A<input v-model="record.a" aria-label="Canción A" maxlength="300" placeholder="Título de la cara A" /></label>
         <label>Canción B<input v-model="record.b" aria-label="Canción B" maxlength="300" placeholder="Título de la cara B" /></label>
       </div>
       <details class="record-metadata"><summary>Datos musicales y selección</summary>

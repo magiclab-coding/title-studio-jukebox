@@ -225,15 +225,35 @@
                         title="Eliminar composición"
                         aria-label="Eliminar composición"
                       >
-                        ⌫
+                        <svg
+                          viewBox="0 0 24 24"
+                          width="21"
+                          height="21"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.7"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7" />
+                        </svg>
                       </button>
                     </div>
                   </div>
                 </section>
                 <div class="composition no-inspector">
                   <section class="workspace panel">
+                    <h2 class="section-title">Edición</h2>
                     <div class="workspace-toolbar">
                       <div class="composition-edit-actions">
+                        <button
+                          class="control-icon"
+                          @click="openStyleAll"
+                          :disabled="!compositionCards.length"
+                          title="Estilo para todas"
+                          aria-label="Estilo para todas"
+                        >
+                          ◈
+                        </button>
                         <button
                           class="control-icon"
                           @click="openPicker"
@@ -262,12 +282,6 @@
                       </div>
                       <div>
                         <span class="status-pill">{{ compositionCards.length }} TARJETAS</span
-                        ><button
-                          class="bulk-style-button"
-                          @click="openStyleAll"
-                          :disabled="!compositionCards.length"
-                        >
-                          ◈ Estilo para todas</button
                         ><span class="toolbar-note"
                           >{{ settings.width }} × {{ settings.height }} mm</span
                         >
@@ -622,7 +636,17 @@
                         @click="openStyle(true)"
                         aria-label="Cambiar estilo de la tarjeta"
                       >
-                        <span v-html="svg(draft)"></span><small>◈ Cambiar estilo</small></button
+                        <span
+                          v-html="
+                            svg({
+                              ...draft,
+                              artist: draft.artist || 'Artista A',
+                              a: !draft.a || draft.a === 'Nuevo título' ? 'Canción A' : draft.a,
+                              b: draft.b || 'Canción B',
+                            })
+                          "
+                        ></span
+                        ><small>◈ Cambiar estilo</small></button
                       ><label v-if="editorMode === 'create' && insertMode === 'new'"
                         >Guardar en<select v-model="destinationCollection">
                           <option v-for="c in collections" :value="c.id">{{ c.name }}</option>
@@ -703,16 +727,27 @@
                     <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                   </div>
                   <div class="style-modal-content">
-                    <div class="custom-style-preview" v-html="svg(styleCard)"></div>
-                    <div class="style-tabs" v-if="!defaultStyleId">
-                      <button
-                        @click="stylePanel = 'select'"
-                        :class="{ on: stylePanel === 'select' }"
-                      >
-                        Seleccionar estilo</button
-                      ><button @click="stylePanel = 'edit'" :class="{ on: stylePanel === 'edit' }">
-                        Editar estilo
-                      </button>
+                    <div class="style-preview-header">
+                      <div class="custom-style-preview" v-html="svg(styleCard)"></div>
+                      <div class="style-tabs" v-if="!defaultStyleId">
+                        <button
+                          class="control-icon"
+                          title="Seleccionar estilo"
+                          aria-label="Seleccionar estilo"
+                          @click="stylePanel = 'select'"
+                          :class="{ on: stylePanel === 'select' }"
+                        >
+                          ◈</button
+                        ><button
+                          class="control-icon"
+                          title="Editar estilo"
+                          aria-label="Editar estilo"
+                          @click="stylePanel = 'edit'"
+                          :class="{ on: stylePanel === 'edit' }"
+                        >
+                          ✎
+                        </button>
+                      </div>
                     </div>
                     <div class="style-choices" v-if="stylePanel === 'select'">
                       <button

@@ -1,3 +1,11 @@
+# 7.0.14
+
+- Alinea títulos de Colecciones, Composiciones y Edición con los restantes bloques.
+- Extiende el selector de composiciones y lleva sus acciones al extremo derecho; papelera consistente.
+- Estilo global agrupado como icono con las acciones de edición.
+- Selector y editor de estilo mediante iconos junto a la muestra, debajo en pantallas estrechas; catálogo solo bajo selección explícita.
+- Muestra de nueva tarjeta con Canción A/B y Artista A sin guardar textos de ejemplo; campo Título cara A.
+
 # 7.0.13
 
 - Traslado individual y múltiple entre colecciones conservando referencias de composición.
