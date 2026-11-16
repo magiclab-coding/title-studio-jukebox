@@ -1,3 +1,10 @@
+# 7.0.17
+
+- Controles de fuente, tamaño y color con altura común y cuadros de tamaño/color iguales.
+- Etiquetas Papel y Elementos colocadas sobre sus controles.
+- Título del editor sin separador sobrante.
+- La muestra abre un modal de plantillas con indicación de selección en hover y foco; elegir una plantilla cierra la selección.
+
 # 7.0.16
 
 - Desarrollo local con reconstrucción y recarga automática, escuchando solo en localhost.
