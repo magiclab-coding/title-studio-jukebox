@@ -417,6 +417,12 @@
                                 >
                                   ✎</button
                                 ><button
+                                  @click="openCardText"
+                                  aria-label="Editar textos de tarjeta"
+                                  title="Textos de tarjeta"
+                                >
+                                  T</button
+                                ><button
                                   @click="openStyle(false)"
                                   aria-label="Estilo de tarjeta"
                                   title="Estilo"
@@ -709,6 +715,59 @@
                   </div>
                 </section></v-dialog
               >
+              <!-- Edición de textos visibles sin modificar el disco original. -->
+              <v-dialog v-model="textDialog" max-width="560" scrollable>
+                <form class="panel card-text-modal" @submit.prevent="saveCardText">
+                  <div class="dialog-heading">
+                    <h3>Textos de esta tarjeta</h3>
+                    <button
+                      type="button"
+                      @click="textDialog = false"
+                      aria-label="Cerrar textos de tarjeta"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div class="custom-style-preview" v-html="svg(textPreview)"></div>
+                  <p class="small-muted">
+                    Personaliza los textos impresos. Los datos originales del disco se conservan.
+                  </p>
+                  <div class="card-text-fields">
+                    <label
+                      v-for="field in [
+                        { key: 'artist', label: 'Artista central' },
+                        { key: 'a', label: 'Título cara A' },
+                        { key: 'b', label: 'Título cara B' },
+                      ]"
+                      :key="field.key"
+                    >
+                      <span>{{ field.label }}</span>
+                      <div class="card-text-row">
+                        <input
+                          v-model="textDraft[field.key]"
+                          :aria-label="field.label + ' de la tarjeta'"
+                          :placeholder="textOriginal[field.key]"
+                          maxlength="300"
+                        />
+                        <button
+                          class="control-icon"
+                          type="button"
+                          @click="textDraft[field.key] = textOriginal[field.key]"
+                          :aria-label="'Restaurar ' + field.label"
+                          title="Volver al original"
+                        >
+                          ↶
+                        </button>
+                      </div>
+                      <small>Original: {{ textOriginal[field.key] || 'Sin texto' }}</small>
+                    </label>
+                  </div>
+                  <div class="modal-footer">
+                    <v-btn type="button" variant="text" @click="textDialog = false">Cancelar</v-btn>
+                    <v-btn type="submit" color="primary">Guardar textos</v-btn>
+                  </div>
+                </form>
+              </v-dialog>
               <!-- Estilo de una posición o del borrador abierto. -->
               <v-dialog v-model="styleDialog" max-width="680" scrollable
                 ><section class="panel style-modal">
@@ -1593,53 +1652,6 @@
                     medidas de tu soporte.
                   </p>
                   <v-btn variant="outlined" @click="renumber">Renumerar A1, A2…</v-btn>
-                  <div class="reference">
-                    <h3>Versiones recuperables</h3>
-                    <p>
-                      El código del sitio se versiona con cada publicación. Estas copias recuperan
-                      tus datos de este navegador.
-                    </p>
-                    <v-btn variant="outlined" @click="checkpoint"
-                      >Guardar versión de los datos</v-btn
-                    >
-                    <div class="version-row" v-for="v in versions" :key="v.id">
-                      <span>{{ new Date(v.date).toLocaleString('es-ES') }}</span><button
-                        class="text-btn"
-                        @click="restoreVersion(v)"
-                      >
-                        Recuperar
-                      </button>
-                    </div>
-                  </div>
-                  <div class="reference">
-                    <h3>Historial de la aplicación · v7.0</h3>
-                    <p>
-                      Las listas de discos agrupan vinilos. Las composiciones reúnen discos de
-                      distintas listas de discos y conservan sus propios estilos y posiciones. Esta
-                      revisión corrige las opciones, quita cabeceras y pies y amplía el zoom al 300
-                      %. Para volver al programa anterior, pide en este chat «Restaura Title Studio
-                      a la versión 3». También están conservadas las versiones 2 y 1. Esto recupera
-                      el programa; para tus discos y composiciones usa las copias JSON o las
-                      versiones de datos.
-                    </p>
-                    <p>
-                      Guardar todo descarga listas de discos, composiciones, selección activa,
-                      preferencias de impresión y hasta diez versiones de datos. Para recuperarlo:
-                      Importar y exportar → selecciona el JSON → Cargar copia. El guardado
-                      automático solo permanece en este navegador.
-                    </p>
-                    <h3>Un guiño a los originales</h3>
-                    <p>
-                      Familias de flechas, bandas, líneas, estrellas y etiquetas para dos artistas,
-                      inspiradas en los formatos clásicos de jukebox.
-                    </p>
-                    <a
-                      href="https://jukebox.tools/jukebox-title-strip-designs"
-                      target="_blank"
-                      rel="noopener"
-                      >Explorar la referencia en jukebox.tools ↗</a
-                    >
-                  </div>
                 </section></template
               >
             </main>

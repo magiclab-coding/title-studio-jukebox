@@ -44,3 +44,10 @@ Use short section comments to organize significant areas of authored code. Add c
 - Start the user-local server with npm run dev when the user computer terminal is available. A remote preview is not the user computer.
 - Only an explicit publication request authorizes develop -> main. Prepare the version as major.(minor+1).0 before merging; then synchronize develop with main.
 - See docs/DESARROLLO_LOCAL.md for installation and testing. Never claim a server runs on the user computer without observing it there.
+
+## Consistencia visual permanente
+
+Los elementos adyacentes deben compartir altura, eje central, márgenes, bordes,
+tipografía y respuesta de foco/hover. Los iconos de una sección usan el mismo
+componente visual; los contenedores details no pueden desalinearlos.
+Verificar las medidas reales y la alineación en pantalla antes de entregar.

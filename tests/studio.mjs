@@ -725,3 +725,41 @@ assert.match(catalogSample, />45 RPM</);
 assert.match(catalogSample, />A1</);
 assert.match(catalogSample, />ROCK</);
 console.log('PASS: empty drafts and isolated complete template samples');
+
+// Los textos de una posición nunca sustituyen los originales del disco.
+app.view.value = 'compose';
+const textPosition = app.composition.value.items[0];
+app.selectedItemId.value = textPosition.id;
+app.selected.value = textPosition.cardId;
+const originalDisc = app.collections.value
+  .flatMap((collection) => collection.cards)
+  .find((card) => card.id === textPosition.cardId);
+const originalContent = JSON.stringify(originalDisc);
+app.openCardText();
+app.textDraft.value = { artist: 'Artista breve', a: 'Cara A breve', b: 'Cara B breve' };
+app.saveCardText();
+await nextTick();
+assert.equal(JSON.stringify(originalDisc), originalContent);
+const shortSvg = app.svg(app.compositionCards.value[0]);
+assert.match(shortSvg, />Artista breve</);
+assert.match(shortSvg, />Cara A breve</);
+assert.match(shortSvg, />Cara B breve</);
+app.shuffleStyles();
+assert.equal(textPosition.text.a, 'Cara A breve');
+app.openCardText();
+app.textDraft.value.a = 'Cambio cancelado';
+app.textDialog.value = false;
+assert.equal(textPosition.text.a, 'Cara A breve');
+app.duplicateInComposition();
+app.saveCardEditor();
+const copiedTextPosition = app.composition.value.items.at(-1);
+assert.equal(copiedTextPosition.text.a, 'Cara A breve');
+assert.notEqual(copiedTextPosition.text, textPosition.text);
+app.selectedItemId.value = textPosition.id;
+app.selected.value = textPosition.cardId;
+app.openCardText();
+app.textDraft.value = { artist: '', a: '', b: '' };
+app.saveCardText();
+assert.deepEqual(Object.keys(textPosition.text), []);
+assert.equal(JSON.stringify(originalDisc), originalContent);
+console.log('PASS: per-card text overrides preserve originals, cancel, duplicate and reset');
