@@ -56,6 +56,14 @@ globalThis.StudioComponents = {
   FontPicker: {
     props: { modelValue: String, options: Array, label: String, sample: String, inherit: Boolean },
     emits: ['update:modelValue'],
+    data() { return { query: '' }; },
+    computed: {
+      matchingFonts() {
+        const plain = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+        const query = plain(this.query).trim();
+        return (this.options || []).filter(font => plain(font.label + ' ' + font.value + ' ' + (font.keywords || '')).includes(query));
+      },
+    },
     methods: {
       choose(value) {
         this.$emit('update:modelValue', value);
@@ -63,10 +71,12 @@ globalThis.StudioComponents = {
       },
     },
     template: `<div class="font-picker"><span class="field-caption">{{ label }}</span>
-      <details ref="menu"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
+      <details ref="menu" @toggle="query = ''"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
         <div class="font-options" role="group" :aria-label="label">
+          <span class="font-search"><input type="search" v-model="query" :aria-label="'Buscar ' + label" placeholder="Buscar fuente…" autocomplete="off" /></span>
+          <p v-if="!matchingFonts.length" class="font-empty" role="status">No hay fuentes con ese nombre.</p>
           <button v-if="inherit" type="button" :aria-pressed="!modelValue" @click="choose('')">La misma que las canciones</button>
-          <button v-for="font in options" :key="font.value" type="button" :aria-pressed="modelValue === font.value" @click="choose(font.value)">
+          <button v-for="font in matchingFonts" :key="font.value" type="button" :aria-pressed="modelValue === font.value" @click="choose(font.value)">
             <small>{{ font.label }}</small><span :style="{fontFamily:font.value}">{{ sample || 'Música con carácter · ÁÉÍÓÚ Ñ' }}</span>
           </button>
         </div>

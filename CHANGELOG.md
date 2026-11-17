@@ -1,3 +1,10 @@
+# 7.8.1
+
+- El lápiz carga cualquier plantilla en el editor visual, con campos y gráficos independientes.
+- Los diseños integrados se editan como copias propias sin alterar las tarjetas existentes.
+- Fuentes de máquina de escribir al principio del selector y búsqueda por nombre o estilo.
+- Conservación de colores vinculados al papel y los gráficos y fuentes de los adornos vectoriales.
+
 # 7.8.0
 
 - Publicación de los iconos de edición en todas las plantillas.

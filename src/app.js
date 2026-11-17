@@ -178,17 +178,17 @@ const templates = [
 ];
 // Fuentes libres incluidas en el build; no dependen de servicios externos.
 const fontOptions = [
+  // Máquinas de escribir: variantes clásicas, limpias y desgastadas.
+  { value: 'Courier Prime', label: 'Courier Prime · Máquina clásica', keywords: 'typewriter máquina de escribir' },
+  { value: 'Cutive Mono', label: 'Cutive Mono · Máquina fina', keywords: 'typewriter máquina de escribir' },
+  { value: 'Special Elite', label: 'Special Elite · Máquina desgastada', keywords: 'typewriter máquina de escribir' },
+  { value: 'IBM Plex Mono', label: 'IBM Plex Mono · Máquina moderna', keywords: 'typewriter máquina de escribir' },
   { value: 'Trade Winds', label: 'Trade Winds · Pincel desgastado' },
   { value: 'Permanent Marker', label: 'Permanent Marker · Rotulador' },
   { value: 'DM Sans', label: 'DM Sans · Moderna y limpia' },
   { value: 'Space Grotesk', label: 'Space Grotesk · Geométrica' },
   { value: 'Oswald', label: 'Oswald · Condensada' },
   { value: 'Playfair Display', label: 'Playfair Display · Editorial' },
-  // Máquinas de escribir: variantes clásicas, limpias y desgastadas.
-  { value: 'Courier Prime', label: 'Courier Prime · Máquina clásica' },
-  { value: 'Cutive Mono', label: 'Cutive Mono · Máquina fina' },
-  { value: 'Special Elite', label: 'Special Elite · Máquina desgastada' },
-  { value: 'IBM Plex Mono', label: 'IBM Plex Mono · Máquina moderna' },
   { value: 'Georgia', label: 'Georgia · Clásica' },
   { value: 'Arial', label: 'Arial · Sans' },
   { value: 'monospace', label: 'Monoespaciada' },
@@ -383,7 +383,10 @@ function makeSvg(c, settings) {
   const tx = (text, y, px, family = font, fill = ink) => {
     const available = labelAvailable(c.style, y === 75);
     const fitted = fitLabelText(text, family, textSize(text, px), available);
-    return `<text x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(fitted.text)}</text>`;
+    const binding = c.designBindings
+      ? `data-disc-field="${({37:'a',75:'artist',112:'b',13:'category',139:'rpm'})[y]}" data-disc-width="${available}" `
+      : '';
+    return `<text ${binding}x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(fitted.text)}</text>`;
   };
   // Las fuentes se incrustan también en el SVG: la exportación y el PDF usan el mismo dibujo.
   const fontCss = [...new Set([font, artistFont])]
@@ -466,7 +469,7 @@ function makeSvg(c, settings) {
       ? tx(c.rpm || settings.rpm, 139, 7, 'Arial', artistInk)
       : '') +
     ((c.showNumber ?? c.showMeta !== false)
-      ? `<text x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
+      ? `<text ${c.designBindings ? 'data-disc-field="number" data-disc-width="80" ' : ''}x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
       : '');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(titleA, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(titleB, 112, titlePx)}${meta}</svg>`;
@@ -2247,7 +2250,25 @@ createApp({
       designerInitial = ref(null),
       designerSession = ref(0);
     function openTemplateDesigner(template = null) {
-      designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
+      try {
+        if (template && !template.design) {
+          const base = { ...template, ...(settings.value.templateDefaults?.[template.id] || {}) };
+          const sample = normalize({
+            ...base, style: template.id, customDesign: null, designBindings: true,
+            artist: 'Artista A / Artista B', artistB: '',
+            a: 'Título de la cara A', b: 'Título de la cara B',
+            category: 'ROCK & ROLL', rpm: '45 RPM', number: 'A1',
+            showGenre: true, showRpm: true, showNumber: true,
+          });
+          designerInitial.value = StudioTemplateTools.fromBuiltinSvg(
+            makeSvg(sample, { width: 76, height: 38, rpm: '45 RPM' }),
+            { ...base, ink: sample.ink, paper: sample.paper, artistInk: sample.artistInk, font: sample.font, graphicsInk: sample.graphicsInk || sample.artistInk, name: template.name + ' (copia)' },
+          );
+        } else designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
+      } catch (error) {
+        notify('No se pudo abrir la plantilla: ' + error.message);
+        return;
+      }
       designerSession.value++;
       designerDialog.value = true;
     }

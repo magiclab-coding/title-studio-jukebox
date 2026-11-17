@@ -53,12 +53,23 @@ try {
         await entries.count(),
         'Todas las plantillas tienen lápiz',
       );
-      await editButtons.first().click();
-      const defaults = page.locator('.style-modal');
-      await defaults.waitFor();
-      assert.match(await defaults.locator('h3').innerText(), /Valores predeterminados del diseño/);
-      await defaults.getByRole('button', { name: 'Cerrar estilos', exact: true }).click();
-      await defaults.waitFor({ state: 'detached' });
+
+      // Integradas y propias deben abrir el mismo editor visual, con el diseño cargado.
+      const builtinNames = ['Ribbon No. 45','Pincel · El Río','Artista en negativo','Typewriter','Sello Rock'];
+      for (const name of builtinNames) {
+        await page.getByRole('button',{name:'Editar plantilla '+name,exact:true}).click();
+        const visual = page.locator('.template-designer');
+        await visual.waitFor();
+        assert.equal(await visual.getByLabel('Nombre',{exact:true}).inputValue(),name+' (copia)');
+        assert.ok(await visual.locator('.designer-layers li').count() >= 6);
+        assert.equal(await visual.getByLabel('Contenido',{exact:true}).inputValue(),'a');
+        assert.ok(await visual.locator('.designer-drawing svg text').count() >= 6);
+        assert.ok(await visual.locator('.designer-drawing svg image, .designer-drawing svg g rect').count() > 0);
+        if (name === 'Ribbon No. 45')
+          await page.screenshot({path:'.test-artifacts/integrated-editor-'+width+'.png',fullPage:true});
+        await visual.getByRole('button',{name:'Cerrar editor de plantilla',exact:true}).click();
+        await visual.waitFor({state:'detached'});
+      }
       const create = page
         .locator('.page-actions')
         .getByRole('button', { name: 'Crear plantilla', exact: true });
@@ -85,6 +96,17 @@ try {
         'Fuentes reales cargadas, sin sustitución',
       );
       await editor.locator('.font-picker summary').click();
+      const fontSearch = editor.getByRole('searchbox',{name:'Buscar Fuente de la capa',exact:true});
+      const firstFamilies = await editor.locator('.font-options button small').allTextContents();
+      assert.deepEqual(firstFamilies.slice(0,4).map(text => text.split(' · ')[0]),
+        ['Courier Prime','Cutive Mono','Special Elite','IBM Plex Mono']);
+      await fontSearch.fill('typewriter');
+      assert.equal(await editor.locator('.font-options button').count(),5);
+      await fontSearch.fill('maquina');
+      assert.equal(await editor.locator('.font-options button').count(),5);
+      await fontSearch.fill('sin coincidencias');
+      assert.ok(await editor.getByText('No hay fuentes con ese nombre.',{exact:true}).isVisible());
+      await fontSearch.fill('Courier');
       const courier = editor.locator('.font-options button').filter({ hasText: 'Courier Prime' });
       await courier.waitFor();
       assert.ok(
