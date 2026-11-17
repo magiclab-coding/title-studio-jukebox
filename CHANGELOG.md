@@ -1,3 +1,9 @@
+# 7.10.0
+
+- Iconos de edición, duplicado y borrado integrados en el pie de cada plantilla, alineados y del mismo tamaño.
+- Eliminación de la flecha redundante y del espacio de acciones bajo las tarjetas.
+- Confirmación del plan antes de futuros cambios registrada en las instrucciones del proyecto.
+
 # 7.9.0
 
 - Publicación de la carga de plantillas integradas en el editor visual como copias editables.

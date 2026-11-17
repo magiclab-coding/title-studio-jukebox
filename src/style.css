@@ -752,6 +752,10 @@ td:last-child {
   gap: 20px;
 }
 .template-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
   text-align: left;
   transition: transform 0.2s;
 }
@@ -763,6 +767,10 @@ td:last-child {
   box-shadow: 0 0 0 1px var(--rust);
 }
 .template-preview {
+  display: block;
+  width: 100%;
+  border: 0;
+  cursor: pointer;
   padding: 30px;
   background: #eaece4;
 }
@@ -772,11 +780,41 @@ td:last-child {
   display: block;
   box-shadow: 0 4px 8px #0002;
 }
+/* Nombre y acciones comparten un pie compacto, también en móvil. */
 .template-info {
-  padding: 17px;
+  padding: 12px 14px;
+  margin-top: auto;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   font-size: 12px;
+}
+.template-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.template-name b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.template-name small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.template-preview:focus-visible,
+.template-name:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: -3px;
 }
 .template-info small {
   display: block;
@@ -4531,10 +4569,18 @@ select:disabled {
 }
 .template-actions {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 8px;
+  gap: 4px;
+}
+.template-actions .control-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
 }
 @media (max-width: 800px) {
   .designer-workspace {

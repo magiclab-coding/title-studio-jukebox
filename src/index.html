@@ -1319,22 +1319,15 @@
                 </div>
                 <div class="template-grid">
                   <div v-for="t in visibleTemplates" :key="t.id" class="template-entry">
-                    <button
-                      class="template-card panel"
-                      :class="{ chosen: current.style === t.id }"
-                      @click="editTemplateDefaults(t)"
-                    >
-                      <div class="template-preview">
+                    <article class="template-card panel" :class="{ chosen: current.style === t.id }">
+                      <button type="button" class="template-preview" @click="editTemplateDefaults(t)" :aria-label="'Valores de plantilla ' + t.name">
                         <div v-html="templatePreview(t, current)"></div>
-                      </div>
+                      </button>
                       <div class="template-info">
-                        <div>
+                        <button type="button" class="template-name" @click="editTemplateDefaults(t)" :title="t.name">
                           <b>{{ t.name }}</b><small>{{ t.group }} · {{ t.description }}</small>
-                        </div>
-                        <span>{{ current.style === t.id ? '✓' : '↗' }}</span>
-                      </div>
-                    </button>
-                    <div class="template-actions" :aria-label="'Gestionar plantilla ' + t.name">
+                        </button>
+                        <div class="template-actions" :aria-label="'Gestionar plantilla ' + t.name">
                       <button
                         type="button"
                         class="control-icon"
@@ -1385,6 +1378,9 @@
                         </svg>
                       </button>
                     </div>
+
+                      </div>
+                    </article>
                   </div>
                 </div>
                 <p
