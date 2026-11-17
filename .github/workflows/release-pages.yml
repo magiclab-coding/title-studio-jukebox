@@ -33,10 +33,6 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: node --test tests/release-version.mjs
-      - name: Import original versions as real tags and Releases
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node scripts/bootstrap-history.mjs
       - run: git fetch origin --tags
       - name: Resolve version for this main commit
         id: version

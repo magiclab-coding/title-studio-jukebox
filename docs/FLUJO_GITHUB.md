@@ -1,38 +1,47 @@
 # Ramas, versiones y publicación
 
-Cada interacción empieza en una rama nueva desde develop:
-
 `feature/* → Pull Request → develop → Pull Request de publicación → main`
 
-- **feature/**: trabajo de una interacción.
-- **develop**: integración y base de la siguiente interacción.
-- **main**: código publicado.
-- **archive/legacy-versions**: cadena de commits históricos de v1 a v7, importados para crear tags y Releases reales. No es base de trabajo.
+## Desarrollo
 
-## Integración continua y publicación
-
-`ci.yml` verifica las ramas de los PR, instala dependencias con npm ci, ejecuta pruebas y compila. Los PR hacia main deben proceder de develop. Esta comprobación es parte de CI; no sustituye reglas de protección de ramas en GitHub.
-
-`release-pages.yml` se ejecuta después de cada push/merge a main y también se puede repetir manualmente desde Actions. Primero valida, recupera las versiones históricas como tags/Releases, calcula la nueva versión, compila y adjunta el sitio a la Release. Después publica el mismo artefacto en GitHub Pages cuando Pages está habilitado. Si no está disponible, la Release se conserva y el flujo informa de que el despliegue se ha omitido.
-
-Las versiones históricas son v1.0.0 a v7.0.0. La primera revisión de este flujo es v7.0.1. En cada nuevo commit de main se incrementa el parche si la versión de package.json ya existe como tag; se respetan incrementos mayores explícitos. Repetir el flujo del mismo commit no crea otra versión ni mueve su tag.
-
-El artefacto publicado incluye version.json con la versión y el SHA exactos. Los recursos de la aplicación utilizan rutas relativas, compatibles con la subruta del proyecto en github.io.
-
-## Configurar Pages una sola vez
-
-En Settings → Pages, elegir GitHub Actions como origen. La dirección de proyecto prevista es https://magiclab-coding.github.io/title-studio-jukebox/. No es un despliegue en la raíz del dominio personal ni reemplaza otro sitio del usuario.
-
-La cuenta actual muestra «Upgrade or make this repository public to enable Pages». El repositorio seguirá privado hasta que el usuario decida si hacerlo público o cambiar de plan. Tras habilitar Pages, repetir Release and GitHub Pages desde main: se desplegará sin crear una Release duplicada.
-
-## Empezar una interacción desde terminal
+Cada interacción crea una rama `feature/YYYYMMDD-HHMMSS-descripcion` desde la
+última revisión de `develop`. Puede utilizarse:
 
 ```sh
 bash scripts/new-interaction.sh descripcion-corta
 ```
 
-El script exige un árbol limpio, descarga origin/develop y crea una rama nueva con fecha y hora UTC. El mismo flujo puede realizarse con las herramientas de GitHub. Las reglas persistentes están en AGENTS.md.
+La implementación incrementa el parche de `package.json` y su lockfile. Una vez
+validados los cambios se integra mediante PR en `develop`. La CI comprueba las
+ramas, instala con `npm ci`, valida el formato, ejecuta las pruebas y compila.
+Los pushes a `develop` y a `feature/*` no publican el sitio.
 
-## Ver los comandos y resultados
+## Publicación
 
-Los ficheros de .github/workflows y scripts son el registro ejecutable. Cada ejecución real y su salida están en la pestaña Actions del repositorio. Cada cambio se revisa en su Pull Request, y cada versión está en Releases.
+La publicación requiere petición explícita del usuario. Se incrementa el número
+menor de versión y se pone el parche a cero; por ejemplo, 7.4.2 → 7.5.0.
+Solo `develop` puede ser origen de una PR hacia `main`.
+
+`release-pages.yml` se ejecuta en cada push a `main`. Valida el código, resuelve
+la versión, compila una distribución minificada, crea una Release del commit
+exacto y publica ese mismo artefacto en GitHub Pages. Repetir el flujo sobre el
+mismo commit reutiliza la versión. Los tags publicados no se desplazan.
+
+La distribución incluye `version.json` con la versión y el SHA. Las rutas de
+recursos son relativas y utilizan hashes para evitar mezclar revisiones.
+
+Dirección: https://magiclab-coding.github.io/title-studio-jukebox/
+
+Tras comprobar el despliegue, se sincroniza `develop` con `main`. Si Pages falla
+o se omite, se informa del resultado real: crear una Release no significa que
+el sitio esté desplegado.
+
+## Trazabilidad
+
+Cada cambio queda en su PR y commit; las salidas de las comprobaciones están en
+Actions. Las Releases representan las publicaciones de este repositorio.
+El historial normal de Git permite revisar y revertir cambios mediante una
+nueva rama y PR, siguiendo el mismo flujo de validación.
+
+El código publicado y los datos del navegador son independientes. Actualizar
+el programa no recupera discos ni composiciones: para eso se utilizan copias JSON.

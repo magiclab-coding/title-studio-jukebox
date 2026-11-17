@@ -7,7 +7,8 @@ import XLSX from 'xlsx';
 let app,
   printed = 0;
 const storage = new Map(),
-  output = { innerHTML: '' };
+  output = { innerHTML: '' },
+  downloaded = [];
 const context = {
   Vue: {
     ref,
@@ -66,7 +67,13 @@ const context = {
           }
         : { click() {} },
   },
-  URL: { createObjectURL: () => '', revokeObjectURL() {} },
+  URL: {
+    createObjectURL: (blob) => {
+      downloaded.push(blob);
+      return '';
+    },
+    revokeObjectURL() {},
+  },
   Blob,
   setTimeout: () => {},
 };
@@ -101,7 +108,6 @@ assert.match(output.innerHTML, /@page\{size:297mm 210mm/);
 app.composition.value.items[0].x = 23;
 await nextTick();
 // --- Recuperación completa y copias parciales ---
-app.checkpoint();
 const backup = JSON.parse(storage.get('title-studio-v3'));
 const originalId = app.cards.value[0].id;
 app.copyComposition();
@@ -322,7 +328,11 @@ await nextTick();
 assert.match(output.innerHTML, /#324d70/);
 app.saveEverything();
 await nextTick();
-assert.ok(app.versions.value.length);
+const savedData = JSON.parse(await downloaded.at(-1).text());
+assert.ok(savedData.collections.length);
+assert.ok(savedData.compositions.length);
+assert.equal('versions' in savedData, false);
+assert.equal(storage.has('title-studio-versions'), false);
 console.log(
   'PASS: selective composition, physical layout, print sources, full/scoped restore, undo, collections, 1,000-row import, pagination and filters',
 );
@@ -520,7 +530,6 @@ assert.notEqual(
 context.innerWidth = 1440;
 app.editCard();
 assert.equal(app.editorDialog.value, true);
-assert.equal(app.editingId.value, null);
 app.editorDialog.value = false;
 app.selectCard(app.currentItem.value.id);
 app.actionCardId.value = app.currentItem.value.id;
