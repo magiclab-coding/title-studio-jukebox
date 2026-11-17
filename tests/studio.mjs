@@ -939,3 +939,19 @@ for (const template of app.templates.filter((t) => !t.hidden && !t.design)) {
 assert.equal(JSON.stringify(app.collections.value), unchangedRecords);
 assert.equal(JSON.stringify(app.compositions.value), unchangedCompositions);
 console.log('PASS: all built-in templates load into the visual editor as independent layers');
+
+// La paleta forma parte del proyecto: persiste y se recupera con el resto de ajustes.
+app.savePaletteColor('#AB12CD');
+app.savePaletteColor('#ab12cd');
+await nextTick();
+assert.ok(app.activePalette.value.includes('#ab12cd'));
+assert.ok(app.activePalette.value.includes('#b9553b'));
+assert.equal(app.settings.value.colorPalette.filter((color)=>color==='#ab12cd').length,1);
+const paletteBackup = JSON.parse(storage.get('title-studio-v3'));
+assert.ok(paletteBackup.settings.colorPalette.includes('#ab12cd'));
+app.settings.value.colorPalette = [];
+app.pendingBackup.value = paletteBackup;
+app.loadBackup();
+await nextTick();
+assert.ok(app.settings.value.colorPalette.includes('#ab12cd'));
+console.log('PASS: active palette is shared, deduplicated and included in project backups');

@@ -86,9 +86,30 @@ try {
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
           await palette.locator('.color-swatches button').first().waitFor();
-          assert.equal(await palette.locator('.color-swatches button').count(), 30);
-          await palette.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#ab12cd');
-          await palette.getByRole('button', { name: 'Listo', exact: true }).click();
+          assert.ok((await palette.locator('.color-swatches button').count()) >= 30);
+          assert.equal(await palette.locator('input').count(),0,'La paleta rápida no tiene campos de edición');
+          await palette.getByRole('button',{name:'Personalizar color…',exact:true}).click();
+          const customColor=page.locator('.color-custom-modal:visible');
+          await customColor.waitFor();
+          const beforeColor=await visual.locator('.designer-drawing svg text').filter({hasText:'Artista A / Artista B'}).getAttribute('fill');
+          await customColor.getByLabel('Hexadecimal de Tinta',{exact:true}).fill('#123abc');
+          await customColor.getByRole('button',{name:'Cancelar',exact:true}).click();
+          await customColor.waitFor({state:'hidden'});
+          assert.equal(await visual.locator('.designer-drawing svg text').filter({hasText:'Artista A / Artista B'}).getAttribute('fill'),beforeColor);
+          await visual.getByRole('button',{name:'Tinta',exact:true}).click();
+          await palette.getByRole('button',{name:'Personalizar color…',exact:true}).click();
+          await customColor.waitFor();
+          const wheel=customColor.getByRole('group',{name:'Rueda cromática',exact:true});
+          await wheel.click({position:{x:150,y:80}});
+          assert.match(await customColor.getByLabel('Hexadecimal de Tinta',{exact:true}).inputValue(),/^#[0-9a-f]{6}$/i);
+          await customColor.getByLabel('Hexadecimal de Tinta',{exact:true}).fill('#ab12cd');
+          await customColor.getByRole('button',{name:'Guardar color',exact:true}).click();
+          await customColor.waitFor({state:'hidden'});
+          await visual.getByRole('button',{name:'Papel',exact:true}).click();
+          await palette.getByRole('button',{name:'Usar #ab12cd',exact:true}).waitFor();
+          await page.keyboard.press('Escape');
+          const savedColor=await page.evaluate(()=>JSON.parse(localStorage.getItem('title-studio-v3')).settings.colorPalette);
+          assert.ok(savedColor.includes('#ab12cd'));
           assert.equal(
             await visual.locator('.designer-drawing > svg > rect').getAttribute('fill'),
             background,
@@ -271,6 +292,8 @@ try {
       await card.waitFor();
       await page.reload();
       await card.waitFor();
+      assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem('title-studio-v3')).settings.colorPalette.includes('#ab12cd')));
+
       // El pie mantiene los tres controles dentro de la tarjeta en todos los anchos.
       const footer = await card.locator('.template-info').evaluate((node) => {
         const bounds = node.getBoundingClientRect();
