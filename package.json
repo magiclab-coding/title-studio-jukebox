@@ -1,15 +1,16 @@
 {
   "name": "title-studio",
-  "version": "7.5.0",
+  "version": "7.6.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node tests/studio.mjs",
+    "test": "node tests/studio.mjs && node --test tests/designer.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:build": "node tests/build.mjs",
-    "dev": "node scripts/dev-server.mjs"
+    "dev": "node scripts/dev-server.mjs",
+    "test:browser": "node tests/designer-browser.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "5.3.0",
@@ -26,6 +27,7 @@
     "esbuild": "0.25.12",
     "html-minifier-terser": "7.2.0",
     "linkedom": "0.18.12",
+    "playwright": "1.56.1",
     "prettier": "3.10.1"
   }
 }

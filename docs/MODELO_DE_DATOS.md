@@ -63,3 +63,21 @@ El centrado de etiquetas afecta solo al eje horizontal; se respeta el margen
 superior y la escala física. Pantalla, SVG, impresión y PDF comparten el dibujo.
 El PDF conserva la configuración seleccionada; la impresora o el visor pueden
 requerir **Tamaño real** o **100 %** para evitar reescalado.
+
+## Plantillas propias
+
+`settings.customTemplates` contiene los diseños del catálogo, identificados por
+`custom-…`. Cada entrada tiene nombre, colores y `design`, con versión 1 y una
+lista ordenada de elementos: texto, rectángulo, elipse, línea, SVG o imagen.
+Cada capa conserva geometría en el lienzo 300 × 150, color, tipografía,
+visibilidad y vínculo opcional con un campo del disco.
+
+Aplicar una plantilla copia su diseño a `appearance.customDesign`. Los diseños
+aplicados son autónomos respecto al catálogo; las copias parciales de composición
+no necesitan resolver un identificador externo. Cambiar a un diseño integrado
+retira esa copia de apariencia. El renderizado y los avisos tipográficos usan
+las medidas de cada capa de texto.
+
+Los SVG pasan por una lista de elementos y atributos permitidos tanto al importar
+como al dibujar. Las imágenes admiten únicamente datos PNG/JPG/WebP incrustados.
+La importación JSON valida y normaliza los diseños antes de sustituir el estado.
