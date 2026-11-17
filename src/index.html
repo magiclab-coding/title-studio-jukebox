@@ -1318,72 +1318,18 @@
                   </button>
                 </div>
                 <div class="template-grid">
-                  <button
-                    v-for="t in visibleTemplates"
-                    :key="t.id"
-                    class="template-card panel"
-                    :class="{ chosen: current.style === t.id }"
-                    @click="editTemplateDefaults(t)"
-                  >
-                    <div class="template-preview">
-                      <div v-html="templatePreview(t, current)"></div>
-                    </div>
-                    <div class="template-info">
-                      <div>
-                        <b>{{ t.name }}</b><small>{{ t.group }} · {{ t.description }}</small>
-                      </div>
-                      <span>{{ current.style === t.id ? '✓' : '↗' }}</span>
-                    </div>
-                  </button>
-                </div>
-                <section
-                  v-if="templateFilter === 'Mis plantillas'"
-                  class="custom-template-management"
-                  aria-label="Gestionar plantillas propias"
-                >
-                  <p v-if="!visibleTemplates.length" class="small-muted">
-                    Crea tu primera plantilla con el botón de la cabecera.
-                  </p>
-                  <div v-for="t in visibleTemplates" :key="t.id" class="custom-template-row">
-                    <span>{{ t.name }}</span>
-                    <div class="inline">
-                      <button
-                        class="control-icon"
-                        @click="openTemplateDesigner(t)"
-                        title="Editar plantilla"
-                        :aria-label="'Editar plantilla ' + t.name"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        class="control-icon"
-                        @click="copyTemplateDesign(t)"
-                        title="Duplicar plantilla"
-                        :aria-label="'Duplicar plantilla ' + t.name"
-                      >
-                        ⧉
-                      </button>
-                      <button
-                        class="control-icon danger"
-                        @click="deleteTemplateDesign(t)"
-                        title="Eliminar plantilla"
-                        :aria-label="'Eliminar plantilla ' + t.name"
-                      >
-                        <svg
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          aria-hidden="true"
-                        >
-                          <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7" />
-                        </svg>
-                      </button>
+                  <div v-for="t in visibleTemplates" :key="t.id" class="template-entry">
+                    <button class="template-card panel" :class="{chosen:current.style===t.id}" @click="editTemplateDefaults(t)">
+                      <div class="template-preview"><div v-html="templatePreview(t,current)"></div></div>
+                      <div class="template-info"><div><b>{{ t.name }}</b><small>{{ t.group }} · {{ t.description }}</small></div><span>{{ current.style===t.id ? '✓' : '↗' }}</span></div>
+                    </button>
+                    <div v-if="t.design" class="template-own-actions" :aria-label="'Gestionar plantilla ' + t.name">
+                      <button class="control-icon" @click="copyTemplateDesign(t)" title="Duplicar plantilla" :aria-label="'Duplicar plantilla ' + t.name">⧉</button>
+                      <button class="control-icon danger" @click="deleteTemplateDesign(t)" title="Eliminar plantilla" :aria-label="'Eliminar plantilla ' + t.name"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
                     </div>
                   </div>
-                </section>
+                </div>
+                <p v-if="templateFilter === 'Mis plantillas' && !visibleTemplates.length" class="small-muted">Crea tu primera plantilla con el botón de la cabecera.</p>
                 <div class="tip">
                   Diseños propios inspirados en las familias clásicas de etiquetas. Selecciona uno y
                   edita aquí sus valores predeterminados. Cada tarjeta puede personalizarse en

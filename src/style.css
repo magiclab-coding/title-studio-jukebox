@@ -4270,8 +4270,7 @@ select:disabled {
 .designer-layer-heading,
 .designer-layer-actions,
 .designer-align,
-.designer-footer,
-.custom-template-row {
+.designer-footer {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -4521,19 +4520,9 @@ select:disabled {
   margin-top: 16px;
   padding-top: 16px;
 }
-.custom-template-management {
-  margin-top: 16px;
-}
-.custom-template-row {
-  justify-content: space-between;
-  padding: 10px 0;
-  border-top: 1px solid #e0e6e0;
-}
-.custom-template-row > span {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
+.template-entry { min-width: 0; display: flex; flex-direction: column; }
+.template-entry > .template-card { width: 100%; flex: 1; }
+.template-own-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 8px; }
 @media (max-width: 800px) {
   .designer-workspace {
     grid-template-columns: minmax(0, 1fr);

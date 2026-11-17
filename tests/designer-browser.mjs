@@ -81,6 +81,22 @@ try {
       await stage.focus();
       await page.keyboard.press('ArrowRight');
       assert.equal(await editor.getByLabel('X', { exact: true }).inputValue(), '11');
+      const rect = await stage.boundingBox();
+      const from = {x:rect.x+61*rect.width/300,y:rect.y+80*rect.height/150};
+      await page.mouse.move(from.x,from.y);
+      await page.mouse.down();
+      await page.mouse.move(from.x+16*rect.width/300,from.y+10*rect.height/150,{steps:5});
+      await page.mouse.up();
+      assert.equal(await editor.getByLabel('X',{exact:true}).inputValue(),'27');
+      assert.equal(await editor.getByLabel('Y',{exact:true}).inputValue(),'65');
+      const handle = editor.locator('.designer-resize');
+      const handleRect = await handle.boundingBox();
+      await page.mouse.move(handleRect.x+handleRect.width/2,handleRect.y+handleRect.height/2);
+      await page.mouse.down();
+      await page.mouse.move(handleRect.x+handleRect.width/2+20*rect.width/300,handleRect.y+handleRect.height/2+10*rect.height/150,{steps:5});
+      await page.mouse.up();
+      assert.equal(await editor.getByLabel('Ancho',{exact:true}).inputValue(),'120');
+      assert.equal(await editor.getByLabel('Alto',{exact:true}).inputValue(),'60');
       const layout = await editor.evaluate((node) => {
         const r = node.getBoundingClientRect();
         const tools = Array.from(node.querySelectorAll('.designer-tools .control-icon')).map(
