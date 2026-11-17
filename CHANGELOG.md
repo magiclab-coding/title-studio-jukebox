@@ -1,3 +1,8 @@
+# 7.6.0
+
+- Publicación del editor visual de plantillas propias, importación de recursos y catálogo persistente.
+- Validación del editor en móvil y escritorio, composiciones, copias y salida minificada.
+
 # 7.5.1
 
 - Editor visual para crear plantillas propias con campos del disco, textos, formas y capas.
