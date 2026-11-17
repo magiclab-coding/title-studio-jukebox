@@ -148,7 +148,8 @@ test('una plantilla integrada se convierte en campos y gráficos independientes'
   assert.equal(title.fontSize, 24);
   assert.equal(title.baseline, 'middle');
   const artist = converted.design.elements.find((e) => e.field === 'artist');
-  assert.equal(artist.colorRole, 'paper');
+  assert.equal(artist.colorRole, 'artistInk');
+  assert.equal(converted.artistInk, '#ffffff');
   const card = {
     ...sample,
     graphicsInk: '#abcdef',
@@ -193,4 +194,32 @@ test('la búsqueda de fuentes admite nombres, estilo de máquina y acentos', () 
     'Courier Prime',
   );
   assert.equal(picker.computed.matchingFonts.call({ query: 'inexistente', options }).length, 0);
+});
+
+test('el artista en inversa mantiene su color al cambiar el papel y admite otro color', () => {
+  const legacy = tools.newTemplate();
+  legacy.paper = '#ffffff';
+  legacy.design.elements[1].colorRole = 'paper';
+  legacy.design.elements[1].fill = '#ffffff';
+  const template = tools.normalizeTemplate(legacy);
+  assert.equal(template.artistInk, '#ffffff');
+  assert.equal(template.design.elements[1].colorRole, 'artistInk');
+  const card = { ...sample, ...template, paper: '#ffcc00', artistInk: '#ab12cd', customDesign: template.design };
+  const rendered = tools.render(card, { width: 76, height: 38 }, { fit });
+  assert.match(rendered, /fill="#ab12cd"[^>]*>Uno \/ Dos</);
+  assert.match(rendered, /fill="#ffcc00"/);
+});
+
+test('paleta ampliada y hexadecimal solo aceptan colores completos sin alterar otras tintas', () => {
+  const shared = {};
+  vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
+  const component = shared.StudioComponents.ColorPicker;
+  const picker = component.data.call({ modelValue: '#ffffff' });
+  const emitted = [];
+  picker.$emit = (...args) => emitted.push(args);
+  assert.ok(picker.colors.length >= 30);
+  for (const value of ['#12', 'red', '#xyz123']) component.methods.choose.call(picker, value);
+  assert.equal(emitted.length, 0);
+  component.methods.choose.call(picker, '#ab12cd');
+  assert.deepEqual(emitted[0], ['update:modelValue', '#ab12cd']);
 });

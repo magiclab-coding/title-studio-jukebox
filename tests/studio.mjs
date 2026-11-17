@@ -860,6 +860,19 @@ app.useTemplate(catalogOwn);
 app.finishStyle();
 await nextTick();
 const appliedDesign = app.composition.value.items[0].appearance.customDesign;
+// La vista previa copia el proxy: las capas de la posición deben sobrevivir al spread.
+const modalCard = app.previewRecord(app.styleCard.value);
+assert.equal(modalCard.customDesign.elements.length, 3);
+assert.equal(JSON.stringify(modalCard.customDesign), JSON.stringify(app.compositionCards.value[0].customDesign));
+assert.equal(app.svg(modalCard), app.svg(app.previewRecord(app.compositionCards.value[0])));
+// El color de artista no puede teñir el papel, ni siquiera en copias antiguas.
+appliedDesign.elements[1].colorRole = 'paper';
+const paperBeforeArtistEdit = app.styleCard.value.paper;
+app.setStyleColor('artistInk', '#ab12cd');
+assert.equal(app.styleCard.value.paper, paperBeforeArtistEdit);
+assert.equal(app.styleCard.value.customDesign.elements[1].colorRole, 'artistInk');
+assert.match(app.svg(app.previewRecord(app.styleCard.value)), /fill="#ab12cd"/);
+
 assert.equal(appliedDesign.elements.length, 3);
 assert.notEqual(appliedDesign, catalogOwn.design);
 const beforeDesignEdit = JSON.stringify(appliedDesign);

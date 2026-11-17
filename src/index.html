@@ -735,19 +735,8 @@
                     >
                     <div class="style-editor-fields">
                       <div class="style-paper">
-                        <label
-                          >Papel<input
-                            type="color"
-                            v-model="styleCard.paper"
-                            aria-label="Color del papel"
-                        /></label>
-                        <label
-                          >Elementos<input
-                            type="color"
-                            :value="styleCard.graphicsInk || styleCard.artistInk || '#202020'"
-                            @input="styleCard.graphicsInk = $event.target.value"
-                            aria-label="Color de elementos gráficos"
-                        /></label>
+                        <color-picker label="Color del papel" caption="Papel" :model-value="styleCard.paper" @update:model-value="setStyleColor('paper', $event)"></color-picker>
+                        <color-picker label="Color de elementos gráficos" caption="Elementos" :model-value="styleCard.graphicsInk || styleCard.artistInk || '#202020'" @update:model-value="setStyleColor('graphicsInk', $event)"></color-picker>
                       </div>
                       <div class="type-row">
                         <font-picker
@@ -763,12 +752,7 @@
                             max="48"
                             v-model.number="styleCard.titlePx"
                             aria-label="Tamaño canciones" /></label
-                        ><label
-                          >Color<input
-                            type="color"
-                            v-model="styleCard.ink"
-                            aria-label="Color canciones"
-                        /></label>
+                        ><color-picker label="Color canciones" caption="Color" :model-value="styleCard.ink" @update:model-value="setStyleColor('ink', $event)"></color-picker>
                       </div>
                       <div class="type-row">
                         <font-picker
@@ -785,12 +769,7 @@
                             max="48"
                             v-model.number="styleCard.artistPx"
                             aria-label="Tamaño artista" /></label
-                        ><label
-                          >Color<input
-                            type="color"
-                            v-model="styleCard.artistInk"
-                            aria-label="Color artista"
-                        /></label>
+                        ><color-picker label="Color artista" caption="Color" :model-value="styleCard.artistInk" @update:model-value="setStyleColor('artistInk', $event)"></color-picker>
                       </div>
                       <fieldset class="metadata-options">
                         <legend>Mostrar en la tarjeta</legend>

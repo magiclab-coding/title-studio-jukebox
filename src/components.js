@@ -1,5 +1,52 @@
 // --- Controles compartidos: el mismo formulario en todos los contextos ---
 globalThis.StudioComponents = {
+  // Un selector compartido mantiene la misma paleta y entrada libre en todos los editores.
+  ColorPicker: {
+    props: { modelValue: String, label: String, caption: String },
+    emits: ['update:modelValue'],
+    data() {
+      return {
+        open: false,
+        hex: this.modelValue || '#000000',
+        colors: ['#ffffff', '#f7f2df', '#e5e7eb', '#9ca3af', '#374151', '#000000',
+          '#7f1d1d', '#b9553b', '#ef4444', '#f97316', '#f59e0b', '#ffcc00',
+          '#854d0e', '#a3a635', '#16a34a', '#213d36', '#377d71', '#14b8a6',
+          '#0891b2', '#005bbb', '#28548a', '#172d40', '#6366f1', '#7c3aed',
+          '#581c87', '#a21caf', '#db2777', '#f472b6', '#fda4af', '#a16207'],
+      };
+    },
+    watch: {
+      modelValue(value) { this.hex = value || '#000000'; },
+    },
+    methods: {
+      choose(value) {
+        if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+        this.hex = value;
+        this.$emit('update:modelValue', value);
+      },
+    },
+    template: `<div class="color-picker">
+      <span class="field-caption">{{ caption || label }}</span>
+      <v-menu v-model="open" :close-on-content-click="false" location="bottom end">
+        <template #activator="{ props }">
+          <button v-bind="props" type="button" class="color-trigger" :aria-label="label" :title="label">
+            <span :style="{backgroundColor: modelValue || '#000000'}"></span>
+          </button>
+        </template>
+        <section class="color-popover" :aria-label="'Selector de ' + label">
+          <div class="color-swatches" role="group" aria-label="Paleta de colores">
+            <button v-for="color in colors" :key="color" type="button" :style="{backgroundColor:color}"
+              :aria-label="'Usar ' + color" :aria-pressed="modelValue?.toLowerCase() === color" @click="choose(color)"></button>
+          </div>
+          <div class="color-custom">
+            <label>Personalizado<input type="color" :value="modelValue || '#000000'" :aria-label="'Color personalizado de ' + label" @input="choose($event.target.value)" /></label>
+            <label>Hexadecimal<input type="text" v-model="hex" maxlength="7" pattern="#[0-9a-fA-F]{6}" :aria-label="'Hexadecimal de ' + label" @input="choose(hex)" @blur="hex=modelValue || '#000000'" spellcheck="false" /></label>
+          </div>
+          <button type="button" class="text-btn" @click="open=false">Listo</button>
+        </section>
+      </v-menu>
+    </div>`,
+  },
   GenreSelect: {
     props: { modelValue: String, genres: Array, label: { default: 'Estilo musical' } },
     emits: ['update:modelValue'],
