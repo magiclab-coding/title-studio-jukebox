@@ -12,8 +12,20 @@ bash scripts/new-interaction.sh descripcion-corta
 ```
 
 La implementación incrementa el parche de `package.json` y su lockfile. Una vez
-validados los cambios se integra mediante PR en `develop`. La CI comprueba las
-ramas, instala con `npm ci`, valida el formato, ejecuta las pruebas y compila.
+validados los cambios se integra mediante PR en `develop`. La CI instala con
+`npm ci`, valida el formato, ejecuta las pruebas, compila y comprueba el editor
+en navegador.
+
+La CI se ejecuta en PR listas para revisión y en pushes a `develop`. Los pushes
+de preparación a `feature/*` no la ejecutan; las PR en borrador tampoco validan
+hasta marcarse como listas. Así no se comprueban en paralelo un commit sin
+preparar y el workflow que actualiza su formato o lockfile. Los errores reales
+de una PR siguen bloqueando su integración. Una nueva revisión cancela la
+validación anterior del mismo evento.
+
+Antes de abrir una PR hay que terminar el formato y sincronizar el lockfile.
+Si se necesita preparación remota, debe terminar y retirarse antes de abrir
+la PR; no se lanzan formateadores temporales en paralelo con la CI.
 Los pushes a `develop` y a `feature/*` no publican el sitio.
 
 ## Publicación

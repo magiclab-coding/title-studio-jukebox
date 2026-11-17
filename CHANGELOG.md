@@ -1,3 +1,19 @@
+# 7.8.0
+
+- Publicación de los iconos de edición en todas las plantillas.
+- Corrección de las ejecuciones prematuras de CI y conservación de los controles obligatorios.
+
+# 7.7.2
+
+- CI en PR listas para revisión y pushes a develop, sin ejecuciones prematuras en ramas de preparación.
+- Cancelación de validaciones sustituidas por nuevas revisiones y conservación de todos los controles.
+- Flujo documentado para preparar formato y lockfile antes de solicitar la integración.
+
+# 7.7.1
+
+- Icono de edición visible en todas las plantillas, con formato y alineación compartidos.
+- El lápiz abre los parámetros de diseños integrados y el editor visual de las plantillas propias.
+
 # 7.7.0
 
 - Publicación de Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono.

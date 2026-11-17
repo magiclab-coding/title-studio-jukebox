@@ -59,3 +59,13 @@ Tener en cuenta glifos, fuente, tamaño y espacio interior del diseño, nunca
 un límite fijo de caracteres. Recalcular al cargar las fuentes.
 La edición de Composición personaliza los textos de la posición; la de Discos
 modifica los originales. No añadir campos duplicados ni un editor de textos separado.
+
+## Preparación y CI sin ejecuciones prematuras
+
+- Preparar formato y lockfile antes de abrir una PR lista para revisión.
+- CI valida PR listas y pushes a develop; no valida pushes de preparación a feature/*.
+- No ejecutar formateadores temporales en paralelo con CI sobre revisiones sin preparar.
+- Si hace falta preparación remota, completarla y retirar su workflow antes de abrir la PR.
+- Conservar format:check, pruebas, compilación y pruebas de navegador como controles obligatorios.
+- Mantener Ubuntu 24.04 para la versión fijada de Playwright; no usar ubuntu-latest sin comprobar compatibilidad.
+- No ocultar fallos reales ni cambiar las notificaciones de la cuenta para simular una corrección.
