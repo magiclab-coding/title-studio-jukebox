@@ -301,11 +301,16 @@
   function normalizeTemplate(raw) {
     const design = normalizeDesign(raw?.design);
     const legacyArtist = design.elements.find(
-      (layer) => layer.type === 'text' && layer.field.startsWith('artist') && layer.colorRole === 'paper',
+      (layer) =>
+        layer.type === 'text' && layer.field.startsWith('artist') && layer.colorRole === 'paper',
     );
     if (legacyArtist)
       design.elements.forEach((layer) => {
-        if (layer.type === 'text' && layer.field.startsWith('artist') && layer.colorRole === 'paper')
+        if (
+          layer.type === 'text' &&
+          layer.field.startsWith('artist') &&
+          layer.colorRole === 'paper'
+        )
           layer.colorRole = 'artistInk';
       });
     return {
@@ -466,7 +471,9 @@
         ...base,
         id: '',
         // Conserva el blanco de un artista en inversa sin vincularlo al papel.
-        artistInk: layers.find((layer) => layer.type === 'text' && layer.field.startsWith('artist'))?.fill || base.artistInk,
+        artistInk:
+          layers.find((layer) => layer.type === 'text' && layer.field.startsWith('artist'))?.fill ||
+          base.artistInk,
         design: { version: 1, elements: layers },
       });
     } finally {
@@ -692,7 +699,9 @@ globalThis.StudioComponents.TemplateDesigner = {
   data() {
     const tools = globalThis.StudioTemplateTools;
     return {
-      model: this.initial ? tools.normalizeTemplate(tools.clone(this.initial)) : tools.newTemplate(),
+      model: this.initial
+        ? tools.normalizeTemplate(tools.clone(this.initial))
+        : tools.newTemplate(),
       selectedId: '',
       undoStack: [],
       redoStack: [],

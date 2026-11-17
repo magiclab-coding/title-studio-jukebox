@@ -204,7 +204,13 @@ test('el artista en inversa mantiene su color al cambiar el papel y admite otro 
   const template = tools.normalizeTemplate(legacy);
   assert.equal(template.artistInk, '#ffffff');
   assert.equal(template.design.elements[1].colorRole, 'artistInk');
-  const card = { ...sample, ...template, paper: '#ffcc00', artistInk: '#ab12cd', customDesign: template.design };
+  const card = {
+    ...sample,
+    ...template,
+    paper: '#ffcc00',
+    artistInk: '#ab12cd',
+    customDesign: template.design,
+  };
   const rendered = tools.render(card, { width: 76, height: 38 }, { fit });
   assert.match(rendered, /fill="#ab12cd"[^>]*>Uno \/ Dos</);
   assert.match(rendered, /fill="#ffcc00"/);
