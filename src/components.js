@@ -1,7 +1,24 @@
 // --- Paleta del proyecto y conversión de la rueda cromática ---
 globalThis.StudioColorTools = {
-  standardColors: [{"name":"Blanco","hex":"#ffffff"},{"name":"Negro","hex":"#000000"},{"name":"Gris claro","hex":"#d1d5db"},{"name":"Gris","hex":"#6b7280"},{"name":"Gris oscuro","hex":"#374151"},{"name":"Rojo","hex":"#ff0000"},{"name":"Naranja","hex":"#ff8000"},{"name":"Amarillo","hex":"#ffff00"},{"name":"Verde","hex":"#008000"},{"name":"Cian","hex":"#00ffff"},{"name":"Azul","hex":"#0000ff"},{"name":"Violeta","hex":"#8000ff"},{"name":"Rosa","hex":"#ff69b4"},{"name":"Marrón","hex":"#8b4513"}],
-  get baseColors() { return this.standardColors.map((color) => color.hex); },
+  standardColors: [
+    { name: 'Blanco', hex: '#ffffff' },
+    { name: 'Negro', hex: '#000000' },
+    { name: 'Gris claro', hex: '#d1d5db' },
+    { name: 'Gris', hex: '#6b7280' },
+    { name: 'Gris oscuro', hex: '#374151' },
+    { name: 'Rojo', hex: '#ff0000' },
+    { name: 'Naranja', hex: '#ff8000' },
+    { name: 'Amarillo', hex: '#ffff00' },
+    { name: 'Verde', hex: '#008000' },
+    { name: 'Cian', hex: '#00ffff' },
+    { name: 'Azul', hex: '#0000ff' },
+    { name: 'Violeta', hex: '#8000ff' },
+    { name: 'Rosa', hex: '#ff69b4' },
+    { name: 'Marrón', hex: '#8b4513' },
+  ],
+  get baseColors() {
+    return this.standardColors.map((color) => color.hex);
+  },
   valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
   palette(values = [], current) {
     const colors = this.standardColors.map((color) => ({ ...color }));
@@ -18,9 +35,12 @@ globalThis.StudioColorTools = {
   },
   // Elige texto blanco o negro por contraste, también en tonos personalizados.
   textColor(hex) {
-    const channels = hex.slice(1).match(/../g).map((part) => parseInt(part,16)/255)
-      .map((value) => value <= 0.04045 ? value/12.92 : ((value+0.055)/1.055)**2.4);
-    const luminance = channels[0]*0.2126 + channels[1]*0.7152 + channels[2]*0.0722;
+    const channels = hex
+      .slice(1)
+      .match(/../g)
+      .map((part) => parseInt(part, 16) / 255)
+      .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
     return luminance > 0.179 ? '#000000' : '#ffffff';
   },
   toHex(h, s, v) {
