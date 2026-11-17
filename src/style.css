@@ -967,8 +967,6 @@ textarea {
   margin-top: 25px;
 }
 
-
-
 .empty {
   padding: 40px;
   text-align: center;
@@ -2174,7 +2172,6 @@ label select {
   margin-top: 3px;
 }
 
-
 .options-body {
   position: absolute;
   right: 0;
@@ -2265,10 +2262,6 @@ label select {
   font-size: 17px;
   z-index: 2;
 }
-
-
-
-
 
 .add-sheet {
   width: 100%;
@@ -2608,7 +2601,6 @@ label select {
   margin-left: auto;
 }
 
-
 .zoom-select {
   font-size: 11px;
   border: 0;
@@ -2785,7 +2777,6 @@ label select {
   .composing .desktop-card-edit {
     display: none;
   }
-
 }
 .composing .composition.no-inspector {
   grid-template-columns: minmax(0, 1fr);
@@ -2925,10 +2916,6 @@ select:disabled {
 .genre-field input {
   margin-top: 5px;
 }
-
-
-
-
 
 .pixel-sizes label {
   flex: 1 1 150px;
@@ -3646,7 +3633,6 @@ select:disabled {
   background: #f0f4f1;
 }
 
-
 .style-modal .style-modal-content {
   padding: 0;
   display: flex;
@@ -3705,7 +3691,7 @@ select:disabled {
     gap: 10px;
   }
 
-.style-modal {
+  .style-modal {
     padding: 16px;
   }
 }

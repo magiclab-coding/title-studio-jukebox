@@ -1607,11 +1607,7 @@ createApp({
     function dragStart(e, item) {
       // En móvil solo el asa inicia un arrastre; el resto permite desplazar la página.
       if (e.pointerType === 'touch' && !e.target.closest('.move-handle')) return;
-      if (
-        e.button !== 0 ||
-        e.target.closest('button:not(.move-handle),input')
-      )
-        return;
+      if (e.button !== 0 || e.target.closest('button:not(.move-handle),input')) return;
       const el = e.currentTarget.closest('.positioned-label') || e.currentTarget,
         startX = e.clientX,
         startY = e.clientY,

@@ -68,7 +68,10 @@ const context = {
         : { click() {} },
   },
   URL: {
-    createObjectURL: (blob) => { downloaded.push(blob); return ''; },
+    createObjectURL: (blob) => {
+      downloaded.push(blob);
+      return '';
+    },
     revokeObjectURL() {},
   },
   Blob,
