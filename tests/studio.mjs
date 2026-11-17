@@ -900,3 +900,26 @@ app.printAll();
 await nextTick();
 assert.match(output.innerHTML, /viewBox=/);
 console.log('PASS: custom templates persist, apply, print and keep existing positions independent');
+
+// El lápiz convierte todos los diseños integrados sin tocar catálogo ni posiciones.
+const unchangedRecords = JSON.stringify(app.collections.value);
+const unchangedCompositions = JSON.stringify(app.compositions.value);
+for (const template of app.templates.filter((t) => !t.hidden && !t.design)) {
+  const source = JSON.stringify(template);
+  app.openTemplateDesigner(template);
+  assert.equal(app.designerDialog.value, true);
+  const draftDesign = app.designerInitial.value;
+  assert.equal(draftDesign.id, '');
+  assert.equal(draftDesign.name, template.name + ' (copia)');
+  for (const field of ['artist', 'a', 'b', 'category', 'rpm', 'number'])
+    assert.ok(
+      draftDesign.design.elements.some((e) => e.type === 'text' && e.field === field),
+      template.id + ' / ' + field,
+    );
+  assert.ok(draftDesign.design.elements.some((e) => ['svg', 'rect', 'ellipse'].includes(e.type)));
+  assert.equal(JSON.stringify(template), source);
+  app.designerDialog.value = false;
+}
+assert.equal(JSON.stringify(app.collections.value), unchangedRecords);
+assert.equal(JSON.stringify(app.compositions.value), unchangedCompositions);
+console.log('PASS: all built-in templates load into the visual editor as independent layers');

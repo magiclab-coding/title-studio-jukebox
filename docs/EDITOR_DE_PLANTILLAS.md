@@ -64,3 +64,21 @@ El editor permite importar/exportar una plantilla JSON individual. **Guardar
 todo** conserva también el catálogo y los recursos. Las copias de composición
 incluyen los diseños usados en sus posiciones. La salida SVG, PDF y la impresión
 usan el mismo renderizado.
+
+## Partir de un diseño integrado
+
+El lápiz de cualquier plantilla abre el editor visual con ese diseño ya cargado.
+En los diseños integrados se crea una copia propia: los títulos, el artista y los
+metadatos son campos vinculados editables; las cartelas son formas y los trazos
+complejos siguen siendo recursos SVG independientes. Puedes moverlos, cambiar
+su tamaño, ocultarlos, eliminarlos o reemplazarlos. Los gráficos conservan sus
+colores de papel y elementos, y las fuentes usadas por adornos tipográficos.
+
+Guardar añade la copia a Mis plantillas. Cancelar no modifica el diseño de
+partida ni las tarjetas colocadas. Las plantillas propias se editan directamente
+en el mismo editor, manteniendo la independencia de las posiciones existentes.
+
+Las fuentes de máquina de escribir aparecen primero en los selectores. El campo
+Buscar fuente filtra por nombre y admite términos como "máquina" o "typewriter".
+Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono se encuentran tanto en
+el editor como en los estilos de composición y conservan ñ y acentos.

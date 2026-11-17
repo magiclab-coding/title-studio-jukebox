@@ -123,3 +123,74 @@ test('edición local: deshacer, rehacer, ordenar y duplicar no modifican el orig
   assert.equal(editor.layers.length, 4);
   assert.equal(JSON.stringify(initial), original);
 });
+
+test('una plantilla integrada se convierte en campos y gráficos independientes', () => {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 150">' +
+    '<rect width="300" height="150" fill="#ffffff"/>' +
+    '<path d="M10 50H290" fill="none" stroke="#654321" stroke-width="3"/>' +
+    '<rect x="10" y="58" width="280" height="34" fill="#654321"/>' +
+    '<text data-disc-field="a" data-disc-width="280" x="150" y="37" text-anchor="middle" dominant-baseline="middle" font-family="Courier Prime" font-size="24px" fill="#123456">Muestra</text>' +
+    '<text data-disc-field="artist" data-disc-width="260" x="150" y="75" text-anchor="middle" dominant-baseline="middle" font-family="Oswald" font-size="19px" fill="#ffffff">Artista</text>' +
+    '</svg>';
+  const converted = tools.fromBuiltinSvg(svg, {
+    ...sample,
+    name: 'Integrada',
+    graphicsInk: '#654321',
+  });
+  assert.equal(converted.id, '');
+  assert.equal(converted.design.elements.length, 4);
+  assert.equal(converted.design.elements[0].type, 'svg');
+  assert.equal(converted.design.elements[1].type, 'rect');
+  const title = converted.design.elements.find((e) => e.field === 'a');
+  assert.equal(title.width, 280);
+  assert.equal(title.font, 'Courier Prime');
+  assert.equal(title.fontSize, 24);
+  assert.equal(title.baseline, 'middle');
+  const artist = converted.design.elements.find((e) => e.field === 'artist');
+  assert.equal(artist.colorRole, 'paper');
+  const card = {
+    ...sample,
+    graphicsInk: '#abcdef',
+    paper: '#eeeeee',
+    customDesign: converted.design,
+  };
+  const rendered = tools.render(card, { width: 76, height: 38 }, { fit });
+  assert.match(rendered, />Primera</);
+  assert.match(rendered, /fill="#eeeeee"/);
+  assert.match(decodeURIComponent(rendered), /stroke="#abcdef"/);
+  const cloned = tools.clone(converted);
+  cloned.design.elements[2].x = 88;
+  assert.notEqual(converted.design.elements[2].x, 88);
+  assert.equal(
+    tools.normalizeTemplate(JSON.parse(JSON.stringify(converted))).design.elements.length,
+    4,
+  );
+});
+
+test('la búsqueda de fuentes admite nombres, estilo de máquina y acentos', () => {
+  const shared = {};
+  vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
+  const picker = shared.StudioComponents.FontPicker;
+  const options = [
+    {
+      value: 'Courier Prime',
+      label: 'Courier Prime · Máquina clásica',
+      keywords: 'typewriter máquina',
+    },
+    {
+      value: 'Special Elite',
+      label: 'Special Elite · Máquina desgastada',
+      keywords: 'typewriter máquina',
+    },
+    { value: 'Arial', label: 'Arial · Sans' },
+  ];
+  for (const query of ['maquina', 'máquina', 'typewriter']) {
+    assert.equal(picker.computed.matchingFonts.call({ query, options }).length, 2);
+  }
+  assert.equal(
+    picker.computed.matchingFonts.call({ query: 'Courier', options })[0].value,
+    'Courier Prime',
+  );
+  assert.equal(picker.computed.matchingFonts.call({ query: 'inexistente', options }).length, 0);
+});
