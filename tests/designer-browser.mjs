@@ -259,14 +259,36 @@ try {
           bottom: bounds.bottom,
           buttons: Array.from(node.querySelectorAll('.template-actions button')).map((button) => {
             const rect = button.getBoundingClientRect();
-            return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height };
+            return {
+              left: rect.left,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+              width: rect.width,
+              height: rect.height,
+            };
           }),
         };
       });
       assert.equal(footer.buttons.length, 3, 'Las acciones propias están dentro del pie');
-      assert.ok(footer.buttons.every((button) => button.width === 42 && button.height === 42), 'Controles del mismo tamaño');
-      assert.ok(footer.buttons.every((button) => button.left >= footer.left && button.right <= footer.right && button.top >= footer.top && button.bottom <= footer.bottom), 'Acciones contenidas en el pie');
-      assert.ok(footer.buttons.every((button) => Math.abs(button.top - footer.buttons[0].top) < 1), 'Acciones alineadas');
+      assert.ok(
+        footer.buttons.every((button) => button.width === 42 && button.height === 42),
+        'Controles del mismo tamaño',
+      );
+      assert.ok(
+        footer.buttons.every(
+          (button) =>
+            button.left >= footer.left &&
+            button.right <= footer.right &&
+            button.top >= footer.top &&
+            button.bottom <= footer.bottom,
+        ),
+        'Acciones contenidas en el pie',
+      );
+      assert.ok(
+        footer.buttons.every((button) => Math.abs(button.top - footer.buttons[0].top) < 1),
+        'Acciones alineadas',
+      );
       assert.equal(await card.locator('.template-info').getByText('↗', { exact: true }).count(), 0);
       await card.screenshot({ path: '.test-artifacts/compact-template-' + width + '.png' });
 
