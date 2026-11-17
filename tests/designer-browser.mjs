@@ -48,13 +48,17 @@ try {
         .click();
       const entries = page.locator('.template-entry');
       const editButtons = entries.locator('.template-actions button[title="Editar plantilla"]');
-      assert.equal(await editButtons.count(), await entries.count(), 'Todas las plantillas tienen lápiz');
+      assert.equal(
+        await editButtons.count(),
+        await entries.count(),
+        'Todas las plantillas tienen lápiz',
+      );
       await editButtons.first().click();
       const defaults = page.locator('.style-modal');
       await defaults.waitFor();
       assert.match(await defaults.locator('h3').innerText(), /Valores predeterminados del diseño/);
-      await defaults.getByRole('button', {name:'Cerrar estilos',exact:true}).click();
-      await defaults.waitFor({state:'detached'});
+      await defaults.getByRole('button', { name: 'Cerrar estilos', exact: true }).click();
+      await defaults.waitFor({ state: 'detached' });
       const create = page
         .locator('.page-actions')
         .getByRole('button', { name: 'Crear plantilla', exact: true });
@@ -198,7 +202,11 @@ try {
       await card.waitFor();
       await page.reload();
       await card.waitFor();
-      await page.locator('.template-entry').filter({has:card}).getByRole('button', {name:'Editar plantilla Plantilla navegador '+width,exact:true}).click();
+      await page
+        .locator('.template-entry')
+        .filter({ has: card })
+        .getByRole('button', { name: 'Editar plantilla Plantilla navegador ' + width, exact: true })
+        .click();
       await editor.waitFor();
       assert.equal(
         await editor.getByLabel('Nombre', { exact: true }).inputValue(),

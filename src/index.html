@@ -1334,10 +1334,7 @@
                         <span>{{ current.style === t.id ? '✓' : '↗' }}</span>
                       </div>
                     </button>
-                    <div
-                      class="template-actions"
-                      :aria-label="'Gestionar plantilla ' + t.name"
-                    >
+                    <div class="template-actions" :aria-label="'Gestionar plantilla ' + t.name">
                       <button
                         type="button"
                         class="control-icon"
@@ -1345,7 +1342,17 @@
                         title="Editar plantilla"
                         :aria-label="'Editar plantilla ' + t.name"
                       >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
                           <path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z" />
                         </svg>
                       </button>
