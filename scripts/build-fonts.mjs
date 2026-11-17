@@ -10,6 +10,10 @@ const families = {
   Oswald: 'oswald',
   'Space Grotesk': 'space-grotesk',
   'Playfair Display': 'playfair-display',
+  'Courier Prime': 'courier-prime',
+  'Cutive Mono': 'cutive-mono',
+  'Special Elite': 'special-elite',
+  'IBM Plex Mono': 'ibm-plex-mono',
 };
 await mkdir('dist/licenses', { recursive: true });
 const css = {};

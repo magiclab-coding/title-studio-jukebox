@@ -92,3 +92,10 @@ npx playwright install --with-deps chromium
 npm run build
 npm run test:browser
 ```
+
+## Fuentes de máquina de escribir
+
+Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono están disponibles en
+los selectores de canciones, artista y capas de plantillas propias, con muestra
+de cada tipografía. Se distribuyen localmente y se incrustan en los SVG utilizados
+por impresión y PDF. Las licencias se incluyen en la distribución.

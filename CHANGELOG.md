@@ -1,3 +1,14 @@
+# 7.7.0
+
+- Publicación de Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono.
+- Fuentes de máquina de escribir con previsualización e incrustación local para SVG/PDF.
+
+# 7.6.1
+
+- Cuatro fuentes libres de máquina de escribir: Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono.
+- Previsualización en los selectores y fuentes locales incrustadas en la salida SVG/PDF.
+- Comprobación de archivos WOFF2, licencias, carga real y persistencia de la fuente en navegador.
+
 # 7.6.0
 
 - Publicación del editor visual de plantillas propias, importación de recursos y catálogo persistente.

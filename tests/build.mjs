@@ -35,7 +35,7 @@ console.log('Plantillas y archivos de producción válidos y minificados.');
 // Los SVG exportados deben disponer de fuentes reales, con sus licencias locales.
 const fontContext = { document: { createElement: () => ({}), head: { appendChild() {} } } };
 vm.runInNewContext(await readFile('dist/fonts.js', 'utf8'), fontContext);
-assert.equal(Object.keys(fontContext.StudioFonts).length, 6);
+assert.equal(Object.keys(fontContext.StudioFonts).length, 10);
 for (const css of Object.values(fontContext.StudioFonts))
   assert.match(css, /data:font\/woff2;base64,/);
 for (const slug of [
@@ -45,6 +45,10 @@ for (const slug of [
   'oswald',
   'space-grotesk',
   'playfair-display',
+  'courier-prime',
+  'cutive-mono',
+  'special-elite',
+  'ibm-plex-mono',
 ]) {
   assert.ok((await readFile(`dist/licenses/${slug}.txt`, 'utf8')).length > 100);
 }
@@ -82,4 +86,12 @@ for (const directory of ['src', 'dist']) {
     actions('.desktop-disc-table tbody td:last-child button'),
     'La lista móvil debe conservar todas las acciones por fila',
   );
+}
+
+// Las cuatro familias de máquina de escribir contienen WOFF2 reales para SVG/PDF.
+for (const family of ['Courier Prime', 'Cutive Mono', 'Special Elite', 'IBM Plex Mono']) {
+  const css = fontContext.StudioFonts[family];
+  assert.ok(css, family + ' debe estar incluida en la distribución');
+  const data = /base64,([a-zA-Z0-9+/=]+)/.exec(css)?.[1];
+  assert.equal(Buffer.from(data, 'base64').subarray(0, 4).toString(), 'wOF2');
 }
