@@ -144,6 +144,10 @@ try {
           // La rueda y las acciones deben caber juntas incluso con poca altura útil.
           await page.setViewportSize({ width, height: 560 });
           await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).click();
+          await page.waitForFunction(() => {
+            const input = document.querySelector('.color-custom-modal input[type="text"]');
+            return input && Math.abs(input.getBoundingClientRect().height - 42) < 0.01;
+          });
           const compactLayout = await customColor.evaluate((node) => {
             const bounds = node.getBoundingClientRect();
             const controls = Array.from(
