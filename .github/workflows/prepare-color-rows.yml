@@ -1,0 +1,30 @@
+name: Prepare named color rows
+on:
+  push:
+    branches: [feature/20261117-180000-color-rows-compact-modal]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run format
+      - run: npm run format
+      - name: Save prepared sources
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src tests package.json package-lock.json CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Format named color rows and compact modal"
+            git push origin HEAD:feature/20261117-180000-color-rows-compact-modal
+          fi
