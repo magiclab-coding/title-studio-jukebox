@@ -836,110 +836,112 @@ globalThis.StudioComponents.TemplateDesigner = {
       this.$emit('close');
     },
   },
-  template: `<section class="template-designer" @keydown="keydown">
-    <header class="designer-heading">
-      <h2>{{ model.id ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
-      <div class="designer-heading-actions">
-        <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
-        <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
-        <button class="control-icon" type="button" @click="close" title="Cerrar editor" aria-label="Cerrar editor de plantilla">×</button>
-      </div>
-    </header>
-    <div class="designer-identity">
-      <label>Nombre<input v-model="model.name" maxlength="80" placeholder="Nombre de tu plantilla" /></label>
-      <label class="designer-paper">Papel<input type="color" v-model="model.paper" /></label>
-      <button class="control-icon" type="button" @click="$refs.templateFile.click()" title="Importar plantilla JSON" aria-label="Importar plantilla JSON">↥</button>
-      <button class="control-icon" type="button" @click="exportTemplate" title="Exportar plantilla JSON" aria-label="Exportar plantilla JSON">↧</button>
-    </div>
-    <div class="designer-workspace">
-      <div class="designer-canvas-panel">
-        <div class="designer-tools" role="group" aria-label="Añadir elementos">
-          <label class="designer-field-select"><span class="sr-only">Campo del disco</span><select v-model="fieldToAdd" aria-label="Campo del disco para añadir"><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
-          <button class="control-icon" type="button" @click="add('text',fieldToAdd)" title="Añadir campo del disco" aria-label="Añadir campo del disco">＋</button>
-          <button class="control-icon" type="button" @click="add('text')" title="Añadir texto libre" aria-label="Añadir texto libre">T</button>
-          <button class="control-icon" type="button" @click="add('line')" title="Añadir línea" aria-label="Añadir línea">╱</button>
-          <button class="control-icon" type="button" @click="add('rect')" title="Añadir rectángulo" aria-label="Añadir rectángulo">▭</button>
-          <button class="control-icon" type="button" @click="add('ellipse')" title="Añadir elipse" aria-label="Añadir elipse">◯</button>
-          <button class="control-icon" type="button" @click="$refs.assetFile.click()" :disabled="fileBusy" title="Importar SVG o imagen" aria-label="Importar SVG o imagen">▧</button>
+  template: `
+    <section class="template-designer" @keydown="keydown">
+        <header class="designer-heading">
+          <h2>{{ model.id ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
+          <div class="designer-heading-actions">
+            <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
+            <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
+            <button class="control-icon" type="button" @click="close" title="Cerrar editor" aria-label="Cerrar editor de plantilla">×</button>
+          </div>
+        </header>
+        <div class="designer-identity">
+          <label>Nombre<input v-model="model.name" maxlength="80" placeholder="Nombre de tu plantilla" /></label>
+          <label class="designer-paper">Papel<input type="color" v-model="model.paper" /></label>
+          <button class="control-icon" type="button" @click="$refs.templateFile.click()" title="Importar plantilla JSON" aria-label="Importar plantilla JSON">↥</button>
+          <button class="control-icon" type="button" @click="exportTemplate" title="Exportar plantilla JSON" aria-label="Exportar plantilla JSON">↧</button>
         </div>
-        <div class="designer-stage-shell">
-          <div ref="stage" class="designer-stage" tabindex="0" role="group" aria-label="Lienzo de plantilla. Selecciona y arrastra una capa; usa las flechas para moverla." :style="{aspectRatio:settings.width+'/'+settings.height}" @pointerdown="startPointer">
-            <div class="designer-drawing" v-html="preview"></div>
-            <div v-if="selectedLayer && selectedLayer.visible" class="designer-selection" :style="selectionStyle">
-              <button type="button" class="designer-resize" @pointerdown.stop="startPointer($event,true)" title="Arrastrar para cambiar tamaño" aria-label="Cambiar tamaño de la capa"></button>
+        <div class="designer-workspace">
+          <div class="designer-canvas-panel">
+            <div class="designer-tools" role="group" aria-label="Añadir elementos">
+              <label class="designer-field-select"><span class="sr-only">Campo del disco</span><select v-model="fieldToAdd" aria-label="Campo del disco para añadir"><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
+              <button class="control-icon" type="button" @click="add('text',fieldToAdd)" title="Añadir campo del disco" aria-label="Añadir campo del disco">＋</button>
+              <button class="control-icon" type="button" @click="add('text')" title="Añadir texto libre" aria-label="Añadir texto libre">T</button>
+              <button class="control-icon" type="button" @click="add('line')" title="Añadir línea" aria-label="Añadir línea">╱</button>
+              <button class="control-icon" type="button" @click="add('rect')" title="Añadir rectángulo" aria-label="Añadir rectángulo">▭</button>
+              <button class="control-icon" type="button" @click="add('ellipse')" title="Añadir elipse" aria-label="Añadir elipse">◯</button>
+              <button class="control-icon" type="button" @click="$refs.assetFile.click()" :disabled="fileBusy" title="Importar SVG o imagen" aria-label="Importar SVG o imagen">▧</button>
             </div>
-          </div>
-        </div>
-        <div class="designer-preview-options">
-          <span>{{ settings.width }} × {{ settings.height }} mm</span>
-          <label><span class="sr-only">Texto de prueba</span><select v-model="sampleMode" aria-label="Texto de prueba"><option value="sample">Texto de muestra</option><option value="long">Probar nombres largos</option></select></label>
-          <button type="button" class="text-btn" @click="clear">Vaciar lienzo</button>
-        </div>
-        <p class="designer-help">Arrastra las capas o ajusta sus medidas. Flechas para mover · Mayús para pasos de 10.</p>
-        <div class="designer-layer-heading"><h3>Capas</h3><small>{{ layers.length }} / 80</small></div>
-        <ol class="designer-layers" aria-label="Capas, de delante hacia atrás">
-          <li v-for="layer in [...layers].reverse()" :key="layer.id" :class="{active:layer.id===selectedId}">
-            <button type="button" class="designer-layer-name" @click="selectedId=layer.id" :aria-pressed="layer.id===selectedId">{{ layer.name }}</button>
-            <button type="button" class="control-icon" @click="layer.visible=!layer.visible" :title="layer.visible ? 'Ocultar capa' : 'Mostrar capa'" :aria-label="(layer.visible ? 'Ocultar ' : 'Mostrar ')+layer.name" :aria-pressed="layer.visible">{{ layer.visible ? '◉' : '○' }}</button>
-          </li>
-        </ol>
-        <p v-if="!layers.length" class="small-muted">Añade campos, formas o un gráfico para empezar.</p>
-      </div>
-      <aside class="designer-properties" aria-label="Propiedades de capa">
-        <h3>Propiedades</h3>
-        <template v-if="selectedLayer">
-          <label>Nombre de la capa<input v-model="selectedLayer.name" maxlength="80" /></label>
-          <div class="designer-layer-actions">
-            <button class="control-icon" type="button" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
-            <button class="control-icon" type="button" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
-            <button class="control-icon" type="button" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
-            <button class="control-icon danger" type="button" @click="remove" title="Eliminar capa" aria-label="Eliminar capa"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
-          </div>
-          <div class="designer-measures">
-            <label>X<input type="number" min="0" max="300" v-model.number="selectedLayer.x" /></label>
-            <label>Y<input type="number" min="0" max="150" v-model.number="selectedLayer.y" /></label>
-            <label>Ancho<input type="number" min="2" max="300" v-model.number="selectedLayer.width" /></label>
-            <label>Alto<input type="number" min="2" max="150" v-model.number="selectedLayer.height" /></label>
-            <label>Giro · °<input type="number" min="-180" max="180" v-model.number="selectedLayer.rotation" /></label>
-            <label>Opacidad<input type="number" min="0" max="1" step="0.05" v-model.number="selectedLayer.opacity" /></label>
-          </div>
-          <div class="designer-align" role="group" aria-label="Alinear en el lienzo">
-            <button type="button" class="control-icon" @click="align('left')" title="Alinear a izquierda" aria-label="Alinear a izquierda">⇤</button>
-            <button type="button" class="control-icon" @click="align('center')" title="Centrar horizontalmente" aria-label="Centrar horizontalmente">↔</button>
-            <button type="button" class="control-icon" @click="align('right')" title="Alinear a derecha" aria-label="Alinear a derecha">⇥</button>
-            <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
-          </div>
-          <template v-if="selectedLayer.type==='text'">
-            <label>Contenido<select v-model="selectedLayer.field"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
-            <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
-            <font-picker v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
-            <div class="designer-measures">
-              <label>Tamaño · px<input type="number" min="4" max="100" v-model.number="selectedLayer.fontSize" /></label>
-              <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
+            <div class="designer-stage-shell">
+              <div ref="stage" class="designer-stage" tabindex="0" role="group" aria-label="Lienzo de plantilla. Selecciona y arrastra una capa; usa las flechas para moverla." :style="{aspectRatio:settings.width+'/'+settings.height}" @pointerdown="startPointer">
+                <div class="designer-drawing" v-html="preview"></div>
+                <div v-if="selectedLayer && selectedLayer.visible" class="designer-selection" :style="selectionStyle">
+                  <button type="button" class="designer-resize" @pointerdown.stop="startPointer($event,true)" title="Arrastrar para cambiar tamaño" aria-label="Cambiar tamaño de la capa"></button>
+                </div>
+              </div>
             </div>
-          </template>
-          <template v-if="!['svg','image'].includes(selectedLayer.type)">
-            <div class="designer-color-row">
-              <label>Color<select v-model="selectedLayer.colorRole"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option><option value="fixed">Propio</option></select></label>
-              <label class="designer-color">Tinta<input v-if="selectedLayer.colorRole==='fixed'" type="color" v-model="selectedLayer.fill" /><input v-else type="color" v-model="model[selectedLayer.colorRole]" /></label>
+            <div class="designer-preview-options">
+              <span>{{ settings.width }} × {{ settings.height }} mm</span>
+              <label><span class="sr-only">Texto de prueba</span><select v-model="sampleMode" aria-label="Texto de prueba"><option value="sample">Texto de muestra</option><option value="long">Probar nombres largos</option></select></label>
+              <button type="button" class="text-btn" @click="clear">Vaciar lienzo</button>
             </div>
-            <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
-            <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
-              <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
-              <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><label class="designer-color">Color borde<input type="color" v-model="selectedLayer.stroke" /></label></div>
-              <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
+            <p class="designer-help">Arrastra las capas o ajusta sus medidas. Flechas para mover · Mayús para pasos de 10.</p>
+            <div class="designer-layer-heading"><h3>Capas</h3><small>{{ layers.length }} / 80</small></div>
+            <ol class="designer-layers" aria-label="Capas, de delante hacia atrás">
+              <li v-for="layer in [...layers].reverse()" :key="layer.id" :class="{active:layer.id===selectedId}">
+                <button type="button" class="designer-layer-name" @click="selectedId=layer.id" :aria-pressed="layer.id===selectedId">{{ layer.name }}</button>
+                <button type="button" class="control-icon" @click="layer.visible=!layer.visible" :title="layer.visible ? 'Ocultar capa' : 'Mostrar capa'" :aria-label="(layer.visible ? 'Ocultar ' : 'Mostrar ')+layer.name" :aria-pressed="layer.visible">{{ layer.visible ? '◉' : '○' }}</button>
+              </li>
+            </ol>
+            <p v-if="!layers.length" class="small-muted">Añade campos, formas o un gráfico para empezar.</p>
+          </div>
+          <aside class="designer-properties" aria-label="Propiedades de capa">
+            <h3>Propiedades</h3>
+            <template v-if="selectedLayer">
+              <label>Nombre de la capa<input v-model="selectedLayer.name" maxlength="80" /></label>
+              <div class="designer-layer-actions">
+                <button class="control-icon" type="button" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
+                <button class="control-icon" type="button" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
+                <button class="control-icon" type="button" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
+                <button class="control-icon danger" type="button" @click="remove" title="Eliminar capa" aria-label="Eliminar capa"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+              </div>
+              <div class="designer-measures">
+                <label>X<input type="number" min="0" max="300" v-model.number="selectedLayer.x" /></label>
+                <label>Y<input type="number" min="0" max="150" v-model.number="selectedLayer.y" /></label>
+                <label>Ancho<input type="number" min="2" max="300" v-model.number="selectedLayer.width" /></label>
+                <label>Alto<input type="number" min="2" max="150" v-model.number="selectedLayer.height" /></label>
+                <label>Giro · °<input type="number" min="-180" max="180" v-model.number="selectedLayer.rotation" /></label>
+                <label>Opacidad<input type="number" min="0" max="1" step="0.05" v-model.number="selectedLayer.opacity" /></label>
+              </div>
+              <div class="designer-align" role="group" aria-label="Alinear en el lienzo">
+                <button type="button" class="control-icon" @click="align('left')" title="Alinear a izquierda" aria-label="Alinear a izquierda">⇤</button>
+                <button type="button" class="control-icon" @click="align('center')" title="Centrar horizontalmente" aria-label="Centrar horizontalmente">↔</button>
+                <button type="button" class="control-icon" @click="align('right')" title="Alinear a derecha" aria-label="Alinear a derecha">⇥</button>
+                <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
+              </div>
+              <template v-if="selectedLayer.type==='text'">
+                <label>Contenido<select v-model="selectedLayer.field"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
+                <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
+                <font-picker v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
+                <div class="designer-measures">
+                  <label>Tamaño · px<input type="number" min="4" max="100" v-model.number="selectedLayer.fontSize" /></label>
+                  <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
+                </div>
+              </template>
+              <template v-if="!['svg','image'].includes(selectedLayer.type)">
+                <div class="designer-color-row">
+                  <label>Color<select v-model="selectedLayer.colorRole"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option><option value="fixed">Propio</option></select></label>
+                  <label class="designer-color">Tinta<input v-if="selectedLayer.colorRole==='fixed'" type="color" v-model="selectedLayer.fill" /><input v-else type="color" v-model="model[selectedLayer.colorRole]" /></label>
+                </div>
+                <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
+                <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
+                  <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
+                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><label class="designer-color">Color borde<input type="color" v-model="selectedLayer.stroke" /></label></div>
+                  <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
+                </template>
+              </template>
             </template>
-          </template>
-        </template>
-        <p v-else class="small-muted">Selecciona una capa en el lienzo o en la lista.</p>
-      </aside>
-    </div>
-    <p v-if="error" class="designer-error" role="alert">{{ error }}</p>
-    <footer class="designer-footer">
-      <button type="button" class="text-btn" @click="close">Cancelar</button>
-      <v-btn color="primary" :disabled="!canSave" @click="save">Guardar plantilla</v-btn>
-    </footer>
-    <input ref="assetFile" type="file" class="sr-only" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp" @change="importAsset" />
-    <input ref="templateFile" type="file" class="sr-only" accept=".json,application/json" @change="importTemplate" />
-  </section>`,
+            <p v-else class="small-muted">Selecciona una capa en el lienzo o en la lista.</p>
+          </aside>
+        </div>
+        <p v-if="error" class="designer-error" role="alert">{{ error }}</p>
+        <footer class="designer-footer">
+          <button type="button" class="text-btn" @click="close">Cancelar</button>
+          <v-btn color="primary" :disabled="!canSave" @click="save">Guardar plantilla</v-btn>
+        </footer>
+        <input ref="assetFile" type="file" class="sr-only" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp" @change="importAsset" />
+        <input ref="templateFile" type="file" class="sr-only" accept=".json,application/json" @change="importTemplate" />
+      </section>
+  `,
 };
