@@ -14,6 +14,10 @@ These rules apply to every future interaction that changes this project.
 
 This GitHub repository is the source of truth. Publish only through the agreed branch workflow.
 
+## Plan and confirmation
+
+Before changing this project, analyze the request, summarize a concrete plan and ask the user to confirm it. Wait for explicit confirmation before making changes. Read-only investigation may be used to prepare the plan. Once confirmed, carry out the agreed plan without asking again unless its scope changes materially. Publish only when explicitly requested.
+
 ## Human-readable source
 
 All authored code committed to GitHub must be readable: use indentation, line breaks and descriptive structure. Never minify authored JavaScript, HTML, CSS or workflow files before committing. Keep generated builds in ignored dist/ and dependencies in ignored node_modules/.
