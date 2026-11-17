@@ -656,11 +656,7 @@ createApp({
       groupName = ref(''),
       groupEditing = ref(false),
       backupScope = ref('system'),
-      pendingBackup = ref(null),
-      versions = ref([]);
-    try {
-      versions.value = JSON.parse(localStorage.getItem('title-studio-versions') || '[]');
-    } catch {}
+      pendingBackup = ref(null);
     // --- Persistencia y deshacer ---
     // La instantánea incluye datos y preferencias, pero no los modales abiertos.
     const snapshot = () => ({
@@ -773,26 +769,6 @@ createApp({
         if ([25, 50, 100].includes(s.ui.pageSize)) pageSize.value = s.ui.pageSize;
       }
     }
-    // Las diez copias locales complementan el JSON descargable; no lo sustituyen.
-    function checkpoint() {
-      versions.value.unshift({
-        id: uid(),
-        date: new Date().toISOString(),
-        data: JSON.parse(JSON.stringify(snapshot())),
-      });
-      versions.value = versions.value.slice(0, 10);
-      try {
-        localStorage.setItem('title-studio-versions', JSON.stringify(versions.value));
-        notify('Versión recuperable guardada');
-      } catch {
-        notify('Sin espacio: descarga una copia completa');
-      }
-    }
-    function restoreVersion(v) {
-      checkpoint();
-      restore(JSON.parse(JSON.stringify(v.data)));
-      notify('Versión recuperada');
-    }
     // --- Listas de discos de vinilos y composiciones de salida ---
     function newCollection() {
       groupEditing.value = false;
@@ -817,7 +793,6 @@ createApp({
     }
     function deleteCollection() {
       if (collections.value.length === 1) return;
-      checkpoint();
       const ids = new Set(cards.value.map((c) => c.id));
       compositions.value.forEach((c) => (c.items = c.items.filter((i) => !ids.has(i.cardId))));
       collections.value = collections.value.filter((c) => c.id !== activeCollection.value);
@@ -905,16 +880,11 @@ createApp({
             i.id !== id && (composition.value.items.some((x) => x.id === id) || i.cardId !== id),
         );
       actionCardId.value = null;
-      cardActions.value = false;
-      if (editingId.value === id) editingId.value = null;
     }
     // --- Acciones contextuales y formularios de tarjeta ---
-    const editingId = ref(null),
-      cardActions = ref(false),
-      styleDialog = ref(false),
+    const styleDialog = ref(false),
       extraPages = ref(0);
-    const optionsDialog = ref(false),
-      insertMode = ref('new'),
+    const insertMode = ref('new'),
       sourceCollection = ref(''),
       sourceQuery = ref(''),
       sourceRecordId = ref(''),
@@ -963,8 +933,6 @@ createApp({
     });
     watch(activeComposition, () => {
       selectedItemId.value = null;
-      editingId.value = null;
-      cardActions.value = false;
       actionCardId.value = null;
       extraPages.value = 0;
       editorDialog.value = false;
@@ -979,11 +947,6 @@ createApp({
       selected.value = item?.cardId || id;
       const key = item?.id || id;
       actionCardId.value = actionCardId.value === key ? null : key;
-    }
-    function selectForEdit(item) {
-      selectedItemId.value = item.id;
-      selected.value = item.cardId;
-      editCard();
     }
     // Alternativa táctil al arrastre: elegir la tarjeta y después su destino.
     function beginMove() {
@@ -1145,12 +1108,7 @@ createApp({
       actionCardId.value = null;
     }
     function editCard() {
-      cardActions.value = false;
-      editingId.value = null;
       openCardEditor('edit');
-    }
-    function finishEditing() {
-      editingId.value = null;
     }
     function createAtSlot(index) {
       editorContext.value = 'composition';
@@ -1355,18 +1313,6 @@ createApp({
       { id: 'compose', icon: '▦', name: 'Composición' },
       { id: 'print', icon: '▧', name: 'Impresión y salida' },
     ];
-    function add() {
-      const c = normalize({ number: 'A' + (cards.value.length + 1), style: current.value?.style });
-      cards.value.push(c);
-      selected.value = c.id;
-      notify('Disco añadido. Puedes editarlo en la tabla o en la etiqueta.');
-    }
-    function duplicate(c) {
-      const n = { ...c, id: uid(), number: c.number + '*' };
-      cards.value.splice(cards.value.indexOf(c) + 1, 0, n);
-      selected.value = n.id;
-      notify('Etiqueta duplicada');
-    }
     // Selección de tabla independiente de las posiciones de composición.
     const checkedDiscs = ref([]);
     const longCell = (card, key) => {
@@ -1661,12 +1607,7 @@ createApp({
     function dragStart(e, item) {
       // En móvil solo el asa inicia un arrastre; el resto permite desplazar la página.
       if (e.pointerType === 'touch' && !e.target.closest('.move-handle')) return;
-      if (
-        e.button !== 0 ||
-        editingId.value === item.id ||
-        e.target.closest('button:not(.move-handle),input')
-      )
-        return;
+      if (e.button !== 0 || e.target.closest('button:not(.move-handle),input')) return;
       const el = e.currentTarget.closest('.positioned-label') || e.currentTarget,
         startX = e.clientX,
         startY = e.clientY,
@@ -1870,10 +1811,9 @@ createApp({
     ];
     // --- Copias transportables y exportación de listas de discos ---
     function saveEverything() {
-      checkpoint();
       download(
         'title-studio-completo-' + new Date().toISOString().slice(0, 10) + '.json',
-        JSON.stringify({ ...snapshot(), versions: versions.value }, null, 2),
+        JSON.stringify(snapshot(), null, 2),
         'application/json',
       );
       notify('Copia completa descargada');
@@ -1898,7 +1838,7 @@ createApp({
           'title-studio.json',
           JSON.stringify(
             backupScope.value === 'system'
-              ? { ...snapshot(), versions: versions.value }
+              ? snapshot()
               : backupScope.value === 'collection'
                 ? {
                     schema: 3,
@@ -2103,22 +2043,12 @@ createApp({
       if (!s) return;
       try {
         validateBackup(s);
-        checkpoint();
         hydrating = true;
         Vue.nextTick(() => (hydrating = false));
         if (s.collections) {
           if (!s.collections.length || s.collections.some((c) => !Array.isArray(c.cards)))
             throw Error('Listas de discos no válidas');
           restore(s);
-          if (Array.isArray(s.versions)) {
-            versions.value = [
-              ...versions.value.slice(0, 1),
-              ...s.versions
-                .filter((v) => v?.data?.collections && typeof v.date === 'string')
-                .slice(0, 9),
-            ];
-            localStorage.setItem('title-studio-versions', JSON.stringify(versions.value));
-          }
         } else if (s.kind === 'settings') {
           settings.value = { ...settings.value, ...s.settings };
         } else if (s.kind === 'composition') {
@@ -2158,7 +2088,7 @@ createApp({
           activeCollection.value = c.id;
         }
         pendingBackup.value = null;
-        notify('Copia cargada. Se ha conservado una versión anterior.');
+        notify('Copia cargada.');
       } catch (e) {
         notify(e.message);
       }
@@ -2288,7 +2218,6 @@ createApp({
       saveGroup,
       artistName,
       printJob,
-      optionsDialog,
       columnKeys,
       visibleColumns,
       mobileArtist,
@@ -2324,7 +2253,6 @@ createApp({
       beginMove,
       moveToSlot,
       slotClick,
-      selectForEdit,
       openStyle,
       stylePanel,
       defaultStyleId,
@@ -2344,12 +2272,9 @@ createApp({
       requestDelete,
       confirmDelete,
       addSheet,
-      editingId,
-      cardActions,
       styleDialog,
       selectCard,
       editCard,
-      finishEditing,
       createAtSlot,
       compositionSlots,
       gridPages,
@@ -2416,9 +2341,6 @@ createApp({
       backupScope,
       pendingBackup,
       loadBackup,
-      versions,
-      checkpoint,
-      restoreVersion,
       templates,
       fontOptions,
       columns,
@@ -2469,23 +2391,9 @@ createApp({
       sheetStyle,
       visiblePageNumbers,
       pageWidth,
-      add,
-      duplicate,
       remove,
-      removeCurrent: () => remove(current.value.id),
       undo,
-      changed: () => {},
       mobileClose,
-      editText: (c, k, e) => {
-        c[k] = e.target.innerText.trim().slice(0, 300);
-      },
-      stripStyle: (c) => ({
-        '--ink': c.ink,
-        '--paper': c.paper,
-        '--title-size': ((+c.size || 100) / 100) * 20 + 'px',
-        fontFamily: c.font,
-        aspectRatio: settings.value.width / settings.value.height,
-      }),
       svg: (c) => {
         fontRevision.value;
         return makeSvg(c, settings.value);
@@ -2497,7 +2405,6 @@ createApp({
         styleAll.value = false;
         notify('Estilo aplicado a esta composición');
       },
-      sortByArtist: () => cards.value.sort((a, b) => a.artist.localeCompare(b.artist)),
       renumber: () => {
         cards.value.forEach((c, i) => (c.number = 'A' + (i + 1)));
         notify('Selecciones renumeradas');
@@ -2507,12 +2414,6 @@ createApp({
       parsePasted,
       commitImport,
       printAll,
-      exportSvg: () =>
-        download(
-          'etiqueta-' + current.value.number + '.svg',
-          makeSvg(current.value, settings.value),
-          'image/svg+xml',
-        ),
       exportSample: () =>
         download(
           'plantilla-title-studio.csv',
