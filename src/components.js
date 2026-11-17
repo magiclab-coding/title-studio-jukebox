@@ -288,7 +288,7 @@ globalThis.StudioComponents = {
       },
     },
     template: `<div class="font-picker"><span class="field-caption">{{ label }}</span>
-      <details ref="menu" @toggle="query = ''"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
+      <details ref="menu" @toggle="!$event.target.open &amp;&amp; (query = '')"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
         <div class="font-options" role="group" :aria-label="label">
           <span class="font-search"><input type="search" v-model="query" :aria-label="'Buscar ' + label" placeholder="Buscar fuente…" autocomplete="off" /></span>
           <p v-if="!matchingFonts.length" class="font-empty" role="status">No hay fuentes con ese nombre.</p>

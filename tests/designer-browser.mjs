@@ -277,10 +277,19 @@ try {
         ['Courier Prime', 'Cutive Mono', 'Special Elite', 'IBM Plex Mono'],
       );
       await fontSearch.fill('typewriter');
+      await page.waitForFunction(() => {
+        const editor = document.querySelector('.template-designer');
+        return editor.querySelectorAll('.font-options button').length === 5;
+      });
       assert.equal(await editor.locator('.font-options button').count(), 5);
       await fontSearch.fill('maquina');
+      await page.waitForFunction(() => {
+        const editor = document.querySelector('.template-designer');
+        return editor.querySelectorAll('.font-options button').length === 5;
+      });
       assert.equal(await editor.locator('.font-options button').count(), 5);
       await fontSearch.fill('sin coincidencias');
+      await editor.getByText('No hay fuentes con ese nombre.', { exact: true }).waitFor();
       assert.ok(
         await editor.getByText('No hay fuentes con ese nombre.', { exact: true }).isVisible(),
       );
