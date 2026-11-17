@@ -216,42 +216,53 @@ test('el artista en inversa mantiene su color al cambiar el papel y admite otro 
   assert.match(rendered, /fill="#ffcc00"/);
 });
 
-
 test('paleta compartida incluye colores de recursos y elimina duplicados', () => {
   const shared = {};
-  vm.runInNewContext(readFileSync('src/components.js','utf8'),shared);
+  vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
   const colors = shared.StudioColorTools;
   assert.ok(colors.baseColors.includes('#b9553b'));
   assert.ok(colors.baseColors.includes('#213d36'));
-  assert.deepEqual(Array.from(colors.collect([{ink:'#ABCDEF',svg:'<path fill="#abcdef" stroke="#123456"/>'},'#123456'])),['#abcdef','#123456']);
-  for (const hex of ['#000000','#ffffff','#ab12cd','#00ff00','#808080']) {
-    const { h,s,v } = colors.fromHex(hex);
-    assert.equal(colors.toHex(h,s,v),hex);
+  assert.deepEqual(
+    Array.from(
+      colors.collect([
+        { ink: '#ABCDEF', svg: '<path fill="#abcdef" stroke="#123456"/>' },
+        '#123456',
+      ]),
+    ),
+    ['#abcdef', '#123456'],
+  );
+  for (const hex of ['#000000', '#ffffff', '#ab12cd', '#00ff00', '#808080']) {
+    const { h, s, v } = colors.fromHex(hex);
+    assert.equal(colors.toHex(h, s, v), hex);
   }
 });
 
 test('personalizar usa un borrador y solo guardar añade y aplica el color', () => {
   const shared = {};
-  vm.runInNewContext(readFileSync('src/components.js','utf8'),shared);
+  vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
   const component = shared.StudioComponents.ColorPicker;
-  const emitted = [], added = [];
-  const picker = { ...component.data.call({}), modelValue:'#ffffff',
-    studioPalette: { add:(color)=>added.push(color) },
-    $emit:(...args)=>emitted.push(args) };
-  for (const [key,method] of Object.entries(component.methods)) picker[key]=method.bind(picker);
+  const emitted = [],
+    added = [];
+  const picker = {
+    ...component.data.call({}),
+    modelValue: '#ffffff',
+    studioPalette: { add: (color) => added.push(color) },
+    $emit: (...args) => emitted.push(args),
+  };
+  for (const [key, method] of Object.entries(component.methods)) picker[key] = method.bind(picker);
   picker.customize();
   picker.editHex('#ab12cd');
-  assert.equal(emitted.length,0);
-  assert.equal(added.length,0);
-  picker.customOpen=false;
+  assert.equal(emitted.length, 0);
+  assert.equal(added.length, 0);
+  picker.customOpen = false;
   picker.customize();
-  assert.equal(picker.hex,'#ffffff');
+  assert.equal(picker.hex, '#ffffff');
   picker.editHex('#12');
   picker.saveColor();
-  assert.equal(emitted.length,0);
+  assert.equal(emitted.length, 0);
   picker.editHex('#ab12cd');
   picker.saveColor();
-  assert.deepEqual(added,['#ab12cd']);
-  assert.deepEqual(emitted,[['update:modelValue','#ab12cd']]);
-  assert.equal(picker.customOpen,false);
+  assert.deepEqual(added, ['#ab12cd']);
+  assert.deepEqual(emitted, [['update:modelValue', '#ab12cd']]);
+  assert.equal(picker.customOpen, false);
 });

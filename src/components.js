@@ -1,6 +1,71 @@
 // --- Paleta del proyecto y conversión de la rueda cromática ---
 globalThis.StudioColorTools = {
-  baseColors: ["#000000","#ffffff","#f7f2df","#e5e7eb","#9ca3af","#374151","#7f1d1d","#b9553b","#ef4444","#f97316","#f59e0b","#ffcc00","#854d0e","#a3a635","#16a34a","#213d36","#377d71","#14b8a6","#0891b2","#005bbb","#28548a","#172d40","#6366f1","#7c3aed","#581c87","#a21caf","#db2777","#f472b6","#fda4af","#a16207","#a44736","#fff9e9","#36776b","#f6f5e7","#324d70","#f5f3e9","#ac8234","#fff9e8","#b84b38","#fff4d9","#293e39","#fffdf4","#5e5779","#f8f3ed","#3b4140","#f4efdf","#111111","#172d44","#234b43","#fbfbf4","#b24231","#743322","#fff8eb","#175d39","#b52b37","#fffdf5","#214c8c","#303030","#efb36c","#ac286b","#fff8f0","#222222","#202020","#f7f7f2"],
+  baseColors: [
+    '#000000',
+    '#ffffff',
+    '#f7f2df',
+    '#e5e7eb',
+    '#9ca3af',
+    '#374151',
+    '#7f1d1d',
+    '#b9553b',
+    '#ef4444',
+    '#f97316',
+    '#f59e0b',
+    '#ffcc00',
+    '#854d0e',
+    '#a3a635',
+    '#16a34a',
+    '#213d36',
+    '#377d71',
+    '#14b8a6',
+    '#0891b2',
+    '#005bbb',
+    '#28548a',
+    '#172d40',
+    '#6366f1',
+    '#7c3aed',
+    '#581c87',
+    '#a21caf',
+    '#db2777',
+    '#f472b6',
+    '#fda4af',
+    '#a16207',
+    '#a44736',
+    '#fff9e9',
+    '#36776b',
+    '#f6f5e7',
+    '#324d70',
+    '#f5f3e9',
+    '#ac8234',
+    '#fff9e8',
+    '#b84b38',
+    '#fff4d9',
+    '#293e39',
+    '#fffdf4',
+    '#5e5779',
+    '#f8f3ed',
+    '#3b4140',
+    '#f4efdf',
+    '#111111',
+    '#172d44',
+    '#234b43',
+    '#fbfbf4',
+    '#b24231',
+    '#743322',
+    '#fff8eb',
+    '#175d39',
+    '#b52b37',
+    '#fffdf5',
+    '#214c8c',
+    '#303030',
+    '#efb36c',
+    '#ac286b',
+    '#fff8f0',
+    '#222222',
+    '#202020',
+    '#f7f7f2',
+  ],
   valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
   collect(values) {
     const colors = new Set();
@@ -14,15 +79,49 @@ globalThis.StudioColorTools = {
     return [...colors];
   },
   toHex(h, s, v) {
-    const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
-    const rgb = h < 60 ? [c,x,0] : h < 120 ? [x,c,0] : h < 180 ? [0,c,x] : h < 240 ? [0,x,c] : h < 300 ? [x,0,c] : [c,0,x];
-    return '#' + rgb.map((value) => Math.round((value + m) * 255).toString(16).padStart(2,'0')).join('');
+    const c = v * s,
+      x = c * (1 - Math.abs(((h / 60) % 2) - 1)),
+      m = v - c;
+    const rgb =
+      h < 60
+        ? [c, x, 0]
+        : h < 120
+          ? [x, c, 0]
+          : h < 180
+            ? [0, c, x]
+            : h < 240
+              ? [0, x, c]
+              : h < 300
+                ? [x, 0, c]
+                : [c, 0, x];
+    return (
+      '#' +
+      rgb
+        .map((value) =>
+          Math.round((value + m) * 255)
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('')
+    );
   },
   fromHex(value) {
-    const rgb = value.slice(1).match(/../g).map((part) => parseInt(part,16)/255);
-    const [r,g,b] = rgb, max = Math.max(...rgb), min = Math.min(...rgb), delta = max - min;
-    let h = !delta ? 0 : max === r ? 60 * (((g-b)/delta)%6) : max === g ? 60*((b-r)/delta+2) : 60*((r-g)/delta+4);
-    return { h: (h+360)%360, s: max ? delta/max : 0, v: max };
+    const rgb = value
+      .slice(1)
+      .match(/../g)
+      .map((part) => parseInt(part, 16) / 255);
+    const [r, g, b] = rgb,
+      max = Math.max(...rgb),
+      min = Math.min(...rgb),
+      delta = max - min;
+    let h = !delta
+      ? 0
+      : max === r
+        ? 60 * (((g - b) / delta) % 6)
+        : max === g
+          ? 60 * ((b - r) / delta + 2)
+          : 60 * ((r - g) / delta + 4);
+    return { h: (h + 360) % 360, s: max ? delta / max : 0, v: max };
   },
 };
 
@@ -38,13 +137,23 @@ globalThis.StudioComponents = {
     },
     computed: {
       colors() {
-        return [...new Set([...(this.studioPalette?.getColors() || StudioColorTools.baseColors), this.modelValue]
-          .filter(StudioColorTools.valid).map((color) => color.toLowerCase()))];
+        return [
+          ...new Set(
+            [...(this.studioPalette?.getColors() || StudioColorTools.baseColors), this.modelValue]
+              .filter(StudioColorTools.valid)
+              .map((color) => color.toLowerCase()),
+          ),
+        ];
       },
-      validHex() { return StudioColorTools.valid(this.hex); },
+      validHex() {
+        return StudioColorTools.valid(this.hex);
+      },
       wheelMarker() {
-        const radians = this.h * Math.PI / 180;
-        return { left: (50 + 49*this.s*Math.cos(radians))+'%', top: (50+49*this.s*Math.sin(radians))+'%' };
+        const radians = (this.h * Math.PI) / 180;
+        return {
+          left: 50 + 49 * this.s * Math.cos(radians) + '%',
+          top: 50 + 49 * this.s * Math.sin(radians) + '%',
+        };
       },
     },
     methods: {
@@ -63,13 +172,15 @@ globalThis.StudioComponents = {
         this.hex = value;
         if (StudioColorTools.valid(value)) Object.assign(this, StudioColorTools.fromHex(value));
       },
-      updateHex() { this.hex = StudioColorTools.toHex(this.h, this.s, this.v); },
+      updateHex() {
+        this.hex = StudioColorTools.toHex(this.h, this.s, this.v);
+      },
       wheelPoint(event) {
         const rect = event.currentTarget.getBoundingClientRect();
-        const x = (event.clientX-rect.left-rect.width/2)/(rect.width/2);
-        const y = (event.clientY-rect.top-rect.height/2)/(rect.height/2);
-        this.h = (Math.atan2(y,x)*180/Math.PI+360)%360;
-        this.s = Math.min(1,Math.hypot(x,y));
+        const x = (event.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+        const y = (event.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+        this.h = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+        this.s = Math.min(1, Math.hypot(x, y));
         this.updateHex();
       },
       startWheel(event) {
@@ -81,12 +192,12 @@ globalThis.StudioComponents = {
         if (event.currentTarget.hasPointerCapture(event.pointerId)) this.wheelPoint(event);
       },
       wheelKey(event) {
-        if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
         event.preventDefault();
-        if (event.key === 'ArrowLeft') this.h = (this.h+355)%360;
-        if (event.key === 'ArrowRight') this.h = (this.h+5)%360;
-        if (event.key === 'ArrowUp') this.s = Math.min(1,this.s+0.05);
-        if (event.key === 'ArrowDown') this.s = Math.max(0,this.s-0.05);
+        if (event.key === 'ArrowLeft') this.h = (this.h + 355) % 360;
+        if (event.key === 'ArrowRight') this.h = (this.h + 5) % 360;
+        if (event.key === 'ArrowUp') this.s = Math.min(1, this.s + 0.05);
+        if (event.key === 'ArrowDown') this.s = Math.max(0, this.s - 0.05);
         this.updateHex();
       },
       saveColor() {

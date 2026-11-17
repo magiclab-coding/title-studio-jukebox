@@ -946,7 +946,7 @@ app.savePaletteColor('#ab12cd');
 await nextTick();
 assert.ok(app.activePalette.value.includes('#ab12cd'));
 assert.ok(app.activePalette.value.includes('#b9553b'));
-assert.equal(app.settings.value.colorPalette.filter((color)=>color==='#ab12cd').length,1);
+assert.equal(app.settings.value.colorPalette.filter((color) => color === '#ab12cd').length, 1);
 const paletteBackup = JSON.parse(storage.get('title-studio-v3'));
 assert.ok(paletteBackup.settings.colorPalette.includes('#ab12cd'));
 app.settings.value.colorPalette = [];

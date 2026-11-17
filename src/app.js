@@ -603,17 +603,21 @@ createApp({
     );
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
     // Los colores propios forman parte de los ajustes y de las copias JSON.
-    const activePalette = computed(() => StudioColorTools.collect([
-      settings.value.colorPalette || [],
-      StudioColorTools.baseColors,
-      templates,
-      settings.value,
-      collections.value,
-      compositions.value,
-    ]));
+    const activePalette = computed(() =>
+      StudioColorTools.collect([
+        settings.value.colorPalette || [],
+        StudioColorTools.baseColors,
+        templates,
+        settings.value,
+        collections.value,
+        compositions.value,
+      ]),
+    );
     function savePaletteColor(color) {
       if (!StudioColorTools.valid(color)) return;
-      settings.value.colorPalette = [...new Set([color.toLowerCase(), ...(settings.value.colorPalette || [])])];
+      settings.value.colorPalette = [
+        ...new Set([color.toLowerCase(), ...(settings.value.colorPalette || [])]),
+      ];
     }
     // El disco aporta el contenido; cada posición conserva su propio estilo.
     const appearanceKeys = [
