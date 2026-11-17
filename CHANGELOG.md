@@ -1,3 +1,9 @@
+# 7.12.0
+
+- Paleta activa compacta con los colores de la aplicación, plantillas y proyecto.
+- Personalización en un modal independiente con rueda cromática táctil, luminosidad y hexadecimal.
+- Guardar aplica el color y lo incorpora a la paleta compartida y persistente; cancelar conserva el anterior.
+
 # 7.11.0
 
 - La vista previa de estilo conserva todas las capas del diseño propio asignado a una posición de composición.

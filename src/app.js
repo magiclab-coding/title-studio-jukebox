@@ -534,6 +534,14 @@ function templatePreview(t, card, settings, sampleMeta = false) {
 }
 
 createApp({
+  provide() {
+    return {
+      studioPalette: {
+        getColors: () => this.activePalette,
+        add: (color) => this.savePaletteColor(color),
+      },
+    };
+  },
   setup() {
     // --- Estado inicial y compatibilidad con copias anteriores ---
     let saved;
@@ -594,6 +602,23 @@ createApp({
       compositions.value.find((c) => c.id === activeComposition.value),
     );
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
+    // Los colores propios forman parte de los ajustes y de las copias JSON.
+    const activePalette = computed(() =>
+      StudioColorTools.collect([
+        settings.value.colorPalette || [],
+        StudioColorTools.baseColors,
+        templates,
+        settings.value,
+        collections.value,
+        compositions.value,
+      ]),
+    );
+    function savePaletteColor(color) {
+      if (!StudioColorTools.valid(color)) return;
+      settings.value.colorPalette = [
+        ...new Set([color.toLowerCase(), ...(settings.value.colorPalette || [])]),
+      ];
+    }
     // El disco aporta el contenido; cada posición conserva su propio estilo.
     const appearanceKeys = [
       'style',
@@ -2515,6 +2540,8 @@ createApp({
       saveTemplateDesign,
       copyTemplateDesign,
       deleteTemplateDesign,
+      activePalette,
+      savePaletteColor,
       fontOptions,
       columns,
       cards,
