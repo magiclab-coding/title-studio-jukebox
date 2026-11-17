@@ -18,30 +18,100 @@
     const n = value === '' || value == null ? NaN : Number(value);
     return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
   };
-  const color = (value, fallback = '#213d36') =>
-    /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
-  const escape = (value) => String(value ?? '').replace(/[<>&"']/g,
-    (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c]);
-  const raster = (value) => typeof value === 'string' && value.length <= 2800000 &&
-    /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=\r\n]+$/i.test(value) ? value : '';
+  const color = (value, fallback = '#213d36') => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
+  const escape = (value) =>
+    String(value ?? '').replace(
+      /[<>&"']/g,
+      (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' })[c],
+    );
+  const raster = (value) =>
+    typeof value === 'string' &&
+    value.length <= 2800000 &&
+    /^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=\r\n]+$/i.test(value)
+      ? value
+      : '';
   const svgCache = new Map();
 
   // Se reconstruye una lista permitida; nunca se inserta el documento importado sin revisar.
   function sanitizeSvg(source) {
-    if (typeof source !== 'string' || source.length > 1000000 ||
-      /<!DOCTYPE|<!ENTITY/i.test(source)) throw Error('SVG no válido o demasiado grande (máximo 1 MB).');
+    if (typeof source !== 'string' || source.length > 1000000 || /<!DOCTYPE|<!ENTITY/i.test(source))
+      throw Error('SVG no válido o demasiado grande (máximo 1 MB).');
     if (svgCache.has(source)) return svgCache.get(source);
     const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
     const root = doc.documentElement;
-    if (root?.localName !== 'svg' || doc.querySelector('parsererror')) throw Error('No se pudo leer el SVG.');
-    const tags = new Set(['svg','g','path','rect','circle','ellipse','line','polyline','polygon',
-      'defs','linearGradient','radialGradient','stop','clipPath','mask','use','symbol','title','desc','text','tspan']);
-    const attrs = new Set(['id','d','x','y','x1','y1','x2','y2','cx','cy','r','rx','ry',
-      'width','height','viewBox','preserveAspectRatio','points','transform','fill','stroke',
-      'stroke-width','stroke-linecap','stroke-linejoin','stroke-dasharray','stroke-dashoffset',
-      'fill-rule','clip-rule','opacity','fill-opacity','stroke-opacity','clip-path','mask',
-      'offset','stop-color','stop-opacity','gradientUnits','gradientTransform','spreadMethod',
-      'fx','fy','text-anchor','dominant-baseline','font-family','font-size','font-weight']);
+    if (root?.localName !== 'svg' || doc.querySelector('parsererror'))
+      throw Error('No se pudo leer el SVG.');
+    const tags = new Set([
+      'svg',
+      'g',
+      'path',
+      'rect',
+      'circle',
+      'ellipse',
+      'line',
+      'polyline',
+      'polygon',
+      'defs',
+      'linearGradient',
+      'radialGradient',
+      'stop',
+      'clipPath',
+      'mask',
+      'use',
+      'symbol',
+      'title',
+      'desc',
+      'text',
+      'tspan',
+    ]);
+    const attrs = new Set([
+      'id',
+      'd',
+      'x',
+      'y',
+      'x1',
+      'y1',
+      'x2',
+      'y2',
+      'cx',
+      'cy',
+      'r',
+      'rx',
+      'ry',
+      'width',
+      'height',
+      'viewBox',
+      'preserveAspectRatio',
+      'points',
+      'transform',
+      'fill',
+      'stroke',
+      'stroke-width',
+      'stroke-linecap',
+      'stroke-linejoin',
+      'stroke-dasharray',
+      'stroke-dashoffset',
+      'fill-rule',
+      'clip-rule',
+      'opacity',
+      'fill-opacity',
+      'stroke-opacity',
+      'clip-path',
+      'mask',
+      'offset',
+      'stop-color',
+      'stop-opacity',
+      'gradientUnits',
+      'gradientTransform',
+      'spreadMethod',
+      'fx',
+      'fy',
+      'text-anchor',
+      'dominant-baseline',
+      'font-family',
+      'font-size',
+      'font-weight',
+    ]);
     const ids = new Map();
     let count = 0;
     const collect = (node) => {
@@ -52,7 +122,11 @@
     };
     collect(root);
     const safeValue = (name, value) => {
-      if (value.length > 200000 || /[<>]|javascript:|data:|https?:|\/\/|expression|var\(/i.test(value)) return null;
+      if (
+        value.length > 200000 ||
+        /[<>]|javascript:|data:|https?:|\/\/|expression|var\(/i.test(value)
+      )
+        return null;
       if (name === 'id') return ids.get(value);
       if (/url\(/i.test(value)) {
         const match = /^url\(\s*['"]?#([^\s'")]+)['"]?\s*\)$/.exec(value);
@@ -85,9 +159,18 @@
         if (safe != null) attributes += ' ' + name + '="' + escape(safe) + '"';
       }
       if (node === root) attributes += ' xmlns="http://www.w3.org/2000/svg"';
-      return '<' + node.localName + attributes + '>' +
-        Array.from(node.childNodes).map((child) => serialize(child, depth + 1)).join('') +
-        '</' + node.localName + '>';
+      return (
+        '<' +
+        node.localName +
+        attributes +
+        '>' +
+        Array.from(node.childNodes)
+          .map((child) => serialize(child, depth + 1))
+          .join('') +
+        '</' +
+        node.localName +
+        '>'
+      );
     };
     const result = serialize(root);
     if (svgCache.size > 60) svgCache.clear();
@@ -97,85 +180,156 @@
 
   function element(type = 'text', field = '') {
     return {
-      id: id(), type, name: fields.find((f) => f.key === field)?.label ||
-        ({ text: 'Texto libre', rect: 'Rectángulo', ellipse: 'Elipse', line: 'Línea', svg: 'Gráfico SVG', image: 'Imagen' }[type]),
-      x: 10, y: 55, width: 280, height: 30, rotation: 0, opacity: 1, visible: true,
-      field, text: field ? '' : 'Tu texto', font: '', fontSize: 20, align: 'center',
+      id: id(),
+      type,
+      name:
+        fields.find((f) => f.key === field)?.label ||
+        {
+          text: 'Texto libre',
+          rect: 'Rectángulo',
+          ellipse: 'Elipse',
+          line: 'Línea',
+          svg: 'Gráfico SVG',
+          image: 'Imagen',
+        }[type],
+      x: 10,
+      y: 55,
+      width: 280,
+      height: 30,
+      rotation: 0,
+      opacity: 1,
+      visible: true,
+      field,
+      text: field ? '' : 'Tu texto',
+      font: '',
+      fontSize: 20,
+      align: 'center',
       colorRole: field.startsWith('artist') ? 'artistInk' : field ? 'ink' : 'graphicsInk',
-      fill: '#213d36', stroke: '#213d36', strokeWidth: type === 'line' ? 2 : 0, radius: 0,
+      fill: '#213d36',
+      stroke: '#213d36',
+      strokeWidth: type === 'line' ? 2 : 0,
+      radius: 0,
     };
   }
   function newTemplate() {
     return {
-      id: '', name: 'Mi plantilla', group: 'Mis plantillas', description: 'Diseño propio',
-      ink: '#28548a', artistInk: '#213d36', graphicsInk: '#213d36', paper: '#ffffff',
-      font: 'DM Sans', titlePx: 20, artistPx: 19, showGenre: false, showRpm: false, showNumber: false,
-      design: { version: 1, elements: [
-        { ...element('text', 'a'), y: 20 },
-        { ...element('text', 'artist'), y: 60, fontSize: 19 },
-        { ...element('text', 'b'), y: 100 },
-      ] },
+      id: '',
+      name: 'Mi plantilla',
+      group: 'Mis plantillas',
+      description: 'Diseño propio',
+      ink: '#28548a',
+      artistInk: '#213d36',
+      graphicsInk: '#213d36',
+      paper: '#ffffff',
+      font: 'DM Sans',
+      titlePx: 20,
+      artistPx: 19,
+      showGenre: false,
+      showRpm: false,
+      showNumber: false,
+      design: {
+        version: 1,
+        elements: [
+          { ...element('text', 'a'), y: 20 },
+          { ...element('text', 'artist'), y: 60, fontSize: 19 },
+          { ...element('text', 'b'), y: 100 },
+        ],
+      },
     };
   }
   function normalizeDesign(value) {
     if (!value || !Array.isArray(value.elements) || value.elements.length > 80)
       throw Error('La plantilla debe contener como máximo 80 capas.');
     const seen = new Set();
-    return { version: 1, elements: value.elements.map((raw) => {
-      const types = ['text','rect','ellipse','line','svg','image'];
-      if (!types.includes(raw?.type)) throw Error('Tipo de capa no válido.');
-      let key = typeof raw.id === 'string' && raw.id.length < 100 ? raw.id : id();
-      if (seen.has(key)) key = id();
-      seen.add(key);
-      const e = {
-        ...element(raw.type), id: key, name: String(raw.name || 'Capa').slice(0, 80),
-        x: num(raw.x,10,0,300), y: num(raw.y,55,0,150),
-        width: num(raw.width,280,2,300), height: num(raw.height,30,2,150),
-        rotation: num(raw.rotation,0,-180,180), opacity: num(raw.opacity,1,0,1),
-        visible: raw.visible !== false, field: fields.some((f) => f.key === raw.field) ? raw.field : '',
-        text: String(raw.text || '').slice(0,1000), font: String(raw.font || '').slice(0,100),
-        fontSize: num(raw.fontSize,20,4,100), align: ['left','center','right'].includes(raw.align) ? raw.align : 'center',
-        colorRole: ['ink','artistInk','graphicsInk','fixed'].includes(raw.colorRole) ? raw.colorRole : 'fixed',
-        fill: raw.fill === 'none' ? 'none' : color(raw.fill), stroke: color(raw.stroke),
-        strokeWidth: num(raw.strokeWidth,0,0,20), radius: num(raw.radius,0,0,75),
-      };
-      if (e.type === 'svg') e.svg = sanitizeSvg(raw.svg);
-      if (e.type === 'image') {
-        e.src = raster(raw.src);
-        if (!e.src) throw Error('Imagen no válida. Utiliza PNG, JPG o WebP de hasta 2 MB.');
-      }
-      return e;
-    }) };
+    return {
+      version: 1,
+      elements: value.elements.map((raw) => {
+        const types = ['text', 'rect', 'ellipse', 'line', 'svg', 'image'];
+        if (!types.includes(raw?.type)) throw Error('Tipo de capa no válido.');
+        let key = typeof raw.id === 'string' && raw.id.length < 100 ? raw.id : id();
+        if (seen.has(key)) key = id();
+        seen.add(key);
+        const e = {
+          ...element(raw.type),
+          id: key,
+          name: String(raw.name || 'Capa').slice(0, 80),
+          x: num(raw.x, 10, 0, 300),
+          y: num(raw.y, 55, 0, 150),
+          width: num(raw.width, 280, 2, 300),
+          height: num(raw.height, 30, 2, 150),
+          rotation: num(raw.rotation, 0, -180, 180),
+          opacity: num(raw.opacity, 1, 0, 1),
+          visible: raw.visible !== false,
+          field: fields.some((f) => f.key === raw.field) ? raw.field : '',
+          text: String(raw.text || '').slice(0, 1000),
+          font: String(raw.font || '').slice(0, 100),
+          fontSize: num(raw.fontSize, 20, 4, 100),
+          align: ['left', 'center', 'right'].includes(raw.align) ? raw.align : 'center',
+          colorRole: ['ink', 'artistInk', 'graphicsInk', 'fixed'].includes(raw.colorRole)
+            ? raw.colorRole
+            : 'fixed',
+          fill: raw.fill === 'none' ? 'none' : color(raw.fill),
+          stroke: color(raw.stroke),
+          strokeWidth: num(raw.strokeWidth, 0, 0, 20),
+          radius: num(raw.radius, 0, 0, 75),
+        };
+        if (e.type === 'svg') e.svg = sanitizeSvg(raw.svg);
+        if (e.type === 'image') {
+          e.src = raster(raw.src);
+          if (!e.src) throw Error('Imagen no válida. Utiliza PNG, JPG o WebP de hasta 2 MB.');
+        }
+        return e;
+      }),
+    };
   }
   function normalizeTemplate(raw) {
     return {
-      ...newTemplate(), id: typeof raw?.id === 'string' && /^custom-[\w-]+$/.test(raw.id) ? raw.id : '',
-      name: String(raw?.name || '').trim().slice(0,80) || 'Mi plantilla',
-      ink: color(raw?.ink,'#28548a'), artistInk: color(raw?.artistInk),
-      graphicsInk: color(raw?.graphicsInk), paper: color(raw?.paper,'#ffffff'),
-      font: String(raw?.font || 'DM Sans').slice(0,100),
+      ...newTemplate(),
+      id: typeof raw?.id === 'string' && /^custom-[\w-]+$/.test(raw.id) ? raw.id : '',
+      name:
+        String(raw?.name || '')
+          .trim()
+          .slice(0, 80) || 'Mi plantilla',
+      ink: color(raw?.ink, '#28548a'),
+      artistInk: color(raw?.artistInk),
+      graphicsInk: color(raw?.graphicsInk),
+      paper: color(raw?.paper, '#ffffff'),
+      font: String(raw?.font || 'DM Sans').slice(0, 100),
       design: normalizeDesign(raw?.design),
     };
   }
-  const content = (e, card) => e.field === 'artist'
-    ? [card.artist, card.artistB].filter(Boolean).join(' / ')
-    : e.field === 'artistA' ? card.artist || '' : e.field ? card[e.field] || '' : e.text;
+  const content = (e, card) =>
+    e.field === 'artist'
+      ? [card.artist, card.artistB].filter(Boolean).join(' / ')
+      : e.field === 'artistA'
+        ? card.artist || ''
+        : e.field
+          ? card[e.field] || ''
+          : e.text;
   const isArtist = (e) => e.field.startsWith('artist');
   function metrics(e, card, fit) {
     const artist = isArtist(e);
     const family = e.font || (artist ? card.artistFont || card.font : card.font) || 'DM Sans';
     const scale = artist ? (card.artistPx ?? 19) / 19 : (card.titlePx ?? 20) / 20;
-    const px = e.fontSize * (e.field && ['artist','artistA','artistB','a','b'].includes(e.field) ? scale : 1);
-    return { ...fit(content(e,card),family,px,e.width),family,px };
+    const px =
+      e.fontSize *
+      (e.field && ['artist', 'artistA', 'artistB', 'a', 'b'].includes(e.field) ? scale : 1);
+    return { ...fit(content(e, card), family, px, e.width), family, px };
   }
   function overflow(card, key, fit) {
-    const keys = key === 'artist' ? ['artist','artistA'] : key === 'artistB' ? ['artist','artistB'] : [key];
-    return card.customDesign.elements.some((e) => e.type === 'text' && e.visible !== false &&
-      keys.includes(e.field) && metrics(e,card,fit).truncated);
+    const keys =
+      key === 'artist' ? ['artist', 'artistA'] : key === 'artistB' ? ['artist', 'artistB'] : [key];
+    return card.customDesign.elements.some(
+      (e) =>
+        e.type === 'text' &&
+        e.visible !== false &&
+        keys.includes(e.field) &&
+        metrics(e, card, fit).truncated,
+    );
   }
   function render(card, settings, helpers, selected = '') {
     const design = normalizeDesign(card.customDesign);
-    const H = 300 * settings.height / settings.width;
+    const H = (300 * settings.height) / settings.width;
     const fonts = new Set([card.font || 'DM Sans', card.artistFont || card.font || 'DM Sans']);
     let layers = '';
     for (const e of design.elements) {
@@ -183,84 +337,250 @@
       const flag = { category: 'showGenre', rpm: 'showRpm', number: 'showNumber' }[e.field];
       if (flag && card[flag] === false) continue;
       const fill = e.colorRole === 'fixed' ? e.fill : color(card[e.colorRole], color(e.fill));
-      const transform = 'translate(' + e.x + ' ' + e.y + ') rotate(' + e.rotation + ' ' + e.width/2 + ' ' + e.height/2 + ')';
+      const transform =
+        'translate(' +
+        e.x +
+        ' ' +
+        e.y +
+        ') rotate(' +
+        e.rotation +
+        ' ' +
+        e.width / 2 +
+        ' ' +
+        e.height / 2 +
+        ')';
       let shape = '';
       if (e.type === 'text') {
         const m = metrics(e, card, helpers.fit);
         fonts.add(m.family);
-        const anchor = {left:'start',center:'middle',right:'end'}[e.align];
-        const x = e.align === 'left' ? 0 : e.align === 'right' ? e.width : e.width/2;
-        shape = '<text x="' + x + '" y="' + e.height/2 + '" dominant-baseline="central" text-anchor="' + anchor +
-          '" fill="' + fill + '" font-family="' + escape(m.family) + '" font-size="' + m.px +
-          '" font-weight="400">' + escape(m.text) + '</text>';
-      } else if (e.type === 'rect') shape = '<rect width="' + e.width + '" height="' + e.height + '" rx="' + e.radius + '" fill="' + fill + '" stroke="' + e.stroke + '" stroke-width="' + e.strokeWidth + '"/>';
-      else if (e.type === 'ellipse') shape = '<ellipse cx="' + e.width/2 + '" cy="' + e.height/2 + '" rx="' + e.width/2 + '" ry="' + e.height/2 + '" fill="' + fill + '" stroke="' + e.stroke + '" stroke-width="' + e.strokeWidth + '"/>';
-      else if (e.type === 'line') shape = '<path d="M0 ' + e.height/2 + 'H' + e.width + '" stroke="' + fill + '" stroke-width="' + (e.strokeWidth || 1) + '" fill="none"/>';
+        const anchor = { left: 'start', center: 'middle', right: 'end' }[e.align];
+        const x = e.align === 'left' ? 0 : e.align === 'right' ? e.width : e.width / 2;
+        shape =
+          '<text x="' +
+          x +
+          '" y="' +
+          e.height / 2 +
+          '" dominant-baseline="central" text-anchor="' +
+          anchor +
+          '" fill="' +
+          fill +
+          '" font-family="' +
+          escape(m.family) +
+          '" font-size="' +
+          m.px +
+          '" font-weight="400">' +
+          escape(m.text) +
+          '</text>';
+      } else if (e.type === 'rect')
+        shape =
+          '<rect width="' +
+          e.width +
+          '" height="' +
+          e.height +
+          '" rx="' +
+          e.radius +
+          '" fill="' +
+          fill +
+          '" stroke="' +
+          e.stroke +
+          '" stroke-width="' +
+          e.strokeWidth +
+          '"/>';
+      else if (e.type === 'ellipse')
+        shape =
+          '<ellipse cx="' +
+          e.width / 2 +
+          '" cy="' +
+          e.height / 2 +
+          '" rx="' +
+          e.width / 2 +
+          '" ry="' +
+          e.height / 2 +
+          '" fill="' +
+          fill +
+          '" stroke="' +
+          e.stroke +
+          '" stroke-width="' +
+          e.strokeWidth +
+          '"/>';
+      else if (e.type === 'line')
+        shape =
+          '<path d="M0 ' +
+          e.height / 2 +
+          'H' +
+          e.width +
+          '" stroke="' +
+          fill +
+          '" stroke-width="' +
+          (e.strokeWidth || 1) +
+          '" fill="none"/>';
       else if (e.type === 'svg') {
         // data SVG se ejecuta en contexto de imagen, sin referencias entre capas.
-        shape = '<image width="' + e.width + '" height="' + e.height + '" preserveAspectRatio="xMidYMid meet" href="data:image/svg+xml;charset=utf-8,' + escape(encodeURIComponent(e.svg)) + '"/>';
-      } else if (e.type === 'image') shape = '<image width="' + e.width + '" height="' + e.height + '" preserveAspectRatio="xMidYMid meet" href="' + escape(e.src) + '"/>';
-      layers += '<g transform="' + transform + '" opacity="' + e.opacity + '">' + shape +
-        (e.id === selected ? '<rect width="' + e.width + '" height="' + e.height + '" fill="none" stroke="#b9553b" stroke-width="1" stroke-dasharray="3 2"/>' : '') + '</g>';
+        shape =
+          '<image width="' +
+          e.width +
+          '" height="' +
+          e.height +
+          '" preserveAspectRatio="xMidYMid meet" href="data:image/svg+xml;charset=utf-8,' +
+          escape(encodeURIComponent(e.svg)) +
+          '"/>';
+      } else if (e.type === 'image')
+        shape =
+          '<image width="' +
+          e.width +
+          '" height="' +
+          e.height +
+          '" preserveAspectRatio="xMidYMid meet" href="' +
+          escape(e.src) +
+          '"/>';
+      layers +=
+        '<g transform="' +
+        transform +
+        '" opacity="' +
+        e.opacity +
+        '">' +
+        shape +
+        (e.id === selected
+          ? '<rect width="' +
+            e.width +
+            '" height="' +
+            e.height +
+            '" fill="none" stroke="#b9553b" stroke-width="1" stroke-dasharray="3 2"/>'
+          : '') +
+        '</g>';
     }
     const css = [...fonts].map((f) => globalThis.StudioFonts?.[f] || '').join('');
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + settings.width + 'mm" height="' + settings.height +
-      'mm" viewBox="0 0 300 ' + H + '" role="img" aria-label="' + escape(card.artist + ' ' + card.a) +
-      '"><style>' + css + '</style><rect width="300" height="' + H + '" fill="' + color(card.paper,'#ffffff') +
-      '"/><g transform="scale(1 ' + H/150 + ')">' + layers + '</g></svg>';
+    return (
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' +
+      settings.width +
+      'mm" height="' +
+      settings.height +
+      'mm" viewBox="0 0 300 ' +
+      H +
+      '" role="img" aria-label="' +
+      escape(card.artist + ' ' + card.a) +
+      '"><style>' +
+      css +
+      '</style><rect width="300" height="' +
+      H +
+      '" fill="' +
+      color(card.paper, '#ffffff') +
+      '"/><g transform="scale(1 ' +
+      H / 150 +
+      ')">' +
+      layers +
+      '</g></svg>'
+    );
   }
-  globalThis.StudioTemplateTools = { fields, clone, id, element, newTemplate, normalizeDesign, normalizeTemplate, sanitizeSvg, render, overflow, metrics };
+  globalThis.StudioTemplateTools = {
+    fields,
+    clone,
+    id,
+    element,
+    newTemplate,
+    normalizeDesign,
+    normalizeTemplate,
+    sanitizeSvg,
+    render,
+    overflow,
+    metrics,
+  };
 })();
 
 // --- Editor visual: el borrador no modifica el catálogo hasta guardar ---
 globalThis.StudioComponents.TemplateDesigner = {
   props: { initial: Object, settings: Object, fonts: Array, renderCard: Function },
-  emits: ['save','close'],
+  emits: ['save', 'close'],
   data() {
     const tools = globalThis.StudioTemplateTools;
     return {
       model: this.initial ? tools.clone(this.initial) : tools.newTemplate(),
-      selectedId: '', undoStack: [], redoStack: [], cleanState: '',
-      error: '', dragging: false, lastState: '', fileBusy: false,
-      fieldToAdd: 'a', sampleMode: 'sample', stopDrag: null,
+      selectedId: '',
+      undoStack: [],
+      redoStack: [],
+      cleanState: '',
+      error: '',
+      dragging: false,
+      lastState: '',
+      fileBusy: false,
+      fieldToAdd: 'a',
+      sampleMode: 'sample',
+      stopDrag: null,
     };
   },
   computed: {
-    fields() { return globalThis.StudioTemplateTools.fields; },
-    layers() { return this.model.design.elements; },
-    selectedLayer() { return this.layers.find((e) => e.id === this.selectedId); },
-    canSave() { return !!this.model.name.trim() && !this.fileBusy; },
+    fields() {
+      return globalThis.StudioTemplateTools.fields;
+    },
+    layers() {
+      return this.model.design.elements;
+    },
+    selectedLayer() {
+      return this.layers.find((e) => e.id === this.selectedId);
+    },
+    canSave() {
+      return !!this.model.name.trim() && !this.fileBusy;
+    },
     previewCard() {
-      const card = { ...this.model, customDesign: this.model.design,
-        artist:'Artista A', artistB:'Artista B', a:'Título de la cara A', b:'Título de la cara B',
-        category:'ROCK & ROLL', rpm:'45 RPM', number:'A1', label:'Sello', year:'1957',
-        showGenre:true, showRpm:true, showNumber:true };
-      if (this.sampleMode === 'long') Object.assign(card, {
-        artist:'Artista con nombre largo',artistB:'Segundo artista',
-        a:'Un título largo para comprobar el espacio disponible',b:'Otra canción con un título muy largo',
-      });
+      const card = {
+        ...this.model,
+        customDesign: this.model.design,
+        artist: 'Artista A',
+        artistB: 'Artista B',
+        a: 'Título de la cara A',
+        b: 'Título de la cara B',
+        category: 'ROCK & ROLL',
+        rpm: '45 RPM',
+        number: 'A1',
+        label: 'Sello',
+        year: '1957',
+        showGenre: true,
+        showRpm: true,
+        showNumber: true,
+      };
+      if (this.sampleMode === 'long')
+        Object.assign(card, {
+          artist: 'Artista con nombre largo',
+          artistB: 'Segundo artista',
+          a: 'Un título largo para comprobar el espacio disponible',
+          b: 'Otra canción con un título muy largo',
+        });
       return card;
     },
-    preview() { return this.renderCard(this.previewCard); },
+    preview() {
+      return this.renderCard(this.previewCard);
+    },
     selectionStyle() {
       const e = this.selectedLayer;
       if (!e || !e.visible) return {};
-      return { left:e.x/3+'%', top:e.y/1.5+'%', width:e.width/3+'%', height:e.height/1.5+'%',
-        transform:'rotate('+e.rotation+'deg)' };
+      return {
+        left: e.x / 3 + '%',
+        top: e.y / 1.5 + '%',
+        width: e.width / 3 + '%',
+        height: e.height / 1.5 + '%',
+        transform: 'rotate(' + e.rotation + 'deg)',
+      };
     },
-    dirty() { return JSON.stringify(this.model) !== this.cleanState; },
+    dirty() {
+      return JSON.stringify(this.model) !== this.cleanState;
+    },
   },
   watch: {
-    model: { deep:true, handler() {
-      if (!this.dragging) this.remember();
-    } },
+    model: {
+      deep: true,
+      handler() {
+        if (!this.dragging) this.remember();
+      },
+    },
   },
   mounted() {
     this.lastState = JSON.stringify(this.model);
     this.cleanState = this.lastState;
     this.selectedId = this.layers.find((e) => e.type === 'text')?.id || '';
   },
-  beforeUnmount() { this.stopDrag?.(); },
+  beforeUnmount() {
+    this.stopDrag?.();
+  },
   methods: {
     remember() {
       const next = JSON.stringify(this.model);
@@ -283,9 +603,12 @@ globalThis.StudioComponents.TemplateDesigner = {
       this.model = JSON.parse(this.lastState);
     },
     add(type, field = '') {
-      if (this.layers.length >= 80) { this.error = 'Máximo 80 capas por plantilla.'; return; }
-      const e = globalThis.StudioTemplateTools.element(type,field);
-      if (type !== 'text') Object.assign(e,{width:100,height:type === 'line' ? 4 : 30});
+      if (this.layers.length >= 80) {
+        this.error = 'Máximo 80 capas por plantilla.';
+        return;
+      }
+      const e = globalThis.StudioTemplateTools.element(type, field);
+      if (type !== 'text') Object.assign(e, { width: 100, height: type === 'line' ? 4 : 30 });
       this.layers.push(e);
       this.selectedId = e.id;
       this.error = '';
@@ -293,9 +616,15 @@ globalThis.StudioComponents.TemplateDesigner = {
     duplicate() {
       if (!this.selectedLayer || this.layers.length >= 80) return;
       const tools = globalThis.StudioTemplateTools;
-      const e = { ...tools.clone(this.selectedLayer), id:tools.id(), name:this.selectedLayer.name+' (copia)' };
-      e.x = Math.min(300-e.width,e.x+4); e.y = Math.min(150-e.height,e.y+4);
-      this.layers.push(e); this.selectedId = e.id;
+      const e = {
+        ...tools.clone(this.selectedLayer),
+        id: tools.id(),
+        name: this.selectedLayer.name + ' (copia)',
+      };
+      e.x = Math.min(300 - e.width, e.x + 4);
+      e.y = Math.min(150 - e.height, e.y + 4);
+      this.layers.push(e);
+      this.selectedId = e.id;
     },
     remove() {
       this.model.design.elements = this.layers.filter((e) => e.id !== this.selectedId);
@@ -306,150 +635,204 @@ globalThis.StudioComponents.TemplateDesigner = {
       const target = index + direction;
       if (index < 0 || target < 0 || target >= this.layers.length) return;
       const list = [...this.layers];
-      [list[index],list[target]] = [list[target],list[index]];
+      [list[index], list[target]] = [list[target], list[index]];
       this.model.design.elements = list;
     },
     align(direction) {
       const e = this.selectedLayer;
       if (!e) return;
       if (direction === 'left') e.x = 0;
-      if (direction === 'center') e.x = (300-e.width)/2;
-      if (direction === 'right') e.x = 300-e.width;
-      if (direction === 'middle') e.y = (150-e.height)/2;
+      if (direction === 'center') e.x = (300 - e.width) / 2;
+      if (direction === 'right') e.x = 300 - e.width;
+      if (direction === 'middle') e.y = (150 - e.height) / 2;
     },
     clear() {
       if (this.layers.length && !window.confirm('¿Vaciar el lienzo? Puedes deshacerlo.')) return;
-      this.model.design.elements = []; this.selectedId = '';
+      this.model.design.elements = [];
+      this.selectedId = '';
     },
     // Las coordenadas se convierten desde píxeles de pantalla al lienzo lógico.
     startPointer(event, resize = false) {
       if (event.button !== 0) return;
       const box = this.$refs.stage.getBoundingClientRect();
       let e = this.selectedLayer;
-      const x = (event.clientX-box.left)*300/box.width, y = (event.clientY-box.top)*150/box.height;
+      const x = ((event.clientX - box.left) * 300) / box.width,
+        y = ((event.clientY - box.top) * 150) / box.height;
       if (!resize) {
         e = [...this.layers].reverse().find((layer) => {
           if (!layer.visible) return false;
-          const angle = -layer.rotation*Math.PI/180;
-          const dx = x-layer.x-layer.width/2, dy = y-layer.y-layer.height/2;
-          const lx = dx*Math.cos(angle)-dy*Math.sin(angle)+layer.width/2;
-          const ly = dx*Math.sin(angle)+dy*Math.cos(angle)+layer.height/2;
+          const angle = (-layer.rotation * Math.PI) / 180;
+          const dx = x - layer.x - layer.width / 2,
+            dy = y - layer.y - layer.height / 2;
+          const lx = dx * Math.cos(angle) - dy * Math.sin(angle) + layer.width / 2;
+          const ly = dx * Math.sin(angle) + dy * Math.cos(angle) + layer.height / 2;
           return lx >= 0 && lx <= layer.width && ly >= 0 && ly <= layer.height;
         });
         this.selectedId = e?.id || '';
       }
       if (!e) return;
       event.preventDefault();
-      const origin = {x:e.x,y:e.y,width:e.width,height:e.height};
+      const origin = { x: e.x, y: e.y, width: e.width, height: e.height };
       const before = JSON.stringify(this.model);
       this.dragging = true;
       const stage = this.$refs.stage;
       stage.setPointerCapture?.(event.pointerId);
       const move = (ev) => {
-        const dx = (ev.clientX-event.clientX)*300/box.width;
-        const dy = (ev.clientY-event.clientY)*150/box.height;
+        const dx = ((ev.clientX - event.clientX) * 300) / box.width;
+        const dy = ((ev.clientY - event.clientY) * 150) / box.height;
         if (resize) {
-          const angle = -e.rotation*Math.PI/180;
-          e.width = Math.round(Math.max(4,Math.min(300-origin.x,origin.width+dx*Math.cos(angle)-dy*Math.sin(angle))));
-          e.height = Math.round(Math.max(4,Math.min(150-origin.y,origin.height+dx*Math.sin(angle)+dy*Math.cos(angle))));
+          const angle = (-e.rotation * Math.PI) / 180;
+          e.width = Math.round(
+            Math.max(
+              4,
+              Math.min(300 - origin.x, origin.width + dx * Math.cos(angle) - dy * Math.sin(angle)),
+            ),
+          );
+          e.height = Math.round(
+            Math.max(
+              4,
+              Math.min(150 - origin.y, origin.height + dx * Math.sin(angle) + dy * Math.cos(angle)),
+            ),
+          );
         } else {
-          e.x = Math.round(Math.max(0,Math.min(300-e.width,origin.x+dx)));
-          e.y = Math.round(Math.max(0,Math.min(150-e.height,origin.y+dy)));
+          e.x = Math.round(Math.max(0, Math.min(300 - e.width, origin.x + dx)));
+          e.y = Math.round(Math.max(0, Math.min(150 - e.height, origin.y + dy)));
         }
       };
       const stop = (ev) => {
-        stage.removeEventListener('pointermove',move);
-        stage.removeEventListener('pointerup',stop);
-        stage.removeEventListener('pointercancel',stop);
-        if (stage.hasPointerCapture?.(event.pointerId)) stage.releasePointerCapture(event.pointerId);
+        stage.removeEventListener('pointermove', move);
+        stage.removeEventListener('pointerup', stop);
+        stage.removeEventListener('pointercancel', stop);
+        if (stage.hasPointerCapture?.(event.pointerId))
+          stage.releasePointerCapture(event.pointerId);
         if (ev?.type === 'pointercancel') this.model = JSON.parse(before);
         this.dragging = false;
         this.remember();
         this.stopDrag = null;
       };
-      stage.addEventListener('pointermove',move);
-      stage.addEventListener('pointerup',stop);
-      stage.addEventListener('pointercancel',stop);
+      stage.addEventListener('pointermove', move);
+      stage.addEventListener('pointerup', stop);
+      stage.addEventListener('pointercancel', stop);
       this.stopDrag = stop;
     },
     keydown(event) {
       if (event.target.closest('input,select,textarea,summary,button')) return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
-        event.preventDefault(); event.shiftKey ? this.redo() : this.undo(); return;
+        event.preventDefault();
+        event.shiftKey ? this.redo() : this.undo();
+        return;
       }
       const e = this.selectedLayer;
       if (!e) return;
-      if (event.key === 'Delete' || event.key === 'Backspace') { event.preventDefault(); this.remove(); }
-      const deltas = {ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        this.remove();
+      }
+      const deltas = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
       const d = deltas[event.key];
       if (d) {
         event.preventDefault();
         const step = event.shiftKey ? 10 : 1;
-        e.x = Math.max(0,Math.min(300-e.width,e.x+d[0]*step));
-        e.y = Math.max(0,Math.min(150-e.height,e.y+d[1]*step));
+        e.x = Math.max(0, Math.min(300 - e.width, e.x + d[0] * step));
+        e.y = Math.max(0, Math.min(150 - e.height, e.y + d[1] * step));
       }
     },
     async importAsset(event) {
       const file = event.target.files?.[0];
       event.target.value = '';
       if (!file) return;
-      if (this.layers.length >= 80) { this.error = 'Máximo 80 capas por plantilla.'; return; }
-      this.fileBusy = true; this.error = '';
+      if (this.layers.length >= 80) {
+        this.error = 'Máximo 80 capas por plantilla.';
+        return;
+      }
+      this.fileBusy = true;
+      this.error = '';
       try {
         const tools = globalThis.StudioTemplateTools;
         const svg = /\.svg$/i.test(file.name) || file.type === 'image/svg+xml';
-        if (file.size > (svg ? 1000000 : 2000000)) throw Error('Máximo 1 MB por SVG y 2 MB por imagen.');
+        if (file.size > (svg ? 1000000 : 2000000))
+          throw Error('Máximo 1 MB por SVG y 2 MB por imagen.');
         let e = tools.element(svg ? 'svg' : 'image');
-        Object.assign(e,{name:file.name.slice(0,80),width:100,height:50});
+        Object.assign(e, { name: file.name.slice(0, 80), width: 100, height: 50 });
         if (svg) {
           e.svg = tools.sanitizeSvg(await file.text());
-          const root = new DOMParser().parseFromString(e.svg,'image/svg+xml').documentElement;
-          const vb = root.getAttribute('viewBox')?.trim().split(/[\s,]+/).map(Number);
+          const root = new DOMParser().parseFromString(e.svg, 'image/svg+xml').documentElement;
+          const vb = root
+            .getAttribute('viewBox')
+            ?.trim()
+            .split(/[\s,]+/)
+            .map(Number);
           const width = vb?.[2] || parseFloat(root.getAttribute('width')) || 100;
           const height = vb?.[3] || parseFloat(root.getAttribute('height')) || 50;
-          e.height = Math.min(90,Math.max(4,100*height/width));
+          e.height = Math.min(90, Math.max(4, (100 * height) / width));
         } else {
-          if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw Error('Utiliza SVG, PNG, JPG o WebP.');
-          e.src = await new Promise((resolve,reject) => {
+          if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type))
+            throw Error('Utiliza SVG, PNG, JPG o WebP.');
+          e.src = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(reader.result);
             reader.onerror = () => reject(Error('No se pudo leer la imagen.'));
             reader.readAsDataURL(file);
           });
         }
-        this.layers.push(e); this.selectedId = e.id;
-      } catch (error) { this.error = error.message; }
-      finally { this.fileBusy = false; }
+        this.layers.push(e);
+        this.selectedId = e.id;
+      } catch (error) {
+        this.error = error.message;
+      } finally {
+        this.fileBusy = false;
+      }
     },
     async importTemplate(event) {
-      const file = event.target.files?.[0]; event.target.value = '';
+      const file = event.target.files?.[0];
+      event.target.value = '';
       if (!file) return;
       this.error = '';
       try {
         if (file.size > 5000000) throw Error('Plantilla demasiado grande (máximo 5 MB).');
         const data = JSON.parse(await file.text());
-        if (data.kind !== 'title-studio-template') throw Error('No es una plantilla de Title Studio.');
+        if (data.kind !== 'title-studio-template')
+          throw Error('No es una plantilla de Title Studio.');
         const next = globalThis.StudioTemplateTools.normalizeTemplate(data.template);
         next.id = this.model.id;
-        this.model = next; this.selectedId = '';
-      } catch (error) { this.error = error.message; }
+        this.model = next;
+        this.selectedId = '';
+      } catch (error) {
+        this.error = error.message;
+      }
     },
     exportTemplate() {
       try {
         const template = globalThis.StudioTemplateTools.normalizeTemplate(this.model);
-        const blob = new Blob([JSON.stringify({kind:'title-studio-template',schema:1,template},null,2)],{type:'application/json'});
-        const url = URL.createObjectURL(blob), a = document.createElement('a');
-        a.href = url; a.download = 'title-studio-plantilla.json'; a.click();
-        setTimeout(() => URL.revokeObjectURL(url),1000);
-      } catch (error) { this.error = error.message; }
+        const blob = new Blob(
+          [JSON.stringify({ kind: 'title-studio-template', schema: 1, template }, null, 2)],
+          { type: 'application/json' },
+        );
+        const url = URL.createObjectURL(blob),
+          a = document.createElement('a');
+        a.href = url;
+        a.download = 'title-studio-plantilla.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (error) {
+        this.error = error.message;
+      }
     },
     save() {
       try {
-        this.$emit('save',globalThis.StudioTemplateTools.normalizeTemplate(this.model));
-      } catch (error) { this.error = error.message; }
+        this.$emit('save', globalThis.StudioTemplateTools.normalizeTemplate(this.model));
+      } catch (error) {
+        this.error = error.message;
+      }
     },
     close() {
-      if (this.dirty && !window.confirm('¿Descartar los cambios sin guardar de esta plantilla?')) return;
+      if (this.dirty && !window.confirm('¿Descartar los cambios sin guardar de esta plantilla?'))
+        return;
       this.$emit('close');
     },
   },

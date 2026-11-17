@@ -2016,15 +2016,21 @@ createApp({
       if (s.settings?.customTemplates) {
         if (!Array.isArray(s.settings.customTemplates) || s.settings.customTemplates.length > 100)
           throw Error('Máximo 100 plantillas propias.');
-        s.settings.customTemplates = s.settings.customTemplates.map((t) => StudioTemplateTools.normalizeTemplate(t));
+        s.settings.customTemplates = s.settings.customTemplates.map((t) =>
+          StudioTemplateTools.normalizeTemplate(t),
+        );
       }
-      for (const group of s.collections || (s.collection ? [s.collection] : s.cards ? [{cards:s.cards}] : []))
+      for (const group of s.collections ||
+        (s.collection ? [s.collection] : s.cards ? [{ cards: s.cards }] : []))
         for (const card of group.cards || [])
-          if (card.customDesign) card.customDesign = StudioTemplateTools.normalizeDesign(card.customDesign);
+          if (card.customDesign)
+            card.customDesign = StudioTemplateTools.normalizeDesign(card.customDesign);
       for (const composition of s.compositions || (s.composition ? [s.composition] : []))
         for (const item of composition.items || [])
           if (item.appearance?.customDesign)
-            item.appearance.customDesign = StudioTemplateTools.normalizeDesign(item.appearance.customDesign);
+            item.appearance.customDesign = StudioTemplateTools.normalizeDesign(
+              item.appearance.customDesign,
+            );
       const groups =
         s.collections || (s.collection ? [s.collection] : s.cards ? [{ cards: s.cards }] : []);
       for (const group of groups) {
@@ -2232,7 +2238,9 @@ createApp({
       ...templates,
       ...(settings.value.customTemplates || []),
     ]);
-    const designerDialog = ref(false), designerInitial = ref(null), designerSession = ref(0);
+    const designerDialog = ref(false),
+      designerInitial = ref(null),
+      designerSession = ref(0);
     function openTemplateDesigner(template = null) {
       designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
       designerSession.value++;
@@ -2263,8 +2271,15 @@ createApp({
       openTemplateDesigner(copy);
     }
     function deleteTemplateDesign(template) {
-      if (!window.confirm('¿Eliminar esta plantilla del catálogo? Las tarjetas ya colocadas se conservarán.')) return;
-      settings.value.customTemplates = (settings.value.customTemplates || []).filter((t) => t.id !== template.id);
+      if (
+        !window.confirm(
+          '¿Eliminar esta plantilla del catálogo? Las tarjetas ya colocadas se conservarán.',
+        )
+      )
+        return;
+      settings.value.customTemplates = (settings.value.customTemplates || []).filter(
+        (t) => t.id !== template.id,
+      );
       if (settings.value.templateDefaults) delete settings.value.templateDefaults[template.id];
       notify('Plantilla eliminada del catálogo');
     }
@@ -2408,7 +2423,9 @@ createApp({
       backupScope,
       pendingBackup,
       loadBackup,
-      get templates() { return catalogTemplates.value; },
+      get templates() {
+        return catalogTemplates.value;
+      },
       designerDialog,
       designerInitial,
       designerSession,

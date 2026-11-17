@@ -842,7 +842,6 @@ console.log(
   'PASS: integrated editing preserves originals; clipping uses glyphs, font, size and layout',
 );
 
-
 // --- Plantillas propias: catálogo, composición, copias e independencia de posiciones ---
 app.view.value = 'templates';
 const designTools = context.StudioTemplateTools;
@@ -852,7 +851,7 @@ app.saveTemplateDesign(ownTemplate);
 await nextTick();
 const catalogOwn = app.templates.find((t) => t.name === ownTemplate.name);
 assert.ok(catalogOwn.id.startsWith('custom-'));
-assert.equal(app.visibleTemplates.value.length,1);
+assert.equal(app.visibleTemplates.value.length, 1);
 app.view.value = 'compose';
 app.selectedItemId.value = app.composition.value.items[0].id;
 app.selected.value = app.composition.value.items[0].cardId;
@@ -861,37 +860,43 @@ app.useTemplate(catalogOwn);
 app.finishStyle();
 await nextTick();
 const appliedDesign = app.composition.value.items[0].appearance.customDesign;
-assert.equal(appliedDesign.elements.length,3);
-assert.notEqual(appliedDesign,catalogOwn.design);
+assert.equal(appliedDesign.elements.length, 3);
+assert.notEqual(appliedDesign, catalogOwn.design);
 const beforeDesignEdit = JSON.stringify(appliedDesign);
 const editedTemplate = designTools.clone(catalogOwn);
 editedTemplate.design.elements[0].x = 30;
 app.saveTemplateDesign(editedTemplate);
 await nextTick();
-assert.equal(JSON.stringify(appliedDesign),beforeDesignEdit);
+assert.equal(JSON.stringify(appliedDesign), beforeDesignEdit);
 const customBackup = JSON.parse(storage.get('title-studio-v3'));
-assert.equal(customBackup.settings.customTemplates[0].design.elements[0].x,30);
+assert.equal(customBackup.settings.customTemplates[0].design.elements[0].x, 30);
 assert.ok(app.svg(app.compositionCards.value[0]).includes('viewBox='));
 const beforeCustomRestore = JSON.stringify(app.composition.value.items[0].appearance.customDesign);
 app.pendingBackup.value = customBackup;
 app.loadBackup();
 await nextTick();
-assert.equal(JSON.stringify(app.composition.value.items[0].appearance.customDesign),beforeCustomRestore);
-assert.equal(app.settings.value.customTemplates[0].id,catalogOwn.id);
+assert.equal(
+  JSON.stringify(app.composition.value.items[0].appearance.customDesign),
+  beforeCustomRestore,
+);
+assert.equal(app.settings.value.customTemplates[0].id, catalogOwn.id);
 app.view.value = 'templates';
 app.editTemplateDefaults(app.settings.value.customTemplates[0]);
-assert.equal(app.designerDialog.value,true);
-assert.equal(app.designerInitial.value.id,catalogOwn.id);
+assert.equal(app.designerDialog.value, true);
+assert.equal(app.designerInitial.value.id, catalogOwn.id);
 app.designerInitial.value.design.elements[0].x = 88;
-assert.equal(app.settings.value.customTemplates[0].design.elements[0].x,30);
+assert.equal(app.settings.value.customTemplates[0].design.elements[0].x, 30);
 app.designerDialog.value = false;
 context.window.confirm = () => true;
 app.deleteTemplateDesign(catalogOwn);
 await nextTick();
 assert.ok(!app.templates.some((t) => t.id === catalogOwn.id));
-assert.equal(JSON.stringify(app.composition.value.items[0].appearance.customDesign),beforeCustomRestore);
+assert.equal(
+  JSON.stringify(app.composition.value.items[0].appearance.customDesign),
+  beforeCustomRestore,
+);
 app.printSource.value = 'composition';
 app.printAll();
 await nextTick();
-assert.match(output.innerHTML,/viewBox=/);
+assert.match(output.innerHTML, /viewBox=/);
 console.log('PASS: custom templates persist, apply, print and keep existing positions independent');

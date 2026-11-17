@@ -18,7 +18,14 @@ for (const directory of ['src', 'dist']) {
   }
 }
 // Impide publicar de nuevo copias sin minificar de los archivos propios.
-for (const file of ['index.html', 'app.js', 'components.js', 'designer.js', 'pdf.js', 'style.css']) {
+for (const file of [
+  'index.html',
+  'app.js',
+  'components.js',
+  'designer.js',
+  'pdf.js',
+  'style.css',
+]) {
   const source = await readFile(`src/${file}`, 'utf8');
   const built = await readFile(`dist/${file}`, 'utf8');
   assert.ok(built.length < source.length * 0.9, `${file} debe estar minificado`);

@@ -27,7 +27,7 @@
     "esbuild": "0.25.12",
     "html-minifier-terser": "7.2.0",
     "linkedom": "0.18.12",
-    "prettier": "3.10.1",
-    "playwright": "1.56.1"
+    "playwright": "1.56.1",
+    "prettier": "3.10.1"
   }
 }
