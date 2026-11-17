@@ -172,6 +172,7 @@ try {
               wheelBottom: wheel.bottom,
             };
           });
+          console.log('Color modal bounds', JSON.stringify(compactLayout));
           assert.ok(
             compactLayout.left >= 0 &&
               compactLayout.right <= width + 1 &&
