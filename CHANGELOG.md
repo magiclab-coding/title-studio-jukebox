@@ -1,3 +1,9 @@
+# 7.5.0
+
+- Icono de restauración dentro del campo, con espacio reservado para el texto.
+- Un campo por fila en pantallas pequeñas.
+- Publicación de la limpieza de código y documentación integrada en develop.
+
 # 7.4.1
 
 - Limpieza de código sin uso, estilos y documentación desactualizada.

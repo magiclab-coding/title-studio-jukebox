@@ -4110,16 +4110,14 @@ select:disabled {
 }
 
 /* Campos habituales: aviso discreto y restauración solo cuando hay una diferencia. */
-/* El botón ocupa una columna propia: nunca comparte espacio con los glifos. */
+/* El relleno reserva espacio real para restaurar dentro del campo. */
 .record-fields .record-input-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: block;
+  position: relative;
   min-width: 0;
 }
 .record-fields .record-input-wrap > input {
-  flex: 1 1 0;
-  width: 0;
+  width: 100%;
   min-width: 0;
   height: 42px;
   min-height: 42px;
@@ -4127,19 +4125,31 @@ select:disabled {
   padding: 8px 10px;
   margin: 0;
 }
+.record-fields .record-input-wrap.has-restore > input {
+  padding-inline-end: 46px;
+}
 .record-fields .record-input-wrap > .field-restore {
-  position: static;
-  transform: none;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
+  position: absolute;
+  inset-inline-end: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
   padding: 0;
-  border: 1px solid #d4dcd7;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 6px;
   background: #f4f7f4;
   color: #547363;
   font-size: 18px;
   line-height: 1;
+}
+.record-fields .record-input-wrap.has-overflow > .field-restore {
+  background: #fff0ca;
+}
+@media (max-width: 720px) {
+  .card-form-modal .record-fields .record-core {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .record-fields .field-restore:hover,
 .record-fields .field-restore:focus-visible {

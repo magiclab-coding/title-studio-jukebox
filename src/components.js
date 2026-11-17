@@ -34,7 +34,7 @@ globalThis.StudioComponents = {
           {key:'a', label:'Título cara A', aria:'Canción A', placeholder:'Título de la cara A'},
           {key:'b', label:'Título cara B', aria:'Canción B', placeholder:'Título de la cara B'}
         ]" :key="field.key">{{ field.label }}
-          <span class="record-input-wrap">
+          <span class="record-input-wrap" :class="{'has-restore': isCustom(field.key), 'has-overflow': overflow?.[field.key]}">
             <input v-model="record[field.key]" :aria-label="field.aria" maxlength="300"
               :placeholder="field.placeholder" :class="{'long-value': overflow?.[field.key]}"
               :title="fieldHint(field.key)" :aria-description="fieldHint(field.key)" />
