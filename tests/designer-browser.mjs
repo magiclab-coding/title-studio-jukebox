@@ -85,6 +85,7 @@ try {
           await visual.getByRole('button', { name: 'Artista central', exact: true }).click();
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
+          await palette.locator('.color-swatches button').first().waitFor();
           assert.equal(await palette.locator('.color-swatches button').count(), 30);
           await palette.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#ab12cd');
           await palette.getByRole('button', { name: 'Listo', exact: true }).click();
