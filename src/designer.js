@@ -111,6 +111,8 @@
       'font-family',
       'font-size',
       'font-weight',
+      'data-disc-field',
+      'data-disc-width',
     ]);
     const ids = new Map();
     let count = 0;
@@ -265,7 +267,13 @@
           font: String(raw.font || '').slice(0, 100),
           fontSize: num(raw.fontSize, 20, 4, 100),
           align: ['left', 'center', 'right'].includes(raw.align) ? raw.align : 'center',
-          colorRole: ['ink', 'artistInk', 'graphicsInk', 'fixed'].includes(raw.colorRole)
+          baseline: ['middle', 'alphabetic', 'central'].includes(raw.baseline)
+            ? raw.baseline
+            : 'central',
+          strokeRole: ['ink', 'artistInk', 'graphicsInk', 'paper'].includes(raw.strokeRole)
+            ? raw.strokeRole
+            : 'fixed',
+          colorRole: ['ink', 'artistInk', 'graphicsInk', 'paper', 'fixed'].includes(raw.colorRole)
             ? raw.colorRole
             : 'fixed',
           fill: raw.fill === 'none' ? 'none' : color(raw.fill),
@@ -273,7 +281,15 @@
           strokeWidth: num(raw.strokeWidth, 0, 0, 20),
           radius: num(raw.radius, 0, 0, 75),
         };
-        if (e.type === 'svg') e.svg = sanitizeSvg(raw.svg);
+        if (e.type === 'svg') {
+          e.svg = sanitizeSvg(raw.svg);
+          if (raw.palette)
+            e.palette = Object.fromEntries(
+              ['paper', 'graphicsInk', 'ink', 'artistInk']
+                .filter((key) => /^#[0-9a-f]{6}$/i.test(raw.palette[key]))
+                .map((key) => [key, raw.palette[key]]),
+            );
+        }
         if (e.type === 'image') {
           e.src = raster(raw.src);
           if (!e.src) throw Error('Imagen no válida. Utiliza PNG, JPG o WebP de hasta 2 MB.');
@@ -298,6 +314,145 @@
       design: normalizeDesign(raw?.design),
     };
   }
+
+  // --- Diseños integrados: textos vinculados y gráficos independientes ---
+  function fromBuiltinSvg(source, base) {
+    const root = new DOMParser().parseFromString(
+      sanitizeSvg(source),
+      'image/svg+xml',
+    ).documentElement;
+    const layers = [];
+    const roleFor = (value, preferred = 'graphicsInk') => {
+      if (value === 'none') return 'fixed';
+      const lower = String(value || '').toLowerCase();
+      if (lower === String(base[preferred] || '').toLowerCase()) return preferred;
+      for (const key of ['paper', 'graphicsInk', 'ink', 'artistInk'])
+        if (lower === String(base[key] || '').toLowerCase()) return key;
+      return 'fixed';
+    };
+    let mounted = false;
+    try {
+      // Medición real del trazo; sin DOM de navegador se conserva el lienzo completo.
+      if (globalThis.document?.body && root.style) {
+        Object.assign(root.style, {
+          position: 'fixed',
+          left: '-10000px',
+          top: '0',
+          width: '300px',
+          height: '150px',
+          visibility: 'hidden',
+          pointerEvents: 'none',
+        });
+        globalThis.document.body.appendChild(root);
+        mounted = true;
+      }
+      for (const [index, node] of Array.from(root.children).entries()) {
+        const tag = node.localName;
+        if (['style', 'defs', 'title', 'desc'].includes(tag)) continue;
+        if (
+          index === 0 &&
+          tag === 'rect' &&
+          Number(node.getAttribute('width')) === 300 &&
+          Number(node.getAttribute('height')) === 150
+        )
+          continue;
+        const value = (name, fallback = 0) => {
+          const n = parseFloat(node.getAttribute(name));
+          return Number.isFinite(n) ? n : fallback;
+        };
+        const field = node.getAttribute('data-disc-field');
+        const fill = node.getAttribute('fill') || '#000000';
+        const opacity = value('opacity', 1);
+        if (field && fields.some((f) => f.key === field)) {
+          const px = value('font-size', 20),
+            centerY = value('y');
+          const height = Math.max(
+            2,
+            Math.min(Math.max(12, px * 1.6), centerY * 2, (150 - centerY) * 2),
+          );
+          const width = value('data-disc-width', 280);
+          const anchor = node.getAttribute('text-anchor') || 'start';
+          const align = { middle: 'center', start: 'left', end: 'right' }[anchor] || 'left';
+          const x = value('x') - (align === 'center' ? width / 2 : align === 'right' ? width : 0);
+          layers.push({
+            ...element('text', field),
+            x,
+            y: centerY - height / 2,
+            width,
+            height,
+            font: node.getAttribute('font-family') || base.font || 'Georgia',
+            fontSize: px,
+            align,
+            baseline: node.getAttribute('dominant-baseline') || 'alphabetic',
+            fill,
+            colorRole: roleFor(fill, field.startsWith('artist') ? 'artistInk' : 'ink'),
+            opacity,
+          });
+          continue;
+        }
+        if (['rect', 'circle', 'ellipse'].includes(tag) && !node.hasAttribute('transform')) {
+          const ellipse = tag !== 'rect';
+          const rx = value(tag === 'circle' ? 'r' : 'rx');
+          const ry = tag === 'circle' ? rx : value('ry');
+          layers.push({
+            ...element(ellipse ? 'ellipse' : 'rect'),
+            name: ellipse ? 'Elipse del diseño' : 'Cartela del diseño',
+            x: ellipse ? value('cx') - rx : value('x'),
+            y: ellipse ? value('cy') - ry : value('y'),
+            width: ellipse ? rx * 2 : value('width', 100),
+            height: ellipse ? ry * 2 : value('height', 30),
+            radius: ellipse ? 0 : value('rx'),
+            fill,
+            colorRole: roleFor(fill),
+            stroke: node.getAttribute('stroke') || '#213d36',
+            strokeRole: roleFor(node.getAttribute('stroke')),
+            strokeWidth: value('stroke-width'),
+            opacity,
+          });
+          continue;
+        }
+        let box = { x: 0, y: 0, width: 300, height: 150 };
+        try {
+          const bounds = node.getBBox(),
+            matrix = node.getCTM();
+          const corners = [
+            [bounds.x, bounds.y],
+            [bounds.x + bounds.width, bounds.y],
+            [bounds.x, bounds.y + bounds.height],
+            [bounds.x + bounds.width, bounds.y + bounds.height],
+          ].map(([x, y]) =>
+            matrix
+              ? [matrix.a * x + matrix.c * y + matrix.e, matrix.b * x + matrix.d * y + matrix.f]
+              : [x, y],
+          );
+          const pad = value('stroke-width') / 2 + 1;
+          const x = Math.max(0, Math.min(...corners.map((p) => p[0])) - pad);
+          const y = Math.max(0, Math.min(...corners.map((p) => p[1])) - pad);
+          const right = Math.min(300, Math.max(...corners.map((p) => p[0])) + pad);
+          const bottom = Math.min(150, Math.max(...corners.map((p) => p[1])) + pad);
+          box = { x, y, width: Math.max(2, right - x), height: Math.max(2, bottom - y) };
+        } catch {}
+        node.removeAttribute('opacity');
+        layers.push({
+          ...element('svg'),
+          ...box,
+          opacity,
+          name: tag === 'text' ? 'Adorno tipográfico' : 'Trazo del diseño',
+          svg:
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' +
+            [box.x, box.y, box.width, box.height].join(' ') +
+            '">' +
+            node.outerHTML +
+            '</svg>',
+          palette: { paper: base.paper, graphicsInk: base.graphicsInk },
+        });
+      }
+      return normalizeTemplate({ ...base, id: '', design: { version: 1, elements: layers } });
+    } finally {
+      if (mounted) root.remove();
+    }
+  }
+
   const content = (e, card) =>
     e.field === 'artist'
       ? [card.artist, card.artistB].filter(Boolean).join(' / ')
@@ -337,6 +492,7 @@
       const flag = { category: 'showGenre', rpm: 'showRpm', number: 'showNumber' }[e.field];
       if (flag && card[flag] === false) continue;
       const fill = e.colorRole === 'fixed' ? e.fill : color(card[e.colorRole], color(e.fill));
+      const stroke = e.strokeRole === 'fixed' ? e.stroke : color(card[e.strokeRole], e.stroke);
       const transform =
         'translate(' +
         e.x +
@@ -360,7 +516,9 @@
           x +
           '" y="' +
           e.height / 2 +
-          '" dominant-baseline="central" text-anchor="' +
+          '" dominant-baseline="' +
+          e.baseline +
+          '" text-anchor="' +
           anchor +
           '" fill="' +
           fill +
@@ -382,7 +540,7 @@
           '" fill="' +
           fill +
           '" stroke="' +
-          e.stroke +
+          stroke +
           '" stroke-width="' +
           e.strokeWidth +
           '"/>';
@@ -399,7 +557,7 @@
           '" fill="' +
           fill +
           '" stroke="' +
-          e.stroke +
+          stroke +
           '" stroke-width="' +
           e.strokeWidth +
           '"/>';
@@ -415,6 +573,24 @@
           (e.strokeWidth || 1) +
           '" fill="none"/>';
       else if (e.type === 'svg') {
+        // Las fuentes de texto gráfico también viajan dentro del recurso SVG.
+        let resource = e.svg;
+        if (e.palette)
+          resource = resource.replace(
+            /\b(fill|stroke|stop-color)="(#[0-9a-f]{6})"/gi,
+            (match, attr, original) => {
+              const role = Object.keys(e.palette).find(
+                (key) => e.palette[key].toLowerCase() === original.toLowerCase(),
+              );
+              return role ? attr + '="' + color(card[role], original) + '"' : match;
+            },
+          );
+        const resourceFonts = Object.keys(globalThis.StudioFonts || {})
+          .filter((family) => resource.includes('font-family="' + family + '"'))
+          .map((family) => globalThis.StudioFonts[family])
+          .join('');
+        if (resourceFonts)
+          resource = resource.replace('>', '><style>' + resourceFonts + '</style>');
         // data SVG se ejecuta en contexto de imagen, sin referencias entre capas.
         shape =
           '<image width="' +
@@ -422,7 +598,7 @@
           '" height="' +
           e.height +
           '" preserveAspectRatio="xMidYMid meet" href="data:image/svg+xml;charset=utf-8,' +
-          escape(encodeURIComponent(e.svg)) +
+          escape(encodeURIComponent(resource)) +
           '"/>';
       } else if (e.type === 'image')
         shape =
@@ -480,6 +656,7 @@
     newTemplate,
     normalizeDesign,
     normalizeTemplate,
+    fromBuiltinSvg,
     sanitizeSvg,
     render,
     overflow,
@@ -839,7 +1016,7 @@ globalThis.StudioComponents.TemplateDesigner = {
   template: `
     <section class="template-designer" @keydown="keydown">
         <header class="designer-heading">
-          <h2>{{ model.id ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
+          <h2>{{ initial ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
           <div class="designer-heading-actions">
             <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
             <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
@@ -911,7 +1088,7 @@ globalThis.StudioComponents.TemplateDesigner = {
                 <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
               </div>
               <template v-if="selectedLayer.type==='text'">
-                <label>Contenido<select v-model="selectedLayer.field"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
+                <label>Contenido<select v-model="selectedLayer.field" aria-label="Contenido"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
                 <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
                 <font-picker v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
                 <div class="designer-measures">
@@ -919,15 +1096,19 @@ globalThis.StudioComponents.TemplateDesigner = {
                   <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
                 </div>
               </template>
+              <label v-if="selectedLayer.type === 'svg' && selectedLayer.palette" class="designer-color">
+                Elementos<input type="color" v-model="model.graphicsInk" />
+              </label>
               <template v-if="!['svg','image'].includes(selectedLayer.type)">
                 <div class="designer-color-row">
-                  <label>Color<select v-model="selectedLayer.colorRole"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option><option value="fixed">Propio</option></select></label>
+                  <label>Color<select v-model="selectedLayer.colorRole"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
+                  <option value="paper">Papel</option><option value="fixed">Propio</option></select></label>
                   <label class="designer-color">Tinta<input v-if="selectedLayer.colorRole==='fixed'" type="color" v-model="selectedLayer.fill" /><input v-else type="color" v-model="model[selectedLayer.colorRole]" /></label>
                 </div>
                 <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
                 <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
                   <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
-                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><label class="designer-color">Color borde<input type="color" v-model="selectedLayer.stroke" /></label></div>
+                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><label class="designer-color">Color borde<input type="color" v-model="selectedLayer.stroke" @input="selectedLayer.strokeRole = 'fixed'" /></label></div>
                   <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
                 </template>
               </template>
