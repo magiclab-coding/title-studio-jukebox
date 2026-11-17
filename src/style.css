@@ -4520,9 +4520,22 @@ select:disabled {
   margin-top: 16px;
   padding-top: 16px;
 }
-.template-entry { min-width: 0; display: flex; flex-direction: column; }
-.template-entry > .template-card { width: 100%; flex: 1; }
-.template-own-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 8px; }
+.template-entry {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.template-entry > .template-card {
+  width: 100%;
+  flex: 1;
+}
+.template-own-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
 @media (max-width: 800px) {
   .designer-workspace {
     grid-template-columns: minmax(0, 1fr);
