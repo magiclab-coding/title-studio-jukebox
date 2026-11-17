@@ -216,21 +216,33 @@ test('el artista en inversa mantiene su color al cambiar el papel y admite otro 
   assert.match(rendered, /fill="#ffcc00"/);
 });
 
-test('paleta compartida incluye colores de recursos y elimina duplicados', () => {
+test('paleta estándar ordenada, colores Custom y contraste legible', () => {
   const shared = {};
   vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
   const colors = shared.StudioColorTools;
-  assert.ok(colors.baseColors.includes('#b9553b'));
-  assert.ok(colors.baseColors.includes('#213d36'));
-  assert.deepEqual(
-    Array.from(
-      colors.collect([
-        { ink: '#ABCDEF', svg: '<path fill="#abcdef" stroke="#123456"/>' },
-        '#123456',
-      ]),
-    ),
-    ['#abcdef', '#123456'],
-  );
+  assert.equal(colors.standardColors.length, 14);
+  assert.equal(colors.standardColors.find((color) => color.name === 'Rojo').hex, '#ff0000');
+  assert.equal(colors.standardColors.find((color) => color.name === 'Azul').hex, '#0000ff');
+  const palette = colors.palette(['#ABCDEF', '#abcdef', '#ffffff'], '#123456');
+  assert.equal(palette.length, 16);
+  assert.equal(palette[14].name, 'Custom');
+  assert.equal(palette[14].hex, '#abcdef');
+  assert.equal(palette[15].hex, '#123456');
+  assert.equal(colors.textColor('#ffff00'), '#000000');
+  assert.equal(colors.textColor('#0000ff'), '#ffffff');
+  for (const color of palette) {
+    const rgb = color.hex
+      .slice(1)
+      .match(/../g)
+      .map((part) => parseInt(part, 16) / 255)
+      .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+    const luminance = rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    const contrast =
+      colors.textColor(color.hex) === '#000000'
+        ? (luminance + 0.05) / 0.05
+        : 1.05 / (luminance + 0.05);
+    assert.ok(contrast >= 4.5, 'Contraste suficiente en ' + color.hex);
+  }
   for (const hex of ['#000000', '#ffffff', '#ab12cd', '#00ff00', '#808080']) {
     const { h, s, v } = colors.fromHex(hex);
     assert.equal(colors.toHex(h, s, v), hex);

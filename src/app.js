@@ -603,16 +603,14 @@ createApp({
     );
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
     // Los colores propios forman parte de los ajustes y de las copias JSON.
-    const activePalette = computed(() =>
-      StudioColorTools.collect([
-        settings.value.colorPalette || [],
-        StudioColorTools.baseColors,
-        templates,
-        settings.value,
-        collections.value,
-        compositions.value,
-      ]),
-    );
+    // Solo estándares y colores guardados: los tonos de las tarjetas no llenan el menú.
+    const activePalette = computed(() => [
+      ...new Set(
+        [...StudioColorTools.baseColors, ...(settings.value.colorPalette || [])]
+          .filter(StudioColorTools.valid)
+          .map((color) => color.toLowerCase()),
+      ),
+    ]);
     function savePaletteColor(color) {
       if (!StudioColorTools.valid(color)) return;
       settings.value.colorPalette = [

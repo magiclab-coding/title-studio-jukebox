@@ -1,82 +1,47 @@
 // --- Paleta del proyecto y conversión de la rueda cromática ---
 globalThis.StudioColorTools = {
-  baseColors: [
-    '#000000',
-    '#ffffff',
-    '#f7f2df',
-    '#e5e7eb',
-    '#9ca3af',
-    '#374151',
-    '#7f1d1d',
-    '#b9553b',
-    '#ef4444',
-    '#f97316',
-    '#f59e0b',
-    '#ffcc00',
-    '#854d0e',
-    '#a3a635',
-    '#16a34a',
-    '#213d36',
-    '#377d71',
-    '#14b8a6',
-    '#0891b2',
-    '#005bbb',
-    '#28548a',
-    '#172d40',
-    '#6366f1',
-    '#7c3aed',
-    '#581c87',
-    '#a21caf',
-    '#db2777',
-    '#f472b6',
-    '#fda4af',
-    '#a16207',
-    '#a44736',
-    '#fff9e9',
-    '#36776b',
-    '#f6f5e7',
-    '#324d70',
-    '#f5f3e9',
-    '#ac8234',
-    '#fff9e8',
-    '#b84b38',
-    '#fff4d9',
-    '#293e39',
-    '#fffdf4',
-    '#5e5779',
-    '#f8f3ed',
-    '#3b4140',
-    '#f4efdf',
-    '#111111',
-    '#172d44',
-    '#234b43',
-    '#fbfbf4',
-    '#b24231',
-    '#743322',
-    '#fff8eb',
-    '#175d39',
-    '#b52b37',
-    '#fffdf5',
-    '#214c8c',
-    '#303030',
-    '#efb36c',
-    '#ac286b',
-    '#fff8f0',
-    '#222222',
-    '#202020',
-    '#f7f7f2',
+  standardColors: [
+    { name: 'Blanco', hex: '#ffffff' },
+    { name: 'Negro', hex: '#000000' },
+    { name: 'Gris claro', hex: '#d1d5db' },
+    { name: 'Gris', hex: '#6b7280' },
+    { name: 'Gris oscuro', hex: '#374151' },
+    { name: 'Rojo', hex: '#ff0000' },
+    { name: 'Naranja', hex: '#ff8000' },
+    { name: 'Amarillo', hex: '#ffff00' },
+    { name: 'Verde', hex: '#008000' },
+    { name: 'Cian', hex: '#00ffff' },
+    { name: 'Azul', hex: '#0000ff' },
+    { name: 'Violeta', hex: '#8000ff' },
+    { name: 'Rosa', hex: '#ff69b4' },
+    { name: 'Marrón', hex: '#8b4513' },
   ],
+  get baseColors() {
+    return this.standardColors.map((color) => color.hex);
+  },
   valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
-  collect(values) {
-    const colors = new Set();
-    const visit = (value) => {
-      if (typeof value === 'string') {
-        for (const match of value.matchAll(/#[0-9a-f]{6}\b/gi)) colors.add(match[0].toLowerCase());
-      } else if (Array.isArray(value)) value.forEach(visit);
-      else if (value && typeof value === 'object') Object.values(value).forEach(visit);
-    };
-    visit(values);
-    return [...colors];
+  palette(values = [], current) {
+    const colors = this.standardColors.map((color) => ({ ...color }));
+    const seen = new Set(this.baseColors);
+    for (const value of [...values, current]) {
+      if (!this.valid(value)) continue;
+      const hex = value.toLowerCase();
+      if (!seen.has(hex)) {
+        colors.push({ name: 'Custom', hex });
+        seen.add(hex);
+      }
+    }
+    return colors;
+  },
+  // Elige texto blanco o negro por contraste, también en tonos personalizados.
+  textColor(hex) {
+    const channels = hex
+      .slice(1)
+      .match(/../g)
+      .map((part) => parseInt(part, 16) / 255)
+      .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
+    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    return luminance > 0.179 ? '#000000' : '#ffffff';
   },
   toHex(h, s, v) {
     const c = v * s,
@@ -137,13 +102,7 @@ globalThis.StudioComponents = {
     },
     computed: {
       colors() {
-        return [
-          ...new Set(
-            [...(this.studioPalette?.getColors() || StudioColorTools.baseColors), this.modelValue]
-              .filter(StudioColorTools.valid)
-              .map((color) => color.toLowerCase()),
-          ),
-        ];
+        return StudioColorTools.palette(this.studioPalette?.getColors() || [], this.modelValue);
       },
       validHex() {
         return StudioColorTools.valid(this.hex);
@@ -157,6 +116,7 @@ globalThis.StudioComponents = {
       },
     },
     methods: {
+      colorText: (hex) => StudioColorTools.textColor(hex),
       choose(value) {
         if (!StudioColorTools.valid(value)) return;
         this.$emit('update:modelValue', value.toLowerCase());
@@ -218,15 +178,17 @@ globalThis.StudioComponents = {
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
           <div class="color-swatches" role="group" aria-label="Paleta activa">
-            <button v-for="color in colors" :key="color" type="button" :style="{backgroundColor:color}"
-              :aria-label="'Usar ' + color" :aria-pressed="modelValue?.toLowerCase() === color" @click="choose(color)"></button>
+            <button v-for="color in colors" :key="color.hex" type="button" :style="{backgroundColor:color.hex, color:colorText(color.hex)}"
+              :aria-label="'Usar ' + color.name + ' ' + color.hex.toUpperCase()" :aria-pressed="modelValue?.toLowerCase() === color.hex" @click="choose(color.hex)">
+              <span>{{ color.name }}</span><code>{{ color.hex.toUpperCase() }}</code>
+            </button>
           </div>
           <button type="button" class="color-personalize" @click="customize">Personalizar color…</button>
         </section>
       </v-menu>
       <v-dialog v-model="customOpen" max-width="360">
         <section class="color-custom-modal panel" :aria-label="'Personalizar ' + label">
-          <div class="dialog-heading"><h3>Personalizar color</h3><button type="button" @click="customOpen=false" aria-label="Cerrar color personalizado">×</button></div>
+          <div class="dialog-heading"><h3>Personalizar color</h3></div>
           <div class="color-wheel" role="group" tabindex="0" aria-label="Rueda cromática" aria-description="Arrastra para elegir tono y saturación. Flechas izquierda y derecha cambian el tono; arriba y abajo la saturación."
             @pointerdown="startWheel" @pointermove="moveWheel" @keydown="wheelKey">
             <span class="color-wheel-shade" :style="{opacity:1-v}"></span>
@@ -236,8 +198,13 @@ globalThis.StudioComponents = {
           <div class="color-custom-value">
             <span class="color-sample" :style="{backgroundColor:validHex ? hex : modelValue}" aria-label="Muestra del color"></span>
             <label>Hexadecimal<input type="text" :value="hex" maxlength="7" :aria-label="'Hexadecimal de ' + label" @input="editHex($event.target.value)" spellcheck="false" :aria-invalid="!validHex" /></label>
+            <button type="button" class="control-icon" @click="customOpen=false" aria-label="Cancelar" title="Cancelar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg>
+            </button>
+            <button type="button" class="control-icon color-save" :disabled="!validHex" @click="saveColor" aria-label="Guardar color" title="Guardar color">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+            </button>
           </div>
-          <div class="color-custom-actions"><button type="button" class="text-btn" @click="customOpen=false">Cancelar</button><button type="button" class="header-action primary" :disabled="!validHex" @click="saveColor">Guardar color</button></div>
         </section>
       </v-dialog>
     </div>`,
@@ -321,7 +288,7 @@ globalThis.StudioComponents = {
       },
     },
     template: `<div class="font-picker"><span class="field-caption">{{ label }}</span>
-      <details ref="menu" @toggle="query = ''"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
+      <details ref="menu" @toggle="!$event.target.open &amp;&amp; (query = '')"><summary :aria-label="label"><span :style="{fontFamily:modelValue || 'inherit'}">{{ modelValue || 'La misma que las canciones' }}</span><span aria-hidden="true">⌄</span></summary>
         <div class="font-options" role="group" :aria-label="label">
           <span class="font-search"><input type="search" v-model="query" :aria-label="'Buscar ' + label" placeholder="Buscar fuente…" autocomplete="off" /></span>
           <p v-if="!matchingFonts.length" class="font-empty" role="status">No hay fuentes con ese nombre.</p>
