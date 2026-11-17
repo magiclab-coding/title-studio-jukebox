@@ -1,3 +1,10 @@
+# 7.5.1
+
+- Editor visual para crear plantillas propias con campos del disco, textos, formas y capas.
+- Importación de SVG, PNG, JPG y WebP; exportación e importación de plantillas JSON.
+- Arrastre, tamaño, giro, alineación, orden, deshacer y rehacer con adaptación móvil.
+- Integración con catálogo, composiciones, copias e impresión sin modificar tarjetas existentes.
+
 # 7.5.0
 
 - Icono de restauración dentro del campo, con espacio reservado para el texto.

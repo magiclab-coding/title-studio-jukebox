@@ -1,0 +1,66 @@
+# Crear tus propias plantillas
+
+En **Diseños y plantillas**, pulsa el icono **Crear plantilla** de la cabecera.
+Se abre un borrador con Artista central y los títulos de ambas caras. Puedes
+vaciar el lienzo o importar una plantilla JSON previamente exportada.
+
+## Lienzo y capas
+
+Añade campos vinculados al disco, texto libre, líneas, rectángulos, elipses o
+gráficos. Arrastra una capa, utiliza las flechas (Mayús mueve 10 unidades) o
+introduce sus coordenadas y medidas. El asa de la selección cambia el tamaño.
+Puedes ajustar giro, opacidad, alineación y orden, duplicar, ocultar o eliminar
+capas, y deshacer o rehacer cambios.
+
+La geometría usa un lienzo lógico de 300 × 150 unidades, adaptado al tamaño
+físico de etiqueta del proyecto, que se muestra junto a la vista previa.
+En pantallas estrechas las propiedades aparecen debajo del lienzo y las medidas
+se disponen en una sola columna.
+
+Los campos del disco se rellenan automáticamente al usar la plantilla.
+El campo **Artista central** combina Artista A y Artista B con una barra.
+Los textos libres se mantienen iguales en todas las tarjetas.
+
+## Tipografía y colores
+
+Cada texto permite fuente, tamaño en píxeles y alineación. La fuente heredada usa
+la tipografía elegida para canciones o artista en la apariencia de la tarjeta.
+Los tamaños de las capas de canciones y artistas se escalan con el tamaño de su
+grupo en el modal de estilo. El texto se acorta sin reducir la fuente; los avisos
+usan la misma medición que el renderizado.
+
+Los colores pueden seguir Canciones, Artista o Elementos, o tener un color propio.
+Las formas admiten borde; los rectángulos también redondeo y relleno transparente.
+El fondo Papel pertenece a la plantilla.
+
+Los campos de género, RPM y número obedecen la visibilidad de la tarjeta.
+El editor los muestra para poder diseñarlos; puedes ocultar cualquier capa.
+El selector **Probar nombres largos** comprueba el recorte sin guardar datos falsos.
+
+## Recursos externos
+
+Importa SVG de hasta 1 MB o PNG/JPG/WebP de hasta 2 MB por archivo.
+Los SVG se reconstruyen con formas, grupos, texto, degradados y referencias
+internas permitidas. Se excluyen scripts, eventos, animaciones, HTML,
+hojas de estilo y referencias externas. Para conservar colores definidos por
+clases CSS, exporta el SVG con estilos de presentación en los elementos.
+Los recursos se incluyen en los datos; no dependen de rutas locales.
+
+Máximo 80 capas por plantilla y 100 plantillas propias. Las imágenes grandes
+pueden superar el almacenamiento disponible del navegador: conserva copias JSON
+y reduce su tamaño si aparece el aviso de guardado.
+
+## Guardar y reutilizar
+
+**Guardar plantilla** la añade a **Mis plantillas** y al selector de estilos de
+Composición. Pulsar una plantilla propia reabre el editor. En Mis plantillas
+también puedes duplicarla o eliminarla.
+
+Cada posición guarda una copia independiente del diseño. Editar o eliminar una
+plantilla del catálogo no cambia las tarjetas colocadas. Para actualizarlas,
+selecciona de nuevo la plantilla en su estilo o aplícala a toda la composición.
+
+El editor permite importar/exportar una plantilla JSON individual. **Guardar
+todo** conserva también el catálogo y los recursos. Las copias de composición
+incluyen los diseños usados en sus posiciones. La salida SVG, PDF y la impresión
+usan el mismo renderizado.

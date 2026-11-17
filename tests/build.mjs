@@ -13,12 +13,19 @@ for (const directory of ['src', 'dist']) {
   assert.ok(template.includes('v-app'));
   const { code } = compile(template, { mode: 'function' });
   new Function('Vue', code);
-  for (const file of ['app.js', 'components.js', 'pdf.js']) {
+  for (const file of ['app.js', 'components.js', 'designer.js', 'pdf.js']) {
     new vm.Script(await readFile(`${directory}/${file}`, 'utf8'));
   }
 }
 // Impide publicar de nuevo copias sin minificar de los archivos propios.
-for (const file of ['index.html', 'app.js', 'components.js', 'pdf.js', 'style.css']) {
+for (const file of [
+  'index.html',
+  'app.js',
+  'components.js',
+  'designer.js',
+  'pdf.js',
+  'style.css',
+]) {
   const source = await readFile(`src/${file}`, 'utf8');
   const built = await readFile(`dist/${file}`, 'utf8');
   assert.ok(built.length < source.length * 0.9, `${file} debe estar minificado`);
@@ -46,6 +53,7 @@ assert.match(builtHtml, /<genre-select/);
 for (const directory of ['src', 'dist']) {
   const shared = {};
   vm.runInNewContext(await readFile(`${directory}/components.js`, 'utf8'), shared);
+  vm.runInNewContext(await readFile(`${directory}/designer.js`, 'utf8'), shared);
   for (const component of Object.values(shared.StudioComponents)) {
     const { code } = compile(component.template, { mode: 'function' });
     new Function('Vue', code);
