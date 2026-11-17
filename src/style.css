@@ -4529,7 +4529,7 @@ select:disabled {
   width: 100%;
   flex: 1;
 }
-.template-own-actions {
+.template-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;

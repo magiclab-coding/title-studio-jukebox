@@ -1,3 +1,8 @@
+# 7.7.1
+
+- Icono de edición visible en todas las plantillas, con formato y alineación compartidos.
+- El lápiz abre los parámetros de diseños integrados y el editor visual de las plantillas propias.
+
 # 7.7.0
 
 - Publicación de Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono.
