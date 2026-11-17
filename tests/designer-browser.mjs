@@ -86,7 +86,13 @@ try {
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
           await palette.locator('.color-swatches button').first().waitFor();
-          assert.equal(await palette.locator('.color-swatches button').count(), 14);
+          assert.equal(
+            await palette
+              .locator('.color-swatches button > span')
+              .filter({ hasNotText: 'Custom' })
+              .count(),
+            14,
+          );
           await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).waitFor();
           const colorRows = await palette.locator('.color-swatches button').evaluateAll((nodes) =>
             nodes.map((node) => {
