@@ -1,3 +1,8 @@
+# 7.8.0
+
+- Publicación de los iconos de edición en todas las plantillas.
+- Corrección de las ejecuciones prematuras de CI y conservación de los controles obligatorios.
+
 # 7.7.2
 
 - CI en PR listas para revisión y pushes a develop, sin ejecuciones prematuras en ramas de preparación.
