@@ -176,7 +176,8 @@ try {
               wheelBottom: wheel.bottom,
             };
           });
-          console.log('Color modal bounds', JSON.stringify(compactLayout));
+          // Las animaciones pueden dejar diferencias de milésimas de píxel.
+          const near42 = (value) => Math.abs(value - 42) < 0.1;
           assert.ok(
             compactLayout.left >= 0 &&
               compactLayout.right <= width + 1 &&
@@ -188,13 +189,13 @@ try {
           assert.ok(
             compactLayout.controls.every(
               (control) =>
-                control.height === 42 &&
+                near42(control.height) &&
                 Math.abs(control.center - compactLayout.controls[0].center) < 1,
             ),
             'Muestra, campo e iconos alineados',
           );
           assert.ok(
-            compactLayout.controls.slice(2).every((control) => control.width === 42),
+            compactLayout.controls.slice(2).every((control) => near42(control.width)),
             'Iconos homogéneos',
           );
           assert.ok(
