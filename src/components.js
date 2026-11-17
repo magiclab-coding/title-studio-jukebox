@@ -1,57 +1,211 @@
+// --- Paleta del proyecto y conversión de la rueda cromática ---
+globalThis.StudioColorTools = {
+  baseColors: [
+    '#000000',
+    '#ffffff',
+    '#f7f2df',
+    '#e5e7eb',
+    '#9ca3af',
+    '#374151',
+    '#7f1d1d',
+    '#b9553b',
+    '#ef4444',
+    '#f97316',
+    '#f59e0b',
+    '#ffcc00',
+    '#854d0e',
+    '#a3a635',
+    '#16a34a',
+    '#213d36',
+    '#377d71',
+    '#14b8a6',
+    '#0891b2',
+    '#005bbb',
+    '#28548a',
+    '#172d40',
+    '#6366f1',
+    '#7c3aed',
+    '#581c87',
+    '#a21caf',
+    '#db2777',
+    '#f472b6',
+    '#fda4af',
+    '#a16207',
+    '#a44736',
+    '#fff9e9',
+    '#36776b',
+    '#f6f5e7',
+    '#324d70',
+    '#f5f3e9',
+    '#ac8234',
+    '#fff9e8',
+    '#b84b38',
+    '#fff4d9',
+    '#293e39',
+    '#fffdf4',
+    '#5e5779',
+    '#f8f3ed',
+    '#3b4140',
+    '#f4efdf',
+    '#111111',
+    '#172d44',
+    '#234b43',
+    '#fbfbf4',
+    '#b24231',
+    '#743322',
+    '#fff8eb',
+    '#175d39',
+    '#b52b37',
+    '#fffdf5',
+    '#214c8c',
+    '#303030',
+    '#efb36c',
+    '#ac286b',
+    '#fff8f0',
+    '#222222',
+    '#202020',
+    '#f7f7f2',
+  ],
+  valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
+  collect(values) {
+    const colors = new Set();
+    const visit = (value) => {
+      if (typeof value === 'string') {
+        for (const match of value.matchAll(/#[0-9a-f]{6}\b/gi)) colors.add(match[0].toLowerCase());
+      } else if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === 'object') Object.values(value).forEach(visit);
+    };
+    visit(values);
+    return [...colors];
+  },
+  toHex(h, s, v) {
+    const c = v * s,
+      x = c * (1 - Math.abs(((h / 60) % 2) - 1)),
+      m = v - c;
+    const rgb =
+      h < 60
+        ? [c, x, 0]
+        : h < 120
+          ? [x, c, 0]
+          : h < 180
+            ? [0, c, x]
+            : h < 240
+              ? [0, x, c]
+              : h < 300
+                ? [x, 0, c]
+                : [c, 0, x];
+    return (
+      '#' +
+      rgb
+        .map((value) =>
+          Math.round((value + m) * 255)
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('')
+    );
+  },
+  fromHex(value) {
+    const rgb = value
+      .slice(1)
+      .match(/../g)
+      .map((part) => parseInt(part, 16) / 255);
+    const [r, g, b] = rgb,
+      max = Math.max(...rgb),
+      min = Math.min(...rgb),
+      delta = max - min;
+    let h = !delta
+      ? 0
+      : max === r
+        ? 60 * (((g - b) / delta) % 6)
+        : max === g
+          ? 60 * ((b - r) / delta + 2)
+          : 60 * ((r - g) / delta + 4);
+    return { h: (h + 360) % 360, s: max ? delta / max : 0, v: max };
+  },
+};
+
 // --- Controles compartidos: el mismo formulario en todos los contextos ---
 globalThis.StudioComponents = {
-  // Un selector compartido mantiene la misma paleta y entrada libre en todos los editores.
+  // La elección rápida aplica un color; la personalización trabaja en un borrador.
   ColorPicker: {
     props: { modelValue: String, label: String, caption: String },
+    inject: { studioPalette: { default: null } },
     emits: ['update:modelValue'],
     data() {
-      return {
-        open: false,
-        hex: this.modelValue || '#000000',
-        colors: [
-          '#ffffff',
-          '#f7f2df',
-          '#e5e7eb',
-          '#9ca3af',
-          '#374151',
-          '#000000',
-          '#7f1d1d',
-          '#b9553b',
-          '#ef4444',
-          '#f97316',
-          '#f59e0b',
-          '#ffcc00',
-          '#854d0e',
-          '#a3a635',
-          '#16a34a',
-          '#213d36',
-          '#377d71',
-          '#14b8a6',
-          '#0891b2',
-          '#005bbb',
-          '#28548a',
-          '#172d40',
-          '#6366f1',
-          '#7c3aed',
-          '#581c87',
-          '#a21caf',
-          '#db2777',
-          '#f472b6',
-          '#fda4af',
-          '#a16207',
-        ],
-      };
+      return { open: false, customOpen: false, hex: '#000000', h: 0, s: 0, v: 1 };
     },
-    watch: {
-      modelValue(value) {
-        this.hex = value || '#000000';
+    computed: {
+      colors() {
+        return [
+          ...new Set(
+            [...(this.studioPalette?.getColors() || StudioColorTools.baseColors), this.modelValue]
+              .filter(StudioColorTools.valid)
+              .map((color) => color.toLowerCase()),
+          ),
+        ];
+      },
+      validHex() {
+        return StudioColorTools.valid(this.hex);
+      },
+      wheelMarker() {
+        const radians = (this.h * Math.PI) / 180;
+        return {
+          left: 50 + 49 * this.s * Math.cos(radians) + '%',
+          top: 50 + 49 * this.s * Math.sin(radians) + '%',
+        };
       },
     },
     methods: {
       choose(value) {
-        if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+        if (!StudioColorTools.valid(value)) return;
+        this.$emit('update:modelValue', value.toLowerCase());
+        this.open = false;
+      },
+      customize() {
+        this.hex = StudioColorTools.valid(this.modelValue) ? this.modelValue : '#ffffff';
+        Object.assign(this, StudioColorTools.fromHex(this.hex));
+        this.open = false;
+        this.customOpen = true;
+      },
+      editHex(value) {
         this.hex = value;
-        this.$emit('update:modelValue', value);
+        if (StudioColorTools.valid(value)) Object.assign(this, StudioColorTools.fromHex(value));
+      },
+      updateHex() {
+        this.hex = StudioColorTools.toHex(this.h, this.s, this.v);
+      },
+      wheelPoint(event) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = (event.clientX - rect.left - rect.width / 2) / (rect.width / 2);
+        const y = (event.clientY - rect.top - rect.height / 2) / (rect.height / 2);
+        this.h = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+        this.s = Math.min(1, Math.hypot(x, y));
+        this.updateHex();
+      },
+      startWheel(event) {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        this.wheelPoint(event);
+      },
+      moveWheel(event) {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) this.wheelPoint(event);
+      },
+      wheelKey(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === 'ArrowLeft') this.h = (this.h + 355) % 360;
+        if (event.key === 'ArrowRight') this.h = (this.h + 5) % 360;
+        if (event.key === 'ArrowUp') this.s = Math.min(1, this.s + 0.05);
+        if (event.key === 'ArrowDown') this.s = Math.max(0, this.s - 0.05);
+        this.updateHex();
+      },
+      saveColor() {
+        if (!StudioColorTools.valid(this.hex)) return;
+        const color = this.hex.toLowerCase();
+        this.studioPalette?.add(color);
+        this.choose(color);
+        this.customOpen = false;
       },
     },
     template: `<div class="color-picker">
@@ -63,17 +217,29 @@ globalThis.StudioComponents = {
           </button>
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
-          <div class="color-swatches" role="group" aria-label="Paleta de colores">
+          <div class="color-swatches" role="group" aria-label="Paleta activa">
             <button v-for="color in colors" :key="color" type="button" :style="{backgroundColor:color}"
               :aria-label="'Usar ' + color" :aria-pressed="modelValue?.toLowerCase() === color" @click="choose(color)"></button>
           </div>
-          <div class="color-custom">
-            <label>Personalizado<input type="color" :value="modelValue || '#000000'" :aria-label="'Color personalizado de ' + label" @input="choose($event.target.value)" /></label>
-            <label>Hexadecimal<input type="text" v-model="hex" maxlength="7" pattern="#[0-9a-fA-F]{6}" :aria-label="'Hexadecimal de ' + label" @input="choose(hex)" @blur="hex=modelValue || '#000000'" spellcheck="false" /></label>
-          </div>
-          <button type="button" class="text-btn" @click="open=false">Listo</button>
+          <button type="button" class="color-personalize" @click="customize">Personalizar color…</button>
         </section>
       </v-menu>
+      <v-dialog v-model="customOpen" max-width="360">
+        <section class="color-custom-modal panel" :aria-label="'Personalizar ' + label">
+          <div class="dialog-heading"><h3>Personalizar color</h3><button type="button" @click="customOpen=false" aria-label="Cerrar color personalizado">×</button></div>
+          <div class="color-wheel" role="group" tabindex="0" aria-label="Rueda cromática" aria-description="Arrastra para elegir tono y saturación. Flechas izquierda y derecha cambian el tono; arriba y abajo la saturación."
+            @pointerdown="startWheel" @pointermove="moveWheel" @keydown="wheelKey">
+            <span class="color-wheel-shade" :style="{opacity:1-v}"></span>
+            <span class="color-wheel-marker" :style="wheelMarker"></span>
+          </div>
+          <label class="color-brightness">Luminosidad<input type="range" min="0" max="1" step="0.01" v-model.number="v" @input="updateHex" aria-label="Luminosidad del color" /></label>
+          <div class="color-custom-value">
+            <span class="color-sample" :style="{backgroundColor:validHex ? hex : modelValue}" aria-label="Muestra del color"></span>
+            <label>Hexadecimal<input type="text" :value="hex" maxlength="7" :aria-label="'Hexadecimal de ' + label" @input="editHex($event.target.value)" spellcheck="false" :aria-invalid="!validHex" /></label>
+          </div>
+          <div class="color-custom-actions"><button type="button" class="text-btn" @click="customOpen=false">Cancelar</button><button type="button" class="header-action primary" :disabled="!validHex" @click="saveColor">Guardar color</button></div>
+        </section>
+      </v-dialog>
     </div>`,
   },
   GenreSelect: {
