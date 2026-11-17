@@ -6,7 +6,7 @@ permissions:
   contents: write
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
@@ -41,3 +41,7 @@ jobs:
           name: template-designer-browser
           path: .test-artifacts/
           if-no-files-found: ignore
+      - name: Inspect mobile preview
+        if: always()
+        run: |
+          node --input-type=module -e 'import { readFile } from "node:fs/promises"; try { console.log("DESIGNER_CAPTURE:" + (await readFile(".test-artifacts/designer-360.png")).toString("base64")); } catch {}'
