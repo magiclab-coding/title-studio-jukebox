@@ -1088,7 +1088,7 @@ globalThis.StudioComponents.TemplateDesigner = {
                 <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
               </div>
               <template v-if="selectedLayer.type==='text'">
-                <label>Contenido<select v-model="selectedLayer.field"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
+                <label>Contenido<select v-model="selectedLayer.field" aria-label="Contenido"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
                 <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
                 <font-picker v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
                 <div class="designer-measures">

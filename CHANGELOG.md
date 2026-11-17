@@ -1,3 +1,8 @@
+# 7.9.0
+
+- Publicación de la carga de plantillas integradas en el editor visual como copias editables.
+- Fuentes de máquina de escribir visibles al principio del selector, con búsqueda por nombre y estilo.
+
 # 7.8.1
 
 - El lápiz carga cualquier plantilla en el editor visual, con campos y gráficos independientes.
