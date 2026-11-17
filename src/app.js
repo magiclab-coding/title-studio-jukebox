@@ -1107,6 +1107,21 @@ createApp({
       styleAll.value = false;
       styleDialog.value = true;
     }
+    function setStyleColor(key, value) {
+      const target = styleCard.value;
+      target[key] = value;
+      // Las copias antiguas podían vincular el artista blanco al papel.
+      if (key === 'artistInk' && target.customDesign) {
+        target.customDesign = {
+          ...target.customDesign,
+          elements: target.customDesign.elements.map((layer) =>
+            layer.type === 'text' && layer.field?.startsWith('artist')
+              ? { ...layer, colorRole: 'artistInk' }
+              : layer,
+          ),
+        };
+      }
+    }
     function finishStyle() {
       if (defaultStyleId.value) {
         settings.value.templateDefaults = {
@@ -1329,6 +1344,13 @@ createApp({
       const item = currentItem.value;
       if (!item || item.cardId !== base.id || view.value === 'collection') return base;
       return new Proxy(base, {
+        // Las copias del disco también deben enumerar las propiedades de su posición.
+        ownKeys: (target) => [...new Set([...Reflect.ownKeys(target), ...appearanceKeys])],
+        getOwnPropertyDescriptor: (target, key) =>
+          Reflect.getOwnPropertyDescriptor(target, key) ||
+          (appearanceKeys.includes(key)
+            ? { enumerable: true, configurable: true, writable: true, value: item.appearance[key] }
+            : undefined),
         get: (target, key) =>
           key === 'displayText'
             ? {}
@@ -2399,6 +2421,7 @@ createApp({
       defaultStyleId,
       editTemplateDefaults,
       finishStyle,
+      setStyleColor,
       styleCard,
       useTemplate,
       actionCardId,
@@ -2595,5 +2618,6 @@ createApp({
   .component('genre-select', globalThis.StudioComponents.GenreSelect)
   .component('record-fields', globalThis.StudioComponents.RecordFields)
   .component('font-picker', globalThis.StudioComponents.FontPicker)
+  .component('color-picker', globalThis.StudioComponents.ColorPicker)
   .component('template-designer', globalThis.StudioComponents.TemplateDesigner)
   .mount('#app');

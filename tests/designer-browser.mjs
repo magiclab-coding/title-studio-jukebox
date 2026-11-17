@@ -78,11 +78,33 @@ try {
             .locator('.designer-drawing svg image, .designer-drawing svg g rect')
             .count()) > 0,
         );
-        if (name === 'Ribbon No. 45')
+        if (name === 'Ribbon No. 45') {
+          const background = await visual
+            .locator('.designer-drawing > svg > rect')
+            .getAttribute('fill');
+          await visual.getByRole('button', { name: 'Artista central', exact: true }).click();
+          await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
+          const palette = page.locator('.color-popover:visible');
+          await palette.locator('.color-swatches button').first().waitFor();
+          assert.equal(await palette.locator('.color-swatches button').count(), 30);
+          await palette.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#ab12cd');
+          await palette.getByRole('button', { name: 'Listo', exact: true }).click();
+          assert.equal(
+            await visual.locator('.designer-drawing > svg > rect').getAttribute('fill'),
+            background,
+          );
+          assert.equal(
+            await visual
+              .locator('.designer-drawing svg text')
+              .filter({ hasText: 'Artista A / Artista B' })
+              .getAttribute('fill'),
+            '#ab12cd',
+          );
           await page.screenshot({
             path: '.test-artifacts/integrated-editor-' + width + '.png',
             fullPage: true,
           });
+        }
         await visual
           .getByRole('button', { name: 'Cerrar editor de plantilla', exact: true })
           .click();
