@@ -328,6 +328,9 @@ function labelAvailable(style, artist) {
   );
 }
 function labelField(card, key, settings) {
+  if (card.customDesign) {
+    return { truncated: StudioTemplateTools.overflow(card, key, fitLabelText) };
+  }
   const artist = key === 'artist' || key === 'artistB';
   const family = artist ? card.artistFont || card.font || 'Georgia' : card.font || 'Georgia';
   const basePx = artist
@@ -355,6 +358,7 @@ function labelContent(record, text = {}) {
 }
 
 function makeSvg(c, settings) {
+  if (c.customDesign) return StudioTemplateTools.render(c, settings, { fit: fitLabelText });
   const color = (value, fallback) => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
   const ink = color(c.ink, '#005bbb');
   const artistInk = color(c.artistInk, '#202020');
@@ -481,6 +485,7 @@ function templatePreview(t, card, settings, sampleMeta = false) {
       paper: t.paper,
       artistInk: t.artistInk || '#202020',
       graphicsInk: t.graphicsInk,
+      customDesign: t.design || t.customDesign || null,
       font: t.font || 'Georgia',
       artistFont: t.artistFont || '',
       ...Object.fromEntries(
@@ -582,6 +587,7 @@ createApp({
       'showNumber',
       'titlePx',
       'artistPx',
+      'customDesign',
     ];
     const appearanceOf = (c) => Object.fromEntries(appearanceKeys.map((k) => [k, c[k]]));
     // Añade identidad y apariencia a las tarjetas creadas con esquemas antiguos.
@@ -1010,7 +1016,7 @@ createApp({
     }
     // Cambia solo la apariencia de las posiciones; conserva discos, huecos y textos.
     function shuffleStyles() {
-      const choices = templates.filter((t) => !t.hidden);
+      const choices = catalogTemplates.value.filter((t) => !t.hidden);
       if (!choices.length) return;
       for (const item of composition.value?.items || []) {
         const template = choices[Math.floor(Math.random() * choices.length)];
@@ -1022,7 +1028,8 @@ createApp({
           artistInk: template.artistInk || '#202020',
           font: template.font || 'Georgia',
           artistFont: '',
-          graphicsInk: undefined,
+          graphicsInk: template.graphicsInk,
+          customDesign: template.design ? StudioTemplateTools.clone(template.design) : null,
           ...(settings.value.templateDefaults?.[template.id] || {}),
         };
       }
@@ -1051,6 +1058,8 @@ createApp({
         artistFont: '',
         artistInk: t.artistInk || '#202020',
         graphicsInk: t.graphicsInk,
+        customDesign: t.design ? StudioTemplateTools.clone(t.design) : null,
+        ...(t.design ? { titlePx: 20, artistPx: 19 } : {}),
         // Los predeterminados personalizados se copian a esta posición.
         ...(settings.value.templateDefaults?.[t.id] || {}),
       });
@@ -1058,10 +1067,15 @@ createApp({
 
     // Los valores del catálogo se guardan en ajustes; las posiciones conservan sus copias.
     function editTemplateDefaults(t) {
+      if (t.design) {
+        openTemplateDesigner(t);
+        return;
+      }
       batchStyle.value = normalize({
         ...current.value,
         ...t,
         style: t.id,
+        customDesign: null,
         ...(settings.value.templateDefaults?.[t.id] || {}),
       });
       defaultStyleId.value = t.id;
@@ -1999,6 +2013,18 @@ createApp({
         if (q.orientation && !['portrait', 'landscape'].includes(q.orientation))
           throw Error('Orientación no válida');
       }
+      if (s.settings?.customTemplates) {
+        if (!Array.isArray(s.settings.customTemplates) || s.settings.customTemplates.length > 100)
+          throw Error('Máximo 100 plantillas propias.');
+        s.settings.customTemplates = s.settings.customTemplates.map((t) => StudioTemplateTools.normalizeTemplate(t));
+      }
+      for (const group of s.collections || (s.collection ? [s.collection] : s.cards ? [{cards:s.cards}] : []))
+        for (const card of group.cards || [])
+          if (card.customDesign) card.customDesign = StudioTemplateTools.normalizeDesign(card.customDesign);
+      for (const composition of s.compositions || (s.composition ? [s.composition] : []))
+        for (const item of composition.items || [])
+          if (item.appearance?.customDesign)
+            item.appearance.customDesign = StudioTemplateTools.normalizeDesign(item.appearance.customDesign);
       const groups =
         s.collections || (s.collection ? [s.collection] : s.cards ? [{ cards: s.cards }] : []);
       for (const group of groups) {
@@ -2201,6 +2227,47 @@ createApp({
       },
       { deep: true },
     );
+    // --- Catálogo propio: las posiciones conservan una copia independiente del diseño ---
+    const catalogTemplates = computed(() => [
+      ...templates,
+      ...(settings.value.customTemplates || []),
+    ]);
+    const designerDialog = ref(false), designerInitial = ref(null), designerSession = ref(0);
+    function openTemplateDesigner(template = null) {
+      designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
+      designerSession.value++;
+      designerDialog.value = true;
+    }
+    function saveTemplateDesign(template) {
+      const clean = StudioTemplateTools.normalizeTemplate(template);
+      clean.id ||= 'custom-' + uid();
+      const own = [...(settings.value.customTemplates || [])];
+      const index = own.findIndex((t) => t.id === clean.id);
+      if (index < 0 && own.length >= 100) {
+        notify('Máximo 100 plantillas propias. Elimina alguna antes de guardar.');
+        return;
+      }
+      if (index < 0) own.push(clean);
+      else own[index] = clean;
+      settings.value.customTemplates = own;
+      // Los ajustes anteriores no deben reemplazar un diseño recién editado.
+      if (settings.value.templateDefaults) delete settings.value.templateDefaults[clean.id];
+      designerDialog.value = false;
+      templateFilter.value = 'Mis plantillas';
+      notify('Plantilla guardada');
+    }
+    function copyTemplateDesign(template) {
+      const copy = StudioTemplateTools.clone(template);
+      copy.id = '';
+      copy.name += ' (copia)';
+      openTemplateDesigner(copy);
+    }
+    function deleteTemplateDesign(template) {
+      if (!window.confirm('¿Eliminar esta plantilla del catálogo? Las tarjetas ya colocadas se conservarán.')) return;
+      settings.value.customTemplates = (settings.value.customTemplates || []).filter((t) => t.id !== template.id);
+      if (settings.value.templateDefaults) delete settings.value.templateDefaults[template.id];
+      notify('Plantilla eliminada del catálogo');
+    }
     // --- API expuesta a la plantilla Vue ---
     return {
       openPicker,
@@ -2341,7 +2408,14 @@ createApp({
       backupScope,
       pendingBackup,
       loadBackup,
-      templates,
+      get templates() { return catalogTemplates.value; },
+      designerDialog,
+      designerInitial,
+      designerSession,
+      openTemplateDesigner,
+      saveTemplateDesign,
+      copyTemplateDesign,
+      deleteTemplateDesign,
       fontOptions,
       columns,
       cards,
@@ -2378,7 +2452,7 @@ createApp({
       pageTitle: computed(() => allNavigation.find((n) => n.id === view.value)?.name || 'Discos'),
       filtered,
       visibleTemplates: computed(() =>
-        templates.filter(
+        catalogTemplates.value.filter(
           (t) =>
             !t.hidden && (templateFilter.value === 'Todos' || t.group === templateFilter.value),
         ),
@@ -2445,4 +2519,5 @@ createApp({
   .component('genre-select', globalThis.StudioComponents.GenreSelect)
   .component('record-fields', globalThis.StudioComponents.RecordFields)
   .component('font-picker', globalThis.StudioComponents.FontPicker)
+  .component('template-designer', globalThis.StudioComponents.TemplateDesigner)
   .mount('#app');

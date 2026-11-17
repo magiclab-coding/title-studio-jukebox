@@ -76,3 +76,19 @@ descargada. Borrar los datos del navegador elimina su contenido local.
 - `tests/`: comportamiento, distribución y numeración de Releases.
 - `docs/`: funcionamiento, desarrollo y copias de datos.
 - `.github/workflows/`: CI y publicación de `main`.
+
+## Plantillas propias
+
+La cabecera de **Diseños y plantillas** permite abrir el editor visual. Incluye
+capas con campos del disco, texto libre, formas y recursos SVG/PNG/JPG/WebP,
+arrastre, alineación, tipografía y colores. Los diseños se guardan con las copias
+JSON y se pueden aplicar a las composiciones sin alterar los discos originales.
+Consulta [el editor de plantillas](docs/EDITOR_DE_PLANTILLAS.md).
+
+La CI comprueba el editor real en Chromium a 360, 720 y 1280 px. Para repetirlo:
+
+```sh
+npx playwright install --with-deps chromium
+npm run build
+npm run test:browser
+```

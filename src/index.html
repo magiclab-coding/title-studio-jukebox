@@ -128,6 +128,9 @@
               <header class="page-heading">
                 <h1>{{ pageTitle }}</h1>
                 <div class="page-actions">
+                  <button v-if="view === 'templates'" class="header-action" @click="openTemplateDesigner()" title="Crear plantilla" aria-label="Crear plantilla" data-tooltip="Crear plantilla">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h11v14H3zM17 7h6m-3-3v6M6 9h5m-5 4h5"/></svg>
+                  </button>
                   <button
                     class="header-action"
                     @click="undo"
@@ -1290,7 +1293,7 @@
               <template v-if="view === 'templates'"
                 ><div class="filter-tabs">
                   <button
-                    v-for="f in ['Todos', 'Clásicos', 'Vintage', 'Minimalistas']"
+                    v-for="f in ['Todos', 'Clásicos', 'Vintage', 'Minimalistas', 'Mis plantillas']"
                     :class="{ on: templateFilter === f }"
                     @click="templateFilter = f"
                   >
@@ -1300,6 +1303,7 @@
                 <div class="template-grid">
                   <button
                     v-for="t in visibleTemplates"
+                    :key="t.id"
                     class="template-card panel"
                     :class="{ chosen: current.style === t.id }"
                     @click="editTemplateDefaults(t)"
@@ -1315,12 +1319,26 @@
                     </div>
                   </button>
                 </div>
+                <section v-if="templateFilter === 'Mis plantillas'" class="custom-template-management" aria-label="Gestionar plantillas propias">
+                  <p v-if="!visibleTemplates.length" class="small-muted">Crea tu primera plantilla con el botón de la cabecera.</p>
+                  <div v-for="t in visibleTemplates" :key="t.id" class="custom-template-row">
+                    <span>{{ t.name }}</span>
+                    <div class="inline">
+                      <button class="control-icon" @click="openTemplateDesigner(t)" title="Editar plantilla" :aria-label="'Editar plantilla ' + t.name">✎</button>
+                      <button class="control-icon" @click="copyTemplateDesign(t)" title="Duplicar plantilla" :aria-label="'Duplicar plantilla ' + t.name">⧉</button>
+                      <button class="control-icon danger" @click="deleteTemplateDesign(t)" title="Eliminar plantilla" :aria-label="'Eliminar plantilla ' + t.name"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+                    </div>
+                  </div>
+                </section>
                 <div class="tip">
                   Diseños propios inspirados en las familias clásicas de etiquetas. Selecciona uno y
                   edita aquí sus valores predeterminados. Cada tarjeta puede personalizarse en
                   Composición.
                 </div></template
               >
+              <v-dialog v-model="designerDialog" max-width="1180" persistent scrollable>
+                <template-designer v-if="designerDialog" :key="designerSession" :initial="designerInitial" :settings="settings" :fonts="fontOptions" :render-card="svg" @save="saveTemplateDesign" @close="designerDialog = false"></template-designer>
+              </v-dialog>
               <!-- Impresión: papel, medidas físicas y vista previa de salida. -->
               <template v-if="view === 'print'"
                 ><div class="print-layout">
@@ -1608,6 +1626,7 @@
     <script src="fonts.js"></script>
     <script src="pdf.js"></script>
     <script src="components.js"></script>
+    <script src="designer.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

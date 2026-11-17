@@ -21,10 +21,10 @@ for (const file of ['favicon.png', 'favicon.ico']) await copyFile('src/' + file,
 await import('./scripts/build-fonts.mjs');
 
 // No se renombran propiedades públicas utilizadas por las plantillas de Vue.
-for (const file of ['app.js', 'components.js', 'pdf.js', 'style.css']) {
+for (const file of ['app.js', 'components.js', 'designer.js', 'pdf.js', 'style.css']) {
   let source = await readFile('src/' + file, 'utf8');
   // Las plantillas de los controles son HTML dentro de cadenas JavaScript.
-  if (file === 'components.js') {
+  if (file === 'components.js' || file === 'designer.js') {
     for (const match of [...source.matchAll(/template: `([\s\S]*?)`/g)]) {
       const template = await minify(match[1], { collapseWhitespace: true, caseSensitive: true });
       source = source.replace(match[0], 'template: ' + JSON.stringify(template));
