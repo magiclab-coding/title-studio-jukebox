@@ -1,3 +1,9 @@
+# 7.11.0
+
+- La vista previa de estilo conserva todas las capas del diseño propio asignado a una posición de composición.
+- El texto del artista usa un color independiente del papel, también al convertir diseños en inversa.
+- Paleta compartida ampliada a 30 colores, selector personalizado y entrada hexadecimal en los editores.
+
 # 7.10.0
 
 - Iconos de edición, duplicado y borrado integrados en el pie de cada plantilla, alineados y del mismo tamaño.
