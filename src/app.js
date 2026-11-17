@@ -179,10 +179,26 @@ const templates = [
 // Fuentes libres incluidas en el build; no dependen de servicios externos.
 const fontOptions = [
   // Máquinas de escribir: variantes clásicas, limpias y desgastadas.
-  { value: 'Courier Prime', label: 'Courier Prime · Máquina clásica', keywords: 'typewriter máquina de escribir' },
-  { value: 'Cutive Mono', label: 'Cutive Mono · Máquina fina', keywords: 'typewriter máquina de escribir' },
-  { value: 'Special Elite', label: 'Special Elite · Máquina desgastada', keywords: 'typewriter máquina de escribir' },
-  { value: 'IBM Plex Mono', label: 'IBM Plex Mono · Máquina moderna', keywords: 'typewriter máquina de escribir' },
+  {
+    value: 'Courier Prime',
+    label: 'Courier Prime · Máquina clásica',
+    keywords: 'typewriter máquina de escribir',
+  },
+  {
+    value: 'Cutive Mono',
+    label: 'Cutive Mono · Máquina fina',
+    keywords: 'typewriter máquina de escribir',
+  },
+  {
+    value: 'Special Elite',
+    label: 'Special Elite · Máquina desgastada',
+    keywords: 'typewriter máquina de escribir',
+  },
+  {
+    value: 'IBM Plex Mono',
+    label: 'IBM Plex Mono · Máquina moderna',
+    keywords: 'typewriter máquina de escribir',
+  },
   { value: 'Trade Winds', label: 'Trade Winds · Pincel desgastado' },
   { value: 'Permanent Marker', label: 'Permanent Marker · Rotulador' },
   { value: 'DM Sans', label: 'DM Sans · Moderna y limpia' },
@@ -384,7 +400,7 @@ function makeSvg(c, settings) {
     const available = labelAvailable(c.style, y === 75);
     const fitted = fitLabelText(text, family, textSize(text, px), available);
     const binding = c.designBindings
-      ? `data-disc-field="${({37:'a',75:'artist',112:'b',13:'category',139:'rpm'})[y]}" data-disc-width="${available}" `
+      ? `data-disc-field="${{ 37: 'a', 75: 'artist', 112: 'b', 13: 'category', 139: 'rpm' }[y]}" data-disc-width="${available}" `
       : '';
     return `<text ${binding}x="150" y="${y * sy}" text-anchor="middle" dominant-baseline="middle" font-family="${esc(family)}" font-size="${textSize(text, px)}px" font-weight="400" fill="${fill}">${esc(fitted.text)}</text>`;
   };
@@ -2254,15 +2270,32 @@ createApp({
         if (template && !template.design) {
           const base = { ...template, ...(settings.value.templateDefaults?.[template.id] || {}) };
           const sample = normalize({
-            ...base, style: template.id, customDesign: null, designBindings: true,
-            artist: 'Artista A / Artista B', artistB: '',
-            a: 'Título de la cara A', b: 'Título de la cara B',
-            category: 'ROCK & ROLL', rpm: '45 RPM', number: 'A1',
-            showGenre: true, showRpm: true, showNumber: true,
+            ...base,
+            style: template.id,
+            customDesign: null,
+            designBindings: true,
+            artist: 'Artista A / Artista B',
+            artistB: '',
+            a: 'Título de la cara A',
+            b: 'Título de la cara B',
+            category: 'ROCK & ROLL',
+            rpm: '45 RPM',
+            number: 'A1',
+            showGenre: true,
+            showRpm: true,
+            showNumber: true,
           });
           designerInitial.value = StudioTemplateTools.fromBuiltinSvg(
             makeSvg(sample, { width: 76, height: 38, rpm: '45 RPM' }),
-            { ...base, ink: sample.ink, paper: sample.paper, artistInk: sample.artistInk, font: sample.font, graphicsInk: sample.graphicsInk || sample.artistInk, name: template.name + ' (copia)' },
+            {
+              ...base,
+              ink: sample.ink,
+              paper: sample.paper,
+              artistInk: sample.artistInk,
+              font: sample.font,
+              graphicsInk: sample.graphicsInk || sample.artistInk,
+              name: template.name + ' (copia)',
+            },
           );
         } else designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
       } catch (error) {

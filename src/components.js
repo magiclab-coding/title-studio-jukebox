@@ -56,12 +56,20 @@ globalThis.StudioComponents = {
   FontPicker: {
     props: { modelValue: String, options: Array, label: String, sample: String, inherit: Boolean },
     emits: ['update:modelValue'],
-    data() { return { query: '' }; },
+    data() {
+      return { query: '' };
+    },
     computed: {
       matchingFonts() {
-        const plain = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+        const plain = (value) =>
+          String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
         const query = plain(this.query).trim();
-        return (this.options || []).filter(font => plain(font.label + ' ' + font.value + ' ' + (font.keywords || '')).includes(query));
+        return (this.options || []).filter((font) =>
+          plain(font.label + ' ' + font.value + ' ' + (font.keywords || '')).includes(query),
+        );
       },
     },
     methods: {
