@@ -1,6 +1,6 @@
 {
   "name": "title-studio",
-  "version": "7.6.0",
+  "version": "7.6.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,11 +13,15 @@
     "test:browser": "node tests/designer-browser.mjs"
   },
   "dependencies": {
+    "@fontsource/courier-prime": "5.3.0",
+    "@fontsource/cutive-mono": "5.3.0",
     "@fontsource/dm-sans": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/oswald": "5.3.0",
     "@fontsource/permanent-marker": "5.3.0",
     "@fontsource/playfair-display": "5.3.0",
     "@fontsource/space-grotesk": "5.3.0",
+    "@fontsource/special-elite": "5.3.0",
     "@fontsource/trade-winds": "5.3.0",
     "vue": "3.5.24",
     "vuetify": "3.10.11",
