@@ -86,6 +86,8 @@ try {
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
           await palette.locator('.color-swatches button').first().waitFor();
+          // La animación del menú escala sus medidas hasta que termina.
+          await palette.locator('.color-swatches button').first().hover();
           assert.equal(
             await palette
               .locator('.color-swatches button > span')
@@ -141,6 +143,7 @@ try {
           await customColor.waitFor();
           // La rueda y las acciones deben caber juntas incluso con poca altura útil.
           await page.setViewportSize({ width, height: 560 });
+          await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).click();
           const compactLayout = await customColor.evaluate((node) => {
             const bounds = node.getBoundingClientRect();
             const controls = Array.from(
