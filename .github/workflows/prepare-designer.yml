@@ -18,6 +18,20 @@ jobs:
           cache: npm
       - run: npm install --save-dev --save-exact playwright@1.56.1
       - run: npm ci
+      - name: Readable editor template
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          import { format } from 'prettier';
+          const path = 'src/designer.js';
+          let source = await readFile(path, 'utf8');
+          for (const match of [...source.matchAll(/template: `([\s\S]*?)`/g)]) {
+            const html = await format(match[1], { parser: 'vue', printWidth: 100 });
+            source = source.replace(match[0], 'template: `\n' + html.trim().split('\n').map(line => '    ' + line).join('\n') + '\n  `');
+          }
+          await writeFile(path, source);
+          NODE
+      - run: npm run format
       - run: npm run format
       - name: Save readable sources and lock
         run: |
