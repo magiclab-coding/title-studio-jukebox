@@ -24,10 +24,10 @@ npm ci
 npm run dev
 ```
 
-Las nuevas funciones se integran únicamente en develop y aumentan el tercer número: 7.0.15 → 7.0.16. La CI valida develop, pero no publica Pages. El servidor local permite probar esa rama sin modificar main.
+Las nuevas funciones se integran únicamente en develop y aumentan el tercer número: 7.4.0 → 7.4.1. La CI valida develop, pero no publica Pages. El servidor local permite probar esa rama sin modificar main.
 
 ## Publicar solo cuando se solicite
 
-Preparar una PR develop → main con el segundo número incrementado y el tercero a cero: 7.0.16 → 7.1.0. Publicar solo tras la petición explícita del usuario. El merge a main activa Release y Pages; después se sincroniza develop con main.
+Preparar una PR develop → main con el segundo número incrementado y el tercero a cero: 7.4.1 → 7.5.0. Publicar solo tras la petición explícita del usuario. El merge a main activa Release y Pages; después se sincroniza develop con main.
 
 Los datos de localhost son independientes de los de GitHub Pages. Para llevar tus discos y composiciones a local, exporta Guardar todo en producción e importa ese JSON en local. No borres datos del navegador para actualizar el programa.

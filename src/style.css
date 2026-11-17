@@ -966,18 +966,9 @@ textarea {
 .settings > label {
   margin-top: 25px;
 }
-.reference {
-  border-top: 1px solid var(--line);
-  margin-top: 30px;
-  padding-top: 25px;
-}
-.reference h3 {
-  margin-bottom: 10px;
-}
-.reference a {
-  font-size: 11px;
-  color: var(--rust);
-}
+
+
+
 .empty {
   padding: 40px;
   text-align: center;
@@ -1603,14 +1594,7 @@ tbody tr:hover td {
   max-width: 350px;
   flex: 1;
 }
-.version-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-  padding: 10px 0;
-  font-size: 11px;
-}
+
 .backup-review {
   padding: 15px;
   background: #eff2e8;
@@ -2189,15 +2173,8 @@ label select {
   padding: 8px;
   margin-top: 3px;
 }
-.composition-options {
-  position: relative;
-  margin: 0;
-}
-.composition-options summary {
-  font-size: 12px;
-  padding: 12px;
-  cursor: pointer;
-}
+
+
 .options-body {
   position: absolute;
   right: 0;
@@ -2288,64 +2265,11 @@ label select {
   font-size: 17px;
   z-index: 2;
 }
-.positioned-label.editing {
-  cursor: auto;
-  user-select: auto;
-  touch-action: pan-y;
-  z-index: 4;
-}
-.inline-card-editor {
-  position: absolute;
-  inset: 2px;
-  display: grid;
-  grid-template-rows: 20% 24% 16% 24% 16%;
-  padding: 4px 5px;
-  background: var(--paper);
-  color: var(--ink);
-  gap: 0;
-}
-.inline-card-editor input {
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-  border: 0;
-  border-bottom: 1px dashed currentColor;
-  border-radius: 0;
-  background: transparent;
-  text-align: center;
-  padding: 0 2px;
-  color: inherit;
-  outline-offset: -1px;
-}
-.inline-card-editor .edit-category {
-  font-size: clamp(8px, 6cqw, 13px);
-}
-.inline-card-editor .edit-title {
-  font-size: clamp(10px, 9cqw, 22px);
-  font-weight: bold;
-}
-.inline-card-editor .edit-artist {
-  font: bold clamp(8px, 6cqw, 14px) Arial;
-}
-.edit-meta {
-  display: flex;
-  min-height: 0;
-  gap: 4px;
-}
-.edit-meta input {
-  font: clamp(8px, 5cqw, 12px) Arial;
-}
-.edit-meta input:first-child {
-  width: 25%;
-}
-.edit-meta button {
-  background: #213d36;
-  color: #fff;
-  border-radius: 3px;
-  min-width: 28px;
-  font-size: 14px;
-}
+
+
+
+
+
 .add-sheet {
   width: 100%;
   border: 1px dashed #b9ccc0;
@@ -2484,11 +2408,7 @@ label select {
     min-width: 0;
     flex-basis: auto;
   }
-  .composition-options summary {
-    font-size: 11px;
-    white-space: nowrap;
-    padding: 10px 4px;
-  }
+
   .composing .workspace-toolbar {
     padding: 6px 8px;
   }
@@ -2687,17 +2607,8 @@ label select {
   font-size: 12px;
   margin-left: auto;
 }
-.composition-options-modal {
-  padding: 20px;
-  max-height: 85dvh;
-  overflow: auto;
-}
-.options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 16px 0;
-}
+
+
 .zoom-select {
   font-size: 11px;
   border: 0;
@@ -2874,11 +2785,7 @@ label select {
   .composing .desktop-card-edit {
     display: none;
   }
-  .options-grid .v-btn {
-    font-size: 11px;
-    min-width: 0;
-    padding: 0 8px;
-  }
+
 }
 .composing .composition.no-inspector {
   grid-template-columns: minmax(0, 1fr);
@@ -3018,27 +2925,11 @@ select:disabled {
 .genre-field input {
   margin-top: 5px;
 }
-.inline-card-editor {
-  display: block;
-  overflow: auto;
-  padding: 8px;
-}
-.inline-card-editor .record-core {
-  gap: 6px;
-}
-.inline-card-editor .record-fields label {
-  font: 10px Arial;
-  margin-bottom: 4px;
-}
-.inline-card-editor .record-fields input {
-  font: 12px Arial;
-  min-height: 30px;
-  padding: 4px;
-  border: 1px solid #ccd9d0;
-}
-.inline-card-editor .record-fields select {
-  font: 12px Arial;
-}
+
+
+
+
+
 .pixel-sizes label {
   flex: 1 1 150px;
 }
@@ -3728,7 +3619,6 @@ select:disabled {
   height: 16px;
 }
 /* Modales: jerarquía sencilla, actions alignées et espaces réguliers. */
-.composition-options-modal,
 .style-modal {
   border-radius: 16px;
   padding: 20px;
@@ -3755,20 +3645,8 @@ select:disabled {
   border-radius: 8px;
   background: #f0f4f1;
 }
-.composition-options-modal .options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 16px;
-}
-.composition-options-modal .v-btn {
-  height: 40px;
-  border: 1px solid #dce4df;
-  box-shadow: none;
-  text-transform: none;
-  letter-spacing: 0;
-  justify-content: flex-start;
-}
+
+
 .style-modal .style-modal-content {
   padding: 0;
   display: flex;
@@ -3826,8 +3704,8 @@ select:disabled {
   .collection-manager .manager-row {
     gap: 10px;
   }
-  .composition-options-modal,
-  .style-modal {
+
+.style-modal {
     padding: 16px;
   }
 }

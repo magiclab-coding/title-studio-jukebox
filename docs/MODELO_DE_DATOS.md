@@ -1,92 +1,65 @@
-# Modelo de datos · versión 7
+# Modelo de datos
 
-## Listas de discos
+## Colecciones y discos
 
-Cada lista de discos tiene identificador, nombre y una lista de discos. Un disco conserva artista, títulos de ambas caras, artista B, selección, categoría, sello y año. Ejemplos de listas de discos: «Discos de mi madre», «Discos de punk» y «Discos de Alejandro».
+Cada entrada de `collections` tiene identificador, nombre y una lista `cards`.
+El disco guarda `artist`, `artistB`, `a`, `b`, `number`, `category`,
+`rpm`, `label` y `year`. Artista A/B y títulos de ambas caras se editan por
+separado. La línea central de la etiqueta une los artistas con `/`.
 
-## Composiciones
+Editar en **Discos** modifica los datos originales. Mover un disco entre
+colecciones conserva su identificador y las referencias de las composiciones.
 
-Cada composición tiene identificador, nombre, número de hojas opcional y tarjetas. Cada tarjeta tiene su propio identificador y referencia `cardId` al disco original; `appearance` guarda diseño, color de canciones (`ink`), color de artista (`artistInk`), papel, fuente de canciones (`font`), fuente del artista (`artistFont`), tamaños en px (`titlePx`, `artistPx`) y visibilidad independiente (`showGenre`, `showRpm`, `showNumber`). `page`, `x` e `y` guardan su posición.
+## Composiciones y posiciones
 
-Un mismo disco puede aparecer en distintas composiciones y repetirse dentro de una composición. Cada posición puede tener un estilo diferente. Los textos corresponden al disco de la lista de discos; editar el contenido del disco se refleja donde se utiliza. Cambiar el estilo de una posición no modifica otras posiciones ni composiciones.
+Cada composición tiene identificador, nombre, hojas y `items`. Cada posición
+conserva su identificador, `cardId`, `page`, `x`, `y` y `appearance`.
+Un disco puede aparecer varias veces o en distintas composiciones.
 
-Eliminar una tarjeta de una composición deja el hueco y conserva el disco de la lista de discos. Eliminar un disco de su lista de discos elimina también sus referencias en las composiciones.
+`appearance` contiene diseño, fuentes, tamaños en píxeles, colores de canciones,
+artista, papel y elementos gráficos, y visibilidad de género, RPM y selección.
+Los valores predeterminados de diseños se guardan en `settings.templateDefaults`;
+cambiarlos no altera posiciones existentes.
 
-## Persistencia
+La edición de Composición usa los cuatro campos habituales para personalizar
+solo esa tarjeta. `items[].text` guarda las diferencias mediante `artistA`,
+`artistB`, `a` y `b`. Restablecer el valor original elimina la diferencia.
+Se mantiene la lectura del campo central `text.artist` de copias de usuario.
 
-El sistema utiliza localStorage bajo la clave histórica `title-studio-v3`; la versión 7 exporta el esquema JSON 5. Se conserva la lectura de claves antiguas para migración. Las copias JSON completas incluyen listas de discos, composiciones, ajustes y preferencias. No hay sincronización de datos entre dispositivos ni copia automática de los datos del navegador en GitHub.
+Eliminar una posición deja el hueco y conserva el disco. Eliminar un disco
+retira sus referencias. Duplicar una tarjeta reutiliza el disco, pero copia
+su aspecto y textos a una posición independiente.
 
-## Diseño y tipografías
+## Persistencia y copias
 
-La plantilla **Pincel · El Río** dispone canción A arriba, artista centrado y canción B abajo. Las canciones comparten color; el artista tiene un color independiente. Ninguna plantilla dibuja marco exterior. Las guías de corte de impresión siguen siendo opcionales y no forman parte del diseño.
+El estado usa el esquema JSON 5 y la clave de navegador `title-studio-v3`.
+El nombre de esa clave se conserva para mantener los datos instalados.
+Las claves `collections` y `collection` siguen siendo parte del formato de
+copias de usuario. Guardar todo exporta el estado actual; las copias parciales
+remapean identificadores cuando es necesario para evitar colisiones.
 
-Los intérpretes se editan en Artista A y Artista B. La tarjeta muestra ambos en su campo central separados por `/`.
+No hay sincronización con GitHub ni entre dispositivos. El historial de Deshacer
+solo cubre cambios de la sesión. Las copias JSON son la copia transportable.
 
-Trade Winds es una aproximación libre al trazo irregular de la referencia, no una identificación exacta. Se incluyen también Permanent Marker, DM Sans, Space Grotesk, Oswald y Playfair Display. Los paquetes Fontsource están fijados en package-lock.json; el build incrusta fuentes WOFF2 en los SVG y publica sus licencias en `dist/licenses`. Así pantalla y PDF comparten el mismo dibujo, sin peticiones a Google Fonts.
+## Tipografía y recorte
 
-Los selectores nativos muestran una flecha consistente. Estilo musical utiliza el mismo selector real en la tabla y los formularios; Otro estilo permite texto libre.
+Los avisos y el SVG comparten la medición Canvas de glifos con la fuente y tamaño
+reales, y el ancho interior disponible de cada diseño. Cargar las fuentes
+invalida la caché y actualiza los resultados. El recorte añade puntos suspensivos,
+mantiene el tamaño de letra y no modifica los textos guardados.
 
-## Interfaz 7.0.7
+Tabla evalúa las tarjetas de la composición activa; si el disco no está
+insertado, utiliza su apariencia predeterminada. La lista móvil y el formulario
+utilizan el mismo cálculo. Las fuentes locales y sus licencias se incluyen en
+la distribución y se incrustan también en los SVG.
 
-La interfaz usa **Discos** y **Mis discos**. Internamente se mantienen las claves `collections` y `collection` para leer las copias antiguas sin perder sus referencias. Los nombres de listas personalizados se conservan.
+## Geometría e impresión
 
-Los registros guardan `artist` (Artista A) y `artistB` (Artista B) por separado. El SVG une los dos valores con `/`; una copia anterior con ambos valores unidos se separa al normalizarla, sin dividir nombres como AC/DC. CSV y Excel admiten tanto los encabezados antiguos como Artista A/B y Canción A/B.
+Las medidas de etiqueta, papel, márgenes y separación se expresan en milímetros.
+Las posiciones se acoplan a huecos de una cuadrícula. La composición puede
+mostrar varias hojas según anchura y zoom, y mover tarjetas entre ellas.
 
-`titlePx` y `artistPx` expresan el tamaño en píxeles del diseño SVG (viewBox de 300 unidades de ancho). Los porcentajes antiguos se convierten automáticamente. Se mantienen el ajuste de textos largos y la escala física definida por las medidas de la etiqueta. `showGenre`, `showRpm` y `showNumber` controlan por separado los tres metadatos. `rpm` guarda la velocidad de cada disco; los valores vacíos se normalizan a 45 RPM. Se conservan las velocidades explícitas de 33 y 78 RPM.
-
-Discos abre el formulario sin insertar la nueva ficha en una composición. Composición ofrece selección múltiple entre listas de discos y conserva los huecos libres. Solo se muestra una hoja, indicada por `ui.composePage`. Eliminar hoja retira sus posiciones, desplaza las hojas posteriores, conserva los discos originales y permite deshacer.
-
-El centrado horizontal es una traslación de presentación y salida: no se reescriben las coordenadas originales de los huecos. La vista previa, la impresión y el PDF usan el mismo desplazamiento. No se centra verticalmente: se conserva el margen superior.
-
-## Interfaz 7.0.8
-
-`ui.columnKeys` conserva las columnas visibles; el valor inicial es Artista A/B y Canción A/B. Ocultar una columna limpia su filtro para evitar resultados inexplicables. Las exportaciones siguen incluyendo todos los campos.
-
-Cada plantilla define su tipografía de previsualización. Cambiar el diseño conserva las opciones de visibilidad de estilo musical, RPM y selección. Pincel admite los mismos metadatos que el resto. Los diseños geométricos exploran familias de líneas, cintas y bloques como las documentadas en https://jukebox.tools/jukebox-title-strip-designs, sin incorporar imágenes externas.
-
-La edición de tarjetas y la inserción usan el mismo modal en escritorio y móvil. Las acciones aparecen al seleccionar y se ocultan al pulsar fuera. Estilo para todas utiliza un borrador: solo el botón de aplicación copia el aspecto a todas las posiciones de la composición; cada posición recibe una copia independiente.
-
-Durante un arrastre, permanecer 650 ms a 24 px del borde cambia a la hoja contigua existente. Se conserva la fila y se entra por la columna del borde opuesto. Para volver a cambiar de hoja hay que salir de la zona del borde y entrar de nuevo. La captura del puntero permanece en el canvas al sustituir la hoja; cancelar restaura el estado anterior y completar registra una única operación de deshacer.
-
-## Interfaz 7.0.10
-
-Los formularios de discos contienen solo datos musicales. La creación de una tarjeta en composición ofrece estilo; editar sus datos no abre controles de diseño. El diálogo de estilo separa selección y parámetros. El catálogo edita valores en `settings.templateDefaults`, incluidos en las copias completas, y cada nueva asignación recibe sus propios valores. Cambiar un predeterminado no modifica posiciones existentes.
-
-Crear un disco compara Artista A/B y Canción A/B dentro de la lista destino, normalizando espacios y mayúsculas; si coincide solicita confirmación antes de repetirlo. Las hojas visibles se calculan según anchura disponible y zoom, hasta tres, y el arrastre calcula el destino sobre la hoja bajo el puntero. Se mantiene el centrado exclusivamente horizontal.
-
-## Interfaz 7.0.12
-
-La selección múltiple de Tabla es temporal e independiente de la composición. El borrado actúa sobre los discos seleccionados o sobre la colección activa completa, pide confirmación, retira sus referencias y conserva la posibilidad de deshacer.
-
-Los textos completos se guardan y exportan sin cambios. Solo la representación SVG acorta con puntos suspensivos cuando excede el ancho, manteniendo el tamaño de letra. Las celdas largas se avisan con fondo ámbar. Las tarjetas nuevas ocultan estilo musical, RPM y selección; los valores explícitos guardados se conservan.
-
-El arrastre utiliza los extremos exteriores del conjunto de hojas visibles para pasar a una página todavía oculta. Mantiene el cambio entre hojas contiguas sin activar el temporizador en bordes interiores.
-
-## Interfaz 7.0.13
-
-Mover discos entre colecciones conserva sus identificadores y sus referencias en las composiciones. La selección de tabla y las acciones por fila tienen alcances independientes. El catálogo oculta el diseño histórico arrows y añade cartela, cinta exterior, notas, sello rock, estrella retro y medianoche. El renderizador histórico se conserva para abrir copias antiguas.
-
-## Textos particulares de tarjeta
-
-Cada posición puede guardar `text: {artist, a, b}` con los textos alternativos
-de impresión. El artista central se edita como una sola línea. Valores vacíos
-o iguales al original se eliminan para recuperar la herencia del disco.
-Los originales permanecen en `collections[].cards`; estilos globales y Shuffle
-no modifican los textos alternativos. SVG, impresión y PDF usan el mismo
-renderizador. Las copias JSON y las composiciones duplicadas conservan estos textos.
-
-## Edición integrada y medición tipográfica
-
-En Composición, los cuatro campos habituales editan únicamente la posición.
-`items[].text` guarda diferencias mediante `artistA`, `artistB`, `a` y `b`;
-los originales se mantienen en Discos. Volver al valor original elimina la
-diferencia. Un botón de restauración aparece dentro del campo solo si difiere.
-El campo central antiguo `text.artist` se sigue leyendo y se convierte al guardar.
-
-El SVG y los avisos de Tabla y formulario comparten la medición Canvas de
-glifos con familia y tamaño reales. Se respeta el ancho disponible del diseño,
-incluida la línea central con decoraciones. Las fuentes locales se cargan
-antes de invalidar y recalcular la caché. El recorte mantiene el tamaño y usa
-puntos suspensivos; nunca modifica el contenido guardado.
-Tabla evalúa las posiciones de la composición activa; si el disco no está
-insertado, utiliza su apariencia predeterminada.
+El centrado de etiquetas afecta solo al eje horizontal; se respeta el margen
+superior y la escala física. Pantalla, SVG, impresión y PDF comparten el dibujo.
+El PDF conserva la configuración seleccionada; la impresora o el visor pueden
+requerir **Tamaño real** o **100 %** para evitar reescalado.

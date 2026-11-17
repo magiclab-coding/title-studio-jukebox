@@ -1,56 +1,78 @@
 # Title Studio · Jukebox
 
-Editor de tarjetas para jukebox. Repositorio principal de desarrollo con ramas feature, develop y main, Releases y publicación automática en GitHub Pages.
+Aplicación para organizar discos de vinilo y diseñar sus etiquetas de jukebox.
 
-Aplicación: https://jukebox-title-studio-ruben.martint-rubens.chatgpt.site
+[Aplicación publicada](https://magiclab-coding.github.io/title-studio-jukebox/) ·
+[Releases](https://github.com/magiclab-coding/title-studio-jukebox/releases)
 
-## Organización
+## Qué permite hacer
 
-- La raíz contiene el código activo; cada versión publicada se identifica por su tag y Release.
-- [Flujo de GitHub](docs/FLUJO_GITHUB.md): ramas, CI, Releases y publicación.
-- Las reglas para cada interacción están en AGENTS.md.
-- Las versiones reales se conservan como tags y Releases; las carpetas históricas se mantienen como material de procedencia.
-- `versions/v1` a `versions/v7` conservan instantáneas del código original.
-- [Historial de versiones](docs/VERSIONES.md): fechas, cambios y commits de origen.
-- [Modelo de datos](docs/MODELO_DE_DATOS.md): listas de discos, discos y composiciones.
-- [Recuperación](docs/RECUPERACION.md): volver a un código anterior y recuperar los datos.
-- `CHANGELOG.md`: notas históricas acumuladas del proyecto.
+- Organizar discos en colecciones y editar artistas, títulos, género, RPM, selección, sello y año.
+- Importar y exportar listas en CSV o Excel y guardar el sistema completo en JSON.
+- Crear composiciones con discos de cualquier colección, huecos, varias hojas y estilos independientes.
+- Personalizar los textos de cada tarjeta conservando los originales del disco.
+- Ajustar fuentes, tamaños y colores, con avisos cuando el texto se recorta.
+- Imprimir o descargar un PDF con las medidas físicas de las etiquetas.
 
-## Desarrollo
+## Desarrollo local
 
-Se utiliza Vue 3, Vuetify y SheetJS. Requiere Node.js y npm.
+Requiere Git, Node.js 24 y npm.
 
 ```sh
-npm install
-npm test
-npm run build
+git clone --branch develop https://github.com/magiclab-coding/title-studio-jukebox.git
+cd title-studio-jukebox
+npm ci
+npm run dev
 ```
 
-El resultado está en `dist/`. Se puede servir con cualquier servidor estático. Las instantáneas no incluyen node_modules ni las copias compiladas de las dependencias; se generan con la instalación y el build.
+Abre http://127.0.0.1:5173/. El servidor se detiene con Ctrl+C y reconstruye al
+editar el código. En Windows también puede utilizarse `INICIAR-DESARROLLO.cmd`.
 
-## Listas de discos y composiciones
+[Instalación y actualización local](docs/DESARROLLO_LOCAL.md).
 
-Una lista de discos agrupa vinilos según preferencias del usuario. Una composición selecciona discos de cualquier lista de discos y conserva sus posiciones, huecos y estilos propios. Duplicar una tarjeta en la composición no duplica el vinilo en la lista de discos.
-
-## Alcance del archivo
-
-Este repositorio conserva el programa y su documentación. No incluye las listas de discos personales guardadas en los navegadores, contraseñas, credenciales de despliegue ni configuración interna de Sites. GitHub Actions crea una Release por integración en main y publica en Pages cuando está habilitado. No hay sincronización automática con Sites. Este GitHub es la fuente principal para el trabajo futuro.
-
-La documentación de versiones se reconstruye a partir del historial Git y los registros del proyecto. Los cambios se describen según la revisión en la que fueron introducidos; las notas antiguas no representan necesariamente el comportamiento actual.
-
-## Código legible
-
-El código activo se conserva sin minificar, con sangrado de dos espacios y formato automático mediante Prettier. Los archivos compilados y dependencias no se suben como código fuente. Las instantáneas históricas conservan su formato original.
+## Comprobaciones
 
 ```sh
 npm run format
 npm run format:check
+npm test
+node --test tests/release-version.mjs
+npm run build
+npm run test:build
 ```
 
-La CI comprueba el formato antes de ejecutar las pruebas y publicar.
+`src/` contiene código legible y comentado. `dist/` es la distribución
+minificada que genera el build; no se guarda en Git. Las fuentes y sus licencias
+se incluyen en la distribución para que pantalla y PDF utilicen el mismo diseño.
 
-## Comentarios y secciones
+## Ramas y publicación
 
-Las áreas importantes del código se organizan con cabeceras de sección y comentarios breves que explican la intención, las unidades y los casos menos evidentes. La versión 7.0.3 aplica esta convención al código activo; las versiones históricas conservan sus originales. La regla queda documentada en AGENTS.md para las siguientes revisiones.
+Cada cambio empieza en una rama `feature/*` desde `develop`. Tras pasar las
+pruebas se integra en `develop` e incrementa el parche, sin publicar.
 
-La distribución de GitHub Pages se genera minificada en `dist`; el código de `src` permanece legible y comentado. `npm run build && npm run test:build` comprueba también que las plantillas Vue pueden compilarse antes de publicar.
+Solo una petición de publicación autoriza el paso de `develop` a `main`.
+La publicación incrementa el número menor y reinicia el parche. GitHub Actions
+crea el tag y la Release del commit publicado y despliega su artefacto en Pages.
+Después se sincroniza `develop` con `main`.
+
+[Flujo completo](docs/FLUJO_GITHUB.md) · [Reglas del proyecto](AGENTS.md).
+
+## Datos y copias de seguridad
+
+Los discos y composiciones se guardan en el navegador. GitHub conserva el código,
+no los datos personales. Localhost y GitHub Pages tienen almacenes separados.
+
+Usa **Guardar todo** para descargar una copia JSON y **Importar y exportar**
+para cargarla. Deshacer conserva los cambios de la sesión; no sustituye una copia
+descargada. Borrar los datos del navegador elimina su contenido local.
+
+[Copias de seguridad](docs/COPIAS_DE_SEGURIDAD.md) ·
+[Modelo de datos](docs/MODELO_DE_DATOS.md) · [Cambios](CHANGELOG.md).
+
+## Estructura
+
+- `src/`: aplicación Vue 3, componentes, estilos y generación de PDF.
+- `scripts/`: desarrollo local, build y publicación.
+- `tests/`: comportamiento, distribución y numeración de Releases.
+- `docs/`: funcionamiento, desarrollo y copias de datos.
+- `.github/workflows/`: CI y publicación de `main`.

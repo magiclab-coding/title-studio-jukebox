@@ -389,7 +389,6 @@
                               class="positioned-label"
                               :class="{
                                 selected: selectedItemId === slot.item.id,
-                                editing: editingId === slot.item.id,
                                 'actions-visible': actionCardId === slot.item.id,
                                 'first-column': slot.index % printCols === 0,
                               }"
@@ -497,61 +496,6 @@
                     </div>
                   </section>
                 </div>
-                <!-- Opciones globales de la composición, fuera de los paneles recortables. -->
-                <v-dialog v-model="optionsDialog" max-width="460"
-                  ><section class="panel composition-options-modal">
-                    <div class="dialog-heading">
-                      <h3>Opciones de composición</h3>
-                      <button @click="optionsDialog = false" aria-label="Cerrar opciones">×</button>
-                    </div>
-                    <label v-if="composition"
-                      >Nombre<input v-model="composition.name" maxlength="100"
-                    /></label>
-                    <div class="options-grid">
-                      <v-btn
-                        @click="
-                          newComposition();
-                          optionsDialog = false;
-                        "
-                        >＋ Nueva</v-btn
-                      ><v-btn
-                        @click="
-                          copyComposition();
-                          optionsDialog = false;
-                        "
-                        :disabled="!composition"
-                        >Duplicar</v-btn
-                      ><v-btn
-                        @click="
-                          deleteComposition();
-                          optionsDialog = false;
-                        "
-                        :disabled="!composition"
-                        >Eliminar</v-btn
-                      ><v-btn
-                        @click="
-                          optionsDialog = false;
-                          openPicker();
-                        "
-                        >Elegir discos</v-btn
-                      ><v-btn
-                        @click="
-                          reflow();
-                          optionsDialog = false;
-                        "
-                        :disabled="!compositionCards.length"
-                        >Compactar huecos</v-btn
-                      ><v-btn
-                        @click="
-                          view = 'print';
-                          printSource = 'composition';
-                          optionsDialog = false;
-                        "
-                        >Imprimir</v-btn
-                      ><v-btn @click="saveEverything">Guardar todo</v-btn>
-                    </div>
-                  </section></v-dialog
-                >
                 <!-- Creación y edición con borrador; los cambios se confirman al guardar. -->
               </template>
               <v-dialog v-model="editorDialog" max-width="480" scrollable
@@ -1536,7 +1480,7 @@
                               ? 'Se cargarán los ajustes.'
                               : 'Se añadirá el contenido como una lista de discos o composición nueva.'
                         }}
-                        Se guardará antes una versión recuperable.
+                        Descarga una copia de tus datos actuales antes de sustituirlos.
                       </p>
                       <v-btn color="primary" @click="loadBackup">Cargar copia</v-btn
                       ><v-btn @click="pendingBackup = null">Cancelar</v-btn>
@@ -1611,7 +1555,7 @@
                   </section>
                 </div></template
               >
-              <!-- Ajustes y copias recuperables del navegador. -->
+              <!-- Ajustes del proyecto. -->
               <template v-if="view === 'settings'"
                 ><section class="panel settings">
                   <h2>Un taller a tu medida.</h2>
