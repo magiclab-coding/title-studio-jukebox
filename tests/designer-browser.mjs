@@ -54,6 +54,21 @@ try {
       await editor.waitFor();
       await editor.getByLabel('Nombre', { exact: true }).fill('Plantilla navegador ' + width);
       assert.equal(await editor.locator('.designer-layers li').count(), 3);
+      // Carga real de las fuentes locales y elección con muestra en el selector compartido.
+      const loaded = await page.evaluate(async () => {
+        const families = ['Courier Prime', 'Cutive Mono', 'Special Elite', 'IBM Plex Mono'];
+        return Promise.all(families.map(async family => {
+          const faces = await document.fonts.load('20px "' + family + '"', 'ÁÉÍÓÚ ñ 45 RPM');
+          return { family, loaded: faces.length > 0 && faces.every(face => face.status === 'loaded') };
+        }));
+      });
+      assert.ok(loaded.every(font => font.loaded), 'Fuentes reales cargadas, sin sustitución');
+      await editor.locator('.font-picker summary').click();
+      const courier = editor.locator('.font-options button').filter({hasText:'Courier Prime'});
+      await courier.waitFor();
+      assert.ok(await courier.locator('span').evaluate(node => getComputedStyle(node).fontFamily.includes('Courier Prime')));
+      await courier.click();
+      assert.equal(await editor.locator('.designer-drawing svg text').first().getAttribute('font-family'), 'Courier Prime');
       await editor.getByRole('button', { name: 'Añadir rectángulo', exact: true }).click();
       await editor.getByLabel('Nombre de la capa', { exact: true }).fill('Fondo central');
       await editor.getByLabel('Ancho', { exact: true }).fill('160');
@@ -166,6 +181,7 @@ try {
         'Plantilla navegador ' + width,
       );
       assert.equal(await editor.locator('.designer-layers li').count(), 5);
+      assert.equal(await editor.locator('.designer-drawing svg text').first().getAttribute('font-family'), 'Courier Prime');
       assert.deepEqual(errors, [], 'Sin errores de ejecución Vue');
       console.log(
         'PASS: editor real, importación, historial, guardado y medidas a ' + width + ' px',

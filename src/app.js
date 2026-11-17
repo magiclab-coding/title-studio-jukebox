@@ -184,6 +184,11 @@ const fontOptions = [
   { value: 'Space Grotesk', label: 'Space Grotesk · Geométrica' },
   { value: 'Oswald', label: 'Oswald · Condensada' },
   { value: 'Playfair Display', label: 'Playfair Display · Editorial' },
+  // Máquinas de escribir: variantes clásicas, limpias y desgastadas.
+  { value: 'Courier Prime', label: 'Courier Prime · Máquina clásica' },
+  { value: 'Cutive Mono', label: 'Cutive Mono · Máquina fina' },
+  { value: 'Special Elite', label: 'Special Elite · Máquina desgastada' },
+  { value: 'IBM Plex Mono', label: 'IBM Plex Mono · Máquina moderna' },
   { value: 'Georgia', label: 'Georgia · Clásica' },
   { value: 'Arial', label: 'Arial · Sans' },
   { value: 'monospace', label: 'Monoespaciada' },
