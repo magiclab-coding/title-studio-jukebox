@@ -1,14 +1,22 @@
 name: CI
-# Valida ramas de trabajo y PR antes de integrar cambios.
+# Valida PR listas para revisar y el resultado integrado en develop.
 on:
   pull_request:
     branches: [develop, main]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: [develop, 'feature/**']
+    branches: [develop]
 permissions:
   contents: read
+# Una nueva revisión sustituye la validación anterior del mismo evento.
+# Las publicaciones usan su propia concurrencia y nunca se cancelan aquí.
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   validate:
+    # Un borrador puede prepararse sin generar errores de formato prematuros.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:

@@ -1,3 +1,9 @@
+# 7.7.2
+
+- CI en PR listas para revisión y pushes a develop, sin ejecuciones prematuras en ramas de preparación.
+- Cancelación de validaciones sustituidas por nuevas revisiones y conservación de todos los controles.
+- Flujo documentado para preparar formato y lockfile antes de solicitar la integración.
+
 # 7.7.1
 
 - Icono de edición visible en todas las plantillas, con formato y alineación compartidos.

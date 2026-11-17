@@ -1,0 +1,29 @@
+name: Prepare CI trigger correction
+on:
+  push:
+    branches: [feature/20261117-fix-ci-triggers]
+permissions:
+  contents: write
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run format
+      - name: Save prepared formatting before PR
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/ci.yml AGENTS.md docs/FLUJO_GITHUB.md package.json package-lock.json CHANGELOG.md
+          if ! git diff --cached --quiet; then
+            git commit -m "Format CI trigger correction"
+            git push origin HEAD:feature/20261117-fix-ci-triggers
+          fi
