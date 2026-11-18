@@ -12,6 +12,8 @@ introduce sus coordenadas y medidas. El asa de la selección cambia el tamaño.
 Puedes ajustar giro, opacidad, alineación y orden, duplicar, ocultar o eliminar
 capas, y deshacer o rehacer cambios.
 
+Sobre la lista, la fila **Capa Actual** permite renombrar la capa seleccionada. A su derecha están las flechas de nivel y el botón para duplicarla.
+
 En la lista de capas, el ojo abierto indica una capa visible y el ojo tachado
 una capa oculta. El candado protege la capa de movimientos, cambios de tamaño,
 edición de sus propiedades, reordenación y borrado. Puedes seleccionarla,
