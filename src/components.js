@@ -108,6 +108,7 @@ globalThis.StudioComponents = {
       modelValue: String,
       label: String,
       caption: String,
+      disabled: { type: Boolean, default: false },
       paper: { type: String, default: '#ffffff' },
       // Solo las capas admiten guardar un vínculo al papel desde la paleta.
       paperLinked: { type: Boolean, default: null },
@@ -211,7 +212,7 @@ globalThis.StudioComponents = {
       <span class="field-caption">{{ caption || label }}</span>
       <v-menu v-model="open" :close-on-content-click="false" location="bottom end">
         <template #activator="{ props }">
-          <button v-bind="props" type="button" class="color-trigger" :aria-label="label" :title="label">
+          <button v-bind="props" type="button" class="color-trigger" :disabled="disabled" :aria-label="label" :title="label">
             <span :class="{checkerboard: modelValue === 'transparent'}" :style="{backgroundColor: modelValue || '#000000'}"></span>
           </button>
         </template>
