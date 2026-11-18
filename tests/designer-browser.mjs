@@ -520,7 +520,7 @@ try {
         'Courier Prime',
       );
       await editor.getByRole('button', { name: 'Añadir rectángulo', exact: true }).click();
-      await editor.getByLabel('Nombre de la capa', { exact: true }).fill('Fondo central');
+      await editor.getByLabel('Capa Actual', { exact: true }).fill('Fondo central');
       await editor.locator('.designer-stroke-width').fill('3');
       const borderRole = editor.getByRole('combobox', { name: 'Vincular trazo con', exact: true });
       assert.deepEqual(await borderRole.locator('option').allTextContents(), [
@@ -578,7 +578,7 @@ try {
         () => document.querySelectorAll('.designer-layers li').length === 5,
       );
       assert.equal(
-        await editor.getByLabel('Nombre de la capa', { exact: true }).inputValue(),
+        await editor.getByLabel('Capa Actual', { exact: true }).inputValue(),
         'adorno.svg',
       );
       const stage = editor.locator('.designer-stage');
@@ -695,7 +695,7 @@ try {
       const lockY = lockedRect.y + (110 * lockedRect.height) / 150;
       await page.mouse.click(lockX, lockY);
       assert.equal(
-        await editor.getByLabel('Nombre de la capa', { exact: true }).inputValue(),
+        await editor.getByLabel('Capa Actual', { exact: true }).inputValue(),
         'Título cara B',
       );
       await row.locator('.designer-layer-name').click();

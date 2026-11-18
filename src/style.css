@@ -2332,7 +2332,6 @@ label select {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 14px;
 }
 .dialog-heading h3 {
   font-size: 17px;
@@ -2531,7 +2530,6 @@ label select {
 }
 .card-form-modal .dialog-heading {
   flex-shrink: 0;
-  margin-bottom: 10px;
 }
 .card-form-content {
   overflow: auto;
@@ -2918,9 +2916,6 @@ select:disabled {
 }
 .group-dialog {
   padding: 24px;
-}
-.group-dialog h3 {
-  margin-bottom: 18px;
 }
 .group-dialog p {
   line-height: 1.5;
@@ -3659,8 +3654,10 @@ select:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 6px;
+  background: rgb(255 255 255 / 10%);
+  backdrop-filter: blur(6px);
 }
 .dialog-heading h3 {
   grid-column: 2;
@@ -4329,10 +4326,6 @@ select:disabled {
   gap: 8px;
   min-width: 0;
 }
-.designer-heading {
-  display: flex;
-  margin-bottom: 16px;
-}
 .designer-heading h2 {
   grid-column: 2;
   grid-row: 1;
@@ -4492,6 +4485,19 @@ select:disabled {
   color: #718074;
   margin: 12px 0 20px;
 }
+.designer-current-layer {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.designer-current-layer label {
+  white-space: nowrap;
+}
+.designer-layer-actions {
+  gap: 4px;
+}
 .designer-layer-heading {
   justify-content: space-between;
 }
@@ -4549,12 +4555,10 @@ select:disabled {
   padding: 0;
   margin: 0;
 }
-.designer-properties > label,
 .designer-property-fields > label,
 .designer-property-fields > .font-picker,
 .designer-property-fields > .designer-measures,
 .designer-property-fields > .designer-color-row,
-.designer-layer-actions,
 .designer-align {
   margin-bottom: 12px;
 }
@@ -4674,6 +4678,11 @@ select:disabled {
     sans-serif;
   margin: 0;
 }
+.dialog-heading > h3:only-child {
+  position: static;
+  width: 100%;
+  transform: none;
+}
 .modal-header-actions {
   display: flex;
   align-items: center;
@@ -4736,21 +4745,33 @@ select:disabled {
   }
 }
 @media (max-width: 480px) {
+  .v-dialog {
+    --modal-heading-height: 36px;
+  }
+  .dialog-heading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex: 0 0 auto;
+    min-height: var(--modal-heading-height);
+    margin-bottom: 4px;
+    padding-block: 0;
+  }
   .modal-icon-group {
     gap: 2px;
     padding: 2px;
     border-radius: 9px;
   }
-  .dialog-heading :is(.modal-header-actions .control-icon, .modal-close-group .control-icon),
-  .designer-heading-actions .control-icon {
+  .dialog-heading .modal-header-actions,
+  .dialog-heading .modal-header-actions > .modal-icon-group {
+    gap: 4px;
+  }
+  .dialog-heading :is(.control-icon, button[aria-label^='Cerrar']) {
     width: 30px;
     min-width: 30px;
     height: 30px;
     min-height: 30px;
     font-size: 18px;
-  }
-  .dialog-heading .modal-header-actions {
-    gap: 4px;
   }
   .template-designer {
     display: flex;
@@ -4765,38 +4786,22 @@ select:disabled {
     overscroll-behavior: contain;
     padding: 10px 14px 12px;
   }
-  .designer-heading,
-  .designer-footer {
-    position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 8px 14px;
-    background: #ffffffd9;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
   .designer-heading {
-    position: sticky;
-    top: 0;
-    border-bottom: 1px solid #e0e6e0;
+    padding-inline: 14px;
+    box-shadow: 0 1px #e0e6e0;
   }
   .template-designer > .designer-content,
   .style-modal > .style-modal-content {
-    margin-top: -44px;
-    padding-top: 54px;
+    /* El contenido pasa detrás de la cabecera al desplazarlo. */
+    margin-top: calc(-1 * var(--modal-heading-height));
+    padding-top: calc(var(--modal-heading-height) + 6px);
   }
   .designer-heading,
   .style-modal > .dialog-heading {
-    gap: 8px;
-    padding-block: 4px;
     margin-bottom: 0;
   }
   .style-modal {
     padding: 4px 14px 12px;
-  }
-  .dialog-heading .modal-header-actions {
-    gap: 4px;
   }
   .dialog-heading .modal-header-actions .modal-mobile-save {
     display: inline-grid;
@@ -4810,13 +4815,14 @@ select:disabled {
   .designer-heading .modal-title-compact {
     display: inline;
   }
-  .dialog-heading {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #ffffffa8;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+  .designer-current-layer input:not([type='checkbox']),
+  .designer-current-layer .control-icon {
+    height: 36px;
+    min-height: 36px;
+  }
+  .designer-current-layer .control-icon {
+    width: 36px;
+    min-width: 36px;
   }
   .template-designer > .designer-footer,
   .style-modal > .modal-desktop-save {
@@ -5027,9 +5033,6 @@ select:disabled {
   padding: 16px;
   max-height: calc(100dvh - 32px);
   overflow: auto;
-}
-.color-custom-modal .dialog-heading {
-  margin-bottom: 12px;
 }
 .color-custom-modal h3 {
   margin: 0;

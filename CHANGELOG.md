@@ -1,3 +1,8 @@
+# 7.21.1
+
+- Cabeceras de modales más bajas con fondo al 90 % de transparencia.
+- La fila Capa Actual reúne el nombre y las acciones de nivel y duplicación encima de la lista de capas.
+
 # 7.21.0
 
 - Publicación de las mejoras del editor y los modales móviles de la versión 7.20.1.
