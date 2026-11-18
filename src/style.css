@@ -4573,12 +4573,27 @@ select:disabled {
 }
 .designer-border-row {
   display: grid;
-  grid-template-columns: minmax(56px, 0.55fr) minmax(110px, 1fr) 46px;
+  grid-template-columns: max-content minmax(0, 1fr) 46px;
   align-items: end;
   gap: 8px;
+  margin-bottom: 12px;
 }
 .designer-border-row .color-picker {
   width: 46px;
+}
+.designer-object-paint-row .designer-check {
+  min-width: 48px;
+}
+.template-designer input.designer-stroke-width {
+  width: calc(2ch + 16px);
+  appearance: textfield;
+  padding-inline: 6px;
+}
+.designer-stroke-width::-webkit-inner-spin-button {
+  appearance: none;
+}
+.designer-border-row .color-picker:has(.color-trigger:disabled) {
+  opacity: 0.45;
 }
 .modal-icon-group {
   display: inline-flex;
@@ -4593,8 +4608,8 @@ select:disabled {
   background: #fff;
 }
 .modal-primary-group .control-icon {
-  background: #a94d35;
-  color: #fff;
+  background: #fff;
+  color: var(--ink);
 }
 .dialog-heading > .modal-close-group {
   position: relative;
@@ -4618,14 +4633,12 @@ select:disabled {
   display: none;
 }
 .template-designer .designer-check {
-  flex-direction: row;
   align-items: center;
-  gap: 8px;
 }
 .designer-check input {
   width: 18px;
   height: 18px;
-  margin: 0;
+  margin: 12px 0;
 }
 .designer-properties .font-picker summary {
   display: flex;
@@ -4768,6 +4781,11 @@ select:disabled {
     top: 0;
     border-bottom: 1px solid #e0e6e0;
   }
+  .template-designer > .designer-content,
+  .style-modal > .style-modal-content {
+    margin-top: -44px;
+    padding-top: 54px;
+  }
   .designer-heading,
   .style-modal > .dialog-heading {
     gap: 8px;
@@ -4796,7 +4814,7 @@ select:disabled {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #ffffffd9;
+    background: #ffffffa8;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -4821,7 +4839,6 @@ select:disabled {
     gap: 8px;
   }
   .designer-border-row {
-    grid-template-columns: minmax(50px, 0.55fr) minmax(100px, 1fr) 46px;
     gap: 6px;
   }
   .designer-border-row label {

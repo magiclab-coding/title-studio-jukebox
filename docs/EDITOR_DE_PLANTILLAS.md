@@ -15,7 +15,8 @@ capas, y deshacer o rehacer cambios.
 En la lista de capas, el ojo abierto indica una capa visible y el ojo tachado
 una capa oculta. El candado protege la capa de movimientos, cambios de tamaño,
 edición de sus propiedades, reordenación y borrado. Puedes seleccionarla,
-cambiar su visibilidad o duplicarla como una capa desbloqueada. **Vaciar
+cambiar su visibilidad o duplicarla como una capa desbloqueada. Al tocar el
+lienzo, la selección salta las capas bloqueadas y busca una capa inferior. **Vaciar
 lienzo** conserva las capas bloqueadas. El estado del candado se guarda en la
 plantilla y en su JSON. Las plantillas anteriores se abren desbloqueadas.
 La papelera de cada fila borra esa capa directamente. Está desactivada en las
@@ -24,7 +25,7 @@ capas bloqueadas. Puedes recuperar una capa borrada con **Deshacer**.
 La geometría usa un lienzo lógico de 300 × 150 unidades, adaptado al tamaño
 físico de etiqueta del proyecto, que se muestra junto a la vista previa.
 En pantallas estrechas las propiedades aparecen debajo del lienzo y las medidas
-se disponen en una sola columna.
+se agrupan por pares.
 En móvil, Deshacer, Rehacer y Cerrar se mantienen arriba y el icono Guardar
 queda en la misma cabecera al desplazar el contenido.
 
@@ -41,7 +42,8 @@ grupo en el modal de estilo. El texto se acorta sin reducir la fuente; los aviso
 usan la misma medición que el renderizado.
 
 Los colores pueden seguir Canciones, Artista o Elementos, o tener un color propio.
-Las formas admiten borde; los rectángulos también redondeo y relleno transparente.
+Rectángulos y elipses tienen una fila de relleno y otra de trazo. Desactivar el
+relleno o dejar el grosor en cero desactiva el vínculo y el color correspondientes.
 El fondo Papel pertenece a la plantilla.
 
 Los campos de género, RPM y número obedecen la visibilidad de la tarjeta.
