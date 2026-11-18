@@ -1,3 +1,7 @@
+# 7.19.0
+
+- Cabeceras, iconos y botones comunes para los modales de estilo y plantillas. En móvil, Guardar y Aplicar pasan a la cabecera compacta.
+
 # 7.18.0
 
 - Papel actual establece un vínculo dinámico cuando se elige desde Tinta o Fondo de una capa.
