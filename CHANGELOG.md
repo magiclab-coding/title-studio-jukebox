@@ -1,3 +1,8 @@
+# 7.16.0
+
+- Candado por capa en el editor de plantillas y ojo para mostrar u ocultar.
+- El bloqueo se guarda en la plantilla y protege las capas al editar o vaciar el lienzo.
+
 # 7.15.0
 
 - Custom numerados de forma correlativa según su orden en la paleta, con renumeración tras borrar.

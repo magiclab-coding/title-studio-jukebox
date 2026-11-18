@@ -514,6 +514,61 @@ try {
           layout.inputs.every((input) => Math.abs(input.left - layout.inputs[0].left) < 1),
           'Una entrada por fila en móvil',
         );
+
+      // El candado protege la capa, mientras el ojo sigue controlando el dibujo.
+      const lockName = 'Bloqueo de capa: adorno.svg';
+      const lock = editor.getByRole('button', { name: lockName, exact: true });
+      const eye = editor.getByRole('button', {
+        name: 'Visibilidad de capa: adorno.svg',
+        exact: true,
+      });
+      assert.equal(await lock.getAttribute('aria-pressed'), 'false');
+      await lock.click();
+      assert.equal(await lock.getAttribute('aria-pressed'), 'true');
+      const row = editor.locator('.designer-layers li').filter({
+        has: page.getByRole('button', { name: lockName, exact: true }),
+      });
+      const buttons = await row.locator('button.control-icon').evaluateAll((elements) =>
+        elements.map((button) => {
+          const rect = button.getBoundingClientRect();
+          return { width: rect.width, height: rect.height, center: rect.top + rect.height / 2 };
+        }),
+      );
+      assert.equal(buttons.length, 2);
+      assert.ok(buttons.every((button) => button.width === 42 && button.height === 42));
+      assert.ok(Math.abs(buttons[0].center - buttons[1].center) < 1);
+      await row.screenshot({ path: '.test-artifacts/locked-layer-' + width + '.png' });
+      const image = editor.locator('.designer-drawing svg image');
+      await eye.click();
+      assert.equal(await eye.getAttribute('aria-pressed'), 'false');
+      await image.waitFor({ state: 'detached' });
+      await eye.click();
+      assert.equal(await eye.getAttribute('aria-pressed'), 'true');
+      await image.waitFor({ state: 'visible' });
+      const xInput = editor.getByLabel('X', { exact: true });
+      assert.ok(await xInput.isDisabled());
+      assert.ok(await editor.getByRole('button', { name: 'Eliminar capa' }).isDisabled());
+      assert.ok(await editor.getByRole('button', { name: 'Enviar capa hacia atrás' }).isDisabled());
+      assert.equal(await handle.count(), 0);
+      await stage.scrollIntoViewIfNeeded();
+      const lockedRect = await stage.boundingBox();
+      const lockX = lockedRect.x + (80 * lockedRect.width) / 300;
+      const lockY = lockedRect.y + (90 * lockedRect.height) / 150;
+      await page.mouse.move(lockX, lockY);
+      await page.mouse.down();
+      await page.mouse.move(lockX + 15, lockY + 5, { steps: 3 });
+      await page.mouse.up();
+      await stage.focus();
+      await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('Delete');
+      assert.equal(await xInput.inputValue(), '27');
+      assert.equal(await editor.locator('.designer-layers li').count(), 5);
+      await editor.getByRole('button', { name: 'Vaciar lienzo', exact: true }).click();
+      assert.equal(await editor.locator('.designer-layers li').count(), 1);
+      assert.equal(await lock.getAttribute('aria-pressed'), 'true');
+      await editor.getByRole('button', { name: 'Deshacer en plantilla', exact: true }).click();
+      assert.equal(await editor.locator('.designer-layers li').count(), 5);
+
       await editor
         .getByRole('button', { name: 'Exportar plantilla JSON', exact: true })
         .scrollIntoViewIfNeeded();
@@ -530,6 +585,15 @@ try {
       await card.waitFor();
       await page.reload();
       await card.waitFor();
+      await page
+        .getByRole('button', { name: 'Editar plantilla Plantilla navegador ' + width, exact: true })
+        .click();
+      assert.equal(await lock.getAttribute('aria-pressed'), 'true');
+      await lock.click();
+      await editor.getByRole('button', { name: 'adorno.svg', exact: true }).click();
+      assert.ok(await xInput.isEnabled());
+      await editor.getByRole('button', { name: 'Cerrar editor de plantilla', exact: true }).click();
+      await editor.waitFor({ state: 'detached' });
       assert.ok(
         await page.evaluate(() =>
           JSON.parse(localStorage.getItem('title-studio-v3')).settings.colorPalette.includes(

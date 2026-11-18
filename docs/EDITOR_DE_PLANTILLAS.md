@@ -12,6 +12,13 @@ introduce sus coordenadas y medidas. El asa de la selección cambia el tamaño.
 Puedes ajustar giro, opacidad, alineación y orden, duplicar, ocultar o eliminar
 capas, y deshacer o rehacer cambios.
 
+En la lista de capas, el ojo abierto indica una capa visible y el ojo tachado
+una capa oculta. El candado protege la capa de movimientos, cambios de tamaño,
+edición de sus propiedades, reordenación y borrado. Puedes seleccionarla,
+cambiar su visibilidad o duplicarla como una capa desbloqueada. **Vaciar
+lienzo** conserva las capas bloqueadas. El estado del candado se guarda en la
+plantilla y en su JSON. Las plantillas anteriores se abren desbloqueadas.
+
 La geometría usa un lienzo lógico de 300 × 150 unidades, adaptado al tamaño
 físico de etiqueta del proyecto, que se muestra junto a la vista previa.
 En pantallas estrechas las propiedades aparecen debajo del lienzo y las medidas

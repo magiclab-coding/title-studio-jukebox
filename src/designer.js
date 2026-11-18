@@ -202,6 +202,7 @@
       rotation: 0,
       opacity: 1,
       visible: true,
+      locked: false,
       field,
       text: field ? '' : 'Tu texto',
       font: '',
@@ -264,6 +265,7 @@
           rotation: num(raw.rotation, 0, -180, 180),
           opacity: num(raw.opacity, 1, 0, 1),
           visible: raw.visible !== false,
+          locked: raw.locked === true,
           field: fields.some((f) => f.key === raw.field) ? raw.field : '',
           text: String(raw.text || '').slice(0, 1000),
           font: String(raw.font || '').slice(0, 100),
@@ -736,6 +738,9 @@ globalThis.StudioComponents.TemplateDesigner = {
     layers() {
       return this.model.design.elements;
     },
+    hasUnlockedLayers() {
+      return this.layers.some((layer) => !layer.locked);
+    },
     selectedLayer() {
       return this.layers.find((e) => e.id === this.selectedId);
     },
@@ -841,6 +846,7 @@ globalThis.StudioComponents.TemplateDesigner = {
         ...tools.clone(this.selectedLayer),
         id: tools.id(),
         name: this.selectedLayer.name + ' (copia)',
+        locked: false,
       };
       e.x = Math.min(300 - e.width, e.x + 4);
       e.y = Math.min(150 - e.height, e.y + 4);
@@ -848,29 +854,40 @@ globalThis.StudioComponents.TemplateDesigner = {
       this.selectedId = e.id;
     },
     remove() {
+      if (!this.selectedLayer || this.selectedLayer.locked) return;
       this.model.design.elements = this.layers.filter((e) => e.id !== this.selectedId);
       this.selectedId = '';
     },
+    canOrder(direction) {
+      const index = this.layers.findIndex((layer) => layer.id === this.selectedId);
+      const neighbor = this.layers[index + direction];
+      return index >= 0 && !this.layers[index].locked && !!neighbor && !neighbor.locked;
+    },
     order(direction) {
+      if (!this.canOrder(direction)) return;
       const index = this.layers.findIndex((e) => e.id === this.selectedId);
       const target = index + direction;
-      if (index < 0 || target < 0 || target >= this.layers.length) return;
       const list = [...this.layers];
       [list[index], list[target]] = [list[target], list[index]];
       this.model.design.elements = list;
     },
     align(direction) {
       const e = this.selectedLayer;
-      if (!e) return;
+      if (!e || e.locked) return;
       if (direction === 'left') e.x = 0;
       if (direction === 'center') e.x = (300 - e.width) / 2;
       if (direction === 'right') e.x = 300 - e.width;
       if (direction === 'middle') e.y = (150 - e.height) / 2;
     },
     clear() {
-      if (this.layers.length && !window.confirm('¿Vaciar el lienzo? Puedes deshacerlo.')) return;
-      this.model.design.elements = [];
-      this.selectedId = '';
+      if (!this.hasUnlockedLayers) return;
+      const lockedLayers = this.layers.filter((layer) => layer.locked);
+      const message = lockedLayers.length
+        ? '¿Vaciar el lienzo? Se conservarán las capas bloqueadas. Puedes deshacerlo.'
+        : '¿Vaciar el lienzo? Puedes deshacerlo.';
+      if (!window.confirm(message)) return;
+      this.model.design.elements = lockedLayers;
+      if (!this.selectedLayer) this.selectedId = '';
     },
     // Las coordenadas se convierten desde píxeles de pantalla al lienzo lógico.
     startPointer(event, resize = false) {
@@ -891,7 +908,7 @@ globalThis.StudioComponents.TemplateDesigner = {
         });
         this.selectedId = e?.id || '';
       }
-      if (!e) return;
+      if (!e || e.locked) return;
       event.preventDefault();
       const origin = { x: e.x, y: e.y, width: e.width, height: e.height };
       const before = JSON.stringify(this.model);
@@ -899,6 +916,7 @@ globalThis.StudioComponents.TemplateDesigner = {
       const stage = this.$refs.stage;
       stage.setPointerCapture?.(event.pointerId);
       const move = (ev) => {
+        if (e.locked) return;
         const dx = ((ev.clientX - event.clientX) * 300) / box.width;
         const dy = ((ev.clientY - event.clientY) * 150) / box.height;
         if (resize) {
@@ -958,6 +976,7 @@ globalThis.StudioComponents.TemplateDesigner = {
       const d = deltas[event.key];
       if (d) {
         event.preventDefault();
+        if (e.locked) return;
         const step = event.shiftKey ? 10 : 1;
         e.x = Math.max(0, Math.min(300 - e.width, e.x + d[0] * step));
         e.y = Math.max(0, Math.min(150 - e.height, e.y + d[1] * step));
@@ -1087,22 +1106,37 @@ globalThis.StudioComponents.TemplateDesigner = {
             <div class="designer-stage-shell">
               <div ref="stage" class="designer-stage" tabindex="0" role="group" aria-label="Lienzo de plantilla. Selecciona y arrastra una capa; usa las flechas para moverla." :style="{aspectRatio:settings.width+'/'+settings.height}" @pointerdown="startPointer">
                 <div class="designer-drawing" v-html="preview"></div>
-                <div v-if="selectedLayer && selectedLayer.visible" class="designer-selection" :style="selectionStyle">
-                  <button type="button" class="designer-resize" @pointerdown.stop="startPointer($event,true)" title="Arrastrar para cambiar tamaño" aria-label="Cambiar tamaño de la capa"></button>
+                <div v-if="selectedLayer && selectedLayer.visible" class="designer-selection" :class="{ locked: selectedLayer.locked }" :style="selectionStyle">
+                  <button v-if="!selectedLayer.locked" type="button" class="designer-resize" @pointerdown.stop="startPointer($event,true)" title="Arrastrar para cambiar tamaño" aria-label="Cambiar tamaño de la capa"></button>
                 </div>
               </div>
             </div>
             <div class="designer-preview-options">
               <span>{{ settings.width }} × {{ settings.height }} mm</span>
               <label><span class="sr-only">Texto de prueba</span><select v-model="sampleMode" aria-label="Texto de prueba"><option value="sample">Texto de muestra</option><option value="long">Probar nombres largos</option></select></label>
-              <button type="button" class="text-btn" @click="clear">Vaciar lienzo</button>
+              <button type="button" class="text-btn" :disabled="!hasUnlockedLayers" @click="clear">Vaciar lienzo</button>
             </div>
             <p class="designer-help">Arrastra las capas o ajusta sus medidas. Flechas para mover · Mayús para pasos de 10.</p>
             <div class="designer-layer-heading"><h3>Capas</h3><small>{{ layers.length }} / 80</small></div>
             <ol class="designer-layers" aria-label="Capas, de delante hacia atrás">
               <li v-for="layer in [...layers].reverse()" :key="layer.id" :class="{active:layer.id===selectedId}">
                 <button type="button" class="designer-layer-name" @click="selectedId=layer.id" :aria-pressed="layer.id===selectedId">{{ layer.name }}</button>
-                <button type="button" class="control-icon" @click="layer.visible=!layer.visible" :title="layer.visible ? 'Ocultar capa' : 'Mostrar capa'" :aria-label="(layer.visible ? 'Ocultar ' : 'Mostrar ')+layer.name" :aria-pressed="layer.visible">{{ layer.visible ? '◉' : '○' }}</button>
+                <button type="button" class="control-icon designer-layer-lock" @click="layer.locked = !layer.locked" :title="layer.locked ? 'Desbloquear capa' : 'Bloquear capa'" :aria-label="'Bloqueo de capa: ' + layer.name" :aria-pressed="layer.locked">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="5" y="11" width="14" height="10" rx="2"/>
+                    <path :d="layer.locked ? 'M8 11V7a4 4 0 0 1 8 0v4' : 'M8 11V7a4 4 0 0 1 8 0'"/>
+                    <path d="M12 15v2"/>
+                  </svg>
+                </button>
+                <button type="button" class="control-icon" @click="layer.visible = !layer.visible" :title="layer.visible ? 'Ocultar capa' : 'Mostrar capa'" :aria-label="'Visibilidad de capa: ' + layer.name" :aria-pressed="layer.visible">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <template v-if="layer.visible">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </template>
+                    <path v-else d="m3 3 18 18M10 5.2c.7-.1 1.3-.2 2-.2 6.5 0 10 7 10 7a16 16 0 0 1-2.4 3.2M6.1 6.1C3.5 8.4 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
+                  </svg>
+                </button>
               </li>
             </ol>
             <p v-if="!layers.length" class="small-muted">Añade campos, formas o un gráfico para empezar.</p>
@@ -1110,51 +1144,55 @@ globalThis.StudioComponents.TemplateDesigner = {
           <aside class="designer-properties" aria-label="Propiedades de capa">
             <h3>Propiedades</h3>
             <template v-if="selectedLayer">
-              <label>Nombre de la capa<input v-model="selectedLayer.name" maxlength="80" /></label>
+              <p v-if="selectedLayer.locked" class="small-muted" role="status">Capa bloqueada. Usa el candado de la lista para editarla.</p>
+              <label>Nombre de la capa<input v-model="selectedLayer.name" :disabled="selectedLayer.locked" maxlength="80" /></label>
               <div class="designer-layer-actions">
-                <button class="control-icon" type="button" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
-                <button class="control-icon" type="button" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
-                <button class="control-icon" type="button" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
-                <button class="control-icon danger" type="button" @click="remove" title="Eliminar capa" aria-label="Eliminar capa"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
+                <button class="control-icon" type="button" :disabled="layers.length >= 80" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
+                <button class="control-icon" type="button" :disabled="!canOrder(1)" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
+                <button class="control-icon" type="button" :disabled="!canOrder(-1)" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
+                <button class="control-icon danger" type="button" :disabled="selectedLayer.locked" @click="remove" title="Eliminar capa" aria-label="Eliminar capa"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
               </div>
-              <div class="designer-measures">
-                <label>X<input type="number" min="0" max="300" v-model.number="selectedLayer.x" /></label>
-                <label>Y<input type="number" min="0" max="150" v-model.number="selectedLayer.y" /></label>
-                <label>Ancho<input type="number" min="2" max="300" v-model.number="selectedLayer.width" /></label>
-                <label>Alto<input type="number" min="2" max="150" v-model.number="selectedLayer.height" /></label>
-                <label>Giro · °<input type="number" min="-180" max="180" v-model.number="selectedLayer.rotation" /></label>
-                <label>Opacidad<input type="number" min="0" max="1" step="0.05" v-model.number="selectedLayer.opacity" /></label>
-              </div>
-              <div class="designer-align" role="group" aria-label="Alinear en el lienzo">
-                <button type="button" class="control-icon" @click="align('left')" title="Alinear a izquierda" aria-label="Alinear a izquierda">⇤</button>
-                <button type="button" class="control-icon" @click="align('center')" title="Centrar horizontalmente" aria-label="Centrar horizontalmente">↔</button>
-                <button type="button" class="control-icon" @click="align('right')" title="Alinear a derecha" aria-label="Alinear a derecha">⇥</button>
-                <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
-              </div>
-              <template v-if="selectedLayer.type==='text'">
-                <label>Contenido<select v-model="selectedLayer.field" aria-label="Contenido"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
-                <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
-                <font-picker v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
+              <fieldset class="designer-property-fields" :disabled="selectedLayer.locked" aria-label="Ajustes de capa">
                 <div class="designer-measures">
-                  <label>Tamaño · px<input type="number" min="4" max="100" v-model.number="selectedLayer.fontSize" /></label>
-                  <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
+                  <label>X<input type="number" min="0" max="300" v-model.number="selectedLayer.x" /></label>
+                  <label>Y<input type="number" min="0" max="150" v-model.number="selectedLayer.y" /></label>
+                  <label>Ancho<input type="number" min="2" max="300" v-model.number="selectedLayer.width" /></label>
+                  <label>Alto<input type="number" min="2" max="150" v-model.number="selectedLayer.height" /></label>
+                  <label>Giro · °<input type="number" min="-180" max="180" v-model.number="selectedLayer.rotation" /></label>
+                  <label>Opacidad<input type="number" min="0" max="1" step="0.05" v-model.number="selectedLayer.opacity" /></label>
                 </div>
-              </template>
-              <color-picker :paper="model.paper" v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
-              <template v-if="!['svg','image'].includes(selectedLayer.type)">
-                <div class="designer-color-row">
-                  <label>Vincular tinta a<select v-model="selectedLayer.colorRole" aria-label="Vincular tinta a"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
-                  <option value="paper">Papel</option><option value="fixed">Propio</option></select></label>
-                  <color-picker :paper="model.paper" v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker><color-picker :paper="model.paper" v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
-                  <color-picker :paper="model.paper" v-if="selectedLayer.type==='text'" label="Fondo" v-model="selectedLayer.background"></color-picker>
+                <div class="designer-align" role="group" aria-label="Alinear en el lienzo">
+                  <button type="button" class="control-icon" @click="align('left')" title="Alinear a izquierda" aria-label="Alinear a izquierda">⇤</button>
+                  <button type="button" class="control-icon" @click="align('center')" title="Centrar horizontalmente" aria-label="Centrar horizontalmente">↔</button>
+                  <button type="button" class="control-icon" @click="align('right')" title="Alinear a derecha" aria-label="Alinear a derecha">⇥</button>
+                  <button type="button" class="control-icon" @click="align('middle')" title="Centrar verticalmente en la tarjeta" aria-label="Centrar verticalmente en la tarjeta">↕</button>
                 </div>
-                <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
-                <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
-                  <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
-                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><color-picker :paper="model.paper" label="Color borde" :model-value="selectedLayer.stroke" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'"></color-picker></div>
-                  <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
+                <template v-if="selectedLayer.type==='text'">
+                  <label>Contenido<select v-model="selectedLayer.field" aria-label="Contenido"><option value="">Texto libre</option><option v-for="field in fields" :value="field.key">{{ field.label }}</option></select></label>
+                  <label v-if="!selectedLayer.field">Texto<input v-model="selectedLayer.text" maxlength="1000" /></label>
+                  <font-picker v-if="!selectedLayer.locked" v-model="selectedLayer.font" :options="fonts" label="Fuente de la capa" sample="Título de la cara A" inherit></font-picker>
+                  <p v-else class="small-muted">Fuente de la capa: {{ selectedLayer.font || 'Heredar' }}</p>
+                  <div class="designer-measures">
+                    <label>Tamaño · px<input type="number" min="4" max="100" v-model.number="selectedLayer.fontSize" /></label>
+                    <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
+                  </div>
                 </template>
-              </template>
+                <color-picker :paper="model.paper" v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
+                <template v-if="!['svg','image'].includes(selectedLayer.type)">
+                  <div class="designer-color-row">
+                    <label>Vincular tinta a<select v-model="selectedLayer.colorRole" aria-label="Vincular tinta a"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
+                    <option value="paper">Papel</option><option value="fixed">Propio</option></select></label>
+                    <color-picker :paper="model.paper" v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker><color-picker :paper="model.paper" v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
+                    <color-picker :paper="model.paper" v-if="selectedLayer.type==='text'" label="Fondo" v-model="selectedLayer.background"></color-picker>
+                  </div>
+                  <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
+                  <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
+                    <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
+                    <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><color-picker :paper="model.paper" label="Color borde" :model-value="selectedLayer.stroke" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'"></color-picker></div>
+                    <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
+                  </template>
+                </template>
+              </fieldset>
             </template>
             <p v-else class="small-muted">Selecciona una capa en el lienzo o en la lista.</p>
           </aside>
