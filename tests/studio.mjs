@@ -960,3 +960,52 @@ app.loadBackup();
 await nextTick();
 assert.ok(app.settings.value.colorPalette.includes('#ab12cd'));
 console.log('PASS: active palette is shared, deduplicated and included in project backups');
+
+// El orden antiguo se adapta sin invertir la creación de nuevos colores.
+const beforePaletteRecords = JSON.stringify(app.collections.value);
+const beforePalettePositions = JSON.stringify(app.compositions.value);
+app.settings.value.colorPalette = ['#222abc', '#111abc'];
+delete app.settings.value.colorPaletteOrder;
+assert.deepEqual(Array.from(app.activePalette.value.slice(-2)), ['#111abc', '#222abc']);
+app.savePaletteColor('#333abc');
+app.savePaletteColor('#111abc');
+assert.deepEqual(Array.from(app.settings.value.colorPalette), ['#111abc', '#222abc', '#333abc']);
+app.removePaletteColor('#222ABC');
+assert.deepEqual(Array.from(app.settings.value.colorPalette), ['#111abc', '#333abc']);
+assert.equal(JSON.stringify(app.collections.value), beforePaletteRecords);
+assert.equal(JSON.stringify(app.compositions.value), beforePalettePositions);
+assert.equal(app.activePalette.value[0], 'transparent');
+await nextTick();
+assert.equal(JSON.parse(storage.get('title-studio-v3')).settings.colorPaletteOrder, 'oldest-first');
+
+// El fondo de texto viaja con la copia de la posición y la salida impresa.
+const backgroundTemplate = designTools.newTemplate();
+backgroundTemplate.name = 'Fondo comprobado';
+backgroundTemplate.design.elements[1].background = '#ff0000';
+app.saveTemplateDesign(backgroundTemplate);
+app.view.value = 'compose';
+app.selectedItemId.value = app.composition.value.items[0].id;
+app.selected.value = app.composition.value.items[0].cardId;
+app.openStyle();
+app.useTemplate(app.templates.find((template) => template.name === 'Fondo comprobado'));
+app.finishStyle();
+await nextTick();
+assert.equal(
+  app.composition.value.items[0].appearance.customDesign.elements[1].background,
+  '#ff0000',
+);
+assert.match(app.svg(app.compositionCards.value[0]), /data-text-background/);
+app.printSource.value = 'composition';
+app.printAll();
+await nextTick();
+assert.match(output.innerHTML, /data-text-background/);
+const backgroundBackup = JSON.parse(storage.get('title-studio-v3'));
+assert.equal(
+  backgroundBackup.compositions.find(
+    (composition) => composition.id === app.activeComposition.value,
+  ).items[0].appearance.customDesign.elements[1].background,
+  '#ff0000',
+);
+console.log(
+  'PASS: custom color chronology, deletion isolation and per-layer backgrounds survive print and backup',
+);

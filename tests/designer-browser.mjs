@@ -85,18 +85,15 @@ try {
           await visual.getByRole('button', { name: 'Artista central', exact: true }).click();
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
-          await palette.locator('.color-swatches button').first().waitFor();
+          await palette.locator('.color-choice').first().waitFor();
           // La animación del menú escala sus medidas hasta que termina.
-          await palette.locator('.color-swatches button').first().hover();
+          await palette.locator('.color-choice').first().hover();
           assert.equal(
-            await palette
-              .locator('.color-swatches button > span')
-              .filter({ hasNotText: 'Custom' })
-              .count(),
-            14,
+            await palette.locator('.color-choice > span').filter({ hasNotText: 'Custom' }).count(),
+            15,
           );
           await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).waitFor();
-          const colorRows = await palette.locator('.color-swatches button').evaluateAll((nodes) =>
+          const colorRows = await palette.locator('.color-row').evaluateAll((nodes) =>
             nodes.map((node) => {
               const rect = node.getBoundingClientRect();
               return {
@@ -114,12 +111,19 @@ try {
             ),
             'Un color por fila',
           );
-          assert.ok(colorRows[5].text.includes('Rojo') && colorRows[5].text.includes('#FF0000'));
+          assert.ok(colorRows[6].text.includes('Rojo') && colorRows[6].text.includes('#FF0000'));
           await palette.screenshot({ path: '.test-artifacts/palette-rows-' + width + '.png' });
           assert.equal(
             await palette.locator('input').count(),
             0,
             'La paleta rápida no tiene campos de edición',
+          );
+          assert.ok(
+            (await palette.locator('.color-choice').first().innerText()).includes('Transparente'),
+          );
+          assert.equal(
+            await palette.locator('.color-swatches > :last-child').innerText(),
+            'Personalizar color…',
           );
           await palette.getByRole('button', { name: 'Personalizar color…', exact: true }).click();
           const customColor = page.locator('.color-custom-modal:visible');
@@ -214,9 +218,70 @@ try {
           await customColor.getByRole('button', { name: 'Guardar color', exact: true }).click();
           await customColor.waitFor({ state: 'hidden' });
           await page.setViewportSize({ width, height: 900 });
+
+          // Guardar añade al final, pero no cambia aún el color del artista.
+          await palette.getByRole('button', { name: 'Usar Custom #AB12CD', exact: true }).waitFor();
+          assert.equal(
+            await visual
+              .locator('.designer-drawing svg text')
+              .filter({ hasText: 'Artista A / Artista B' })
+              .getAttribute('fill'),
+            beforeColor,
+          );
+          await palette.getByRole('button', { name: 'Personalizar color…', exact: true }).click();
+          await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#12abcd');
+          await customColor.getByRole('button', { name: 'Guardar color', exact: true }).click();
+          await customColor.waitFor({ state: 'hidden' });
+          const customNames = await palette
+            .locator('.color-choice')
+            .filter({ hasText: 'Custom' })
+            .allTextContents();
+          assert.equal(customNames.length, 2);
+          assert.ok(customNames[0].includes('#AB12CD') && customNames[1].includes('#12ABCD'));
+          await palette.getByRole('button', { name: 'Usar Custom #AB12CD', exact: true }).click();
+          await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
+          await palette
+            .getByRole('button', { name: 'Eliminar color #AB12CD', exact: true })
+            .click();
+          await palette
+            .getByRole('button', { name: 'Usar Custom #AB12CD', exact: true })
+            .waitFor({ state: 'detached' });
+          assert.equal(
+            await visual
+              .locator('.designer-drawing svg text')
+              .filter({ hasText: 'Artista A / Artista B' })
+              .getAttribute('fill'),
+            '#ab12cd',
+          );
+          // Volver a crear el eliminado lo sitúa detrás del resto de Custom.
+          await palette.getByRole('button', { name: 'Personalizar color…', exact: true }).click();
+          await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#ab12cd');
+          await customColor.getByRole('button', { name: 'Guardar color', exact: true }).click();
+          await customColor.waitFor({ state: 'hidden' });
+          const recreated = await palette
+            .locator('.color-choice')
+            .filter({ hasText: 'Custom' })
+            .allTextContents();
+          assert.ok(recreated[0].includes('#12ABCD') && recreated[1].includes('#AB12CD'));
+          await palette.getByRole('button', { name: 'Usar Custom #AB12CD', exact: true }).click();
+          await palette.waitFor({ state: 'hidden' });
           await visual.getByRole('button', { name: 'Papel', exact: true }).click();
           await palette.getByRole('button', { name: 'Usar Custom #AB12CD', exact: true }).waitFor();
           await page.keyboard.press('Escape');
+          await palette.waitFor({ state: 'hidden' });
+          // El fondo de cada texto es independiente de la tinta y del papel.
+          await visual.getByRole('button', { name: 'Fondo del texto', exact: true }).click();
+          await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).click();
+          assert.equal(
+            await visual.locator('[data-text-background]').getAttribute('fill'),
+            '#ff0000',
+          );
+          await palette.waitFor({ state: 'hidden' });
+          await visual.getByRole('button', { name: 'Fondo del texto', exact: true }).click();
+          await palette
+            .getByRole('button', { name: 'Usar Transparente #00000000', exact: true })
+            .click();
+          await visual.locator('[data-text-background]').waitFor({ state: 'detached' });
           const savedColor = await page.evaluate(
             () => JSON.parse(localStorage.getItem('title-studio-v3')).settings.colorPalette,
           );

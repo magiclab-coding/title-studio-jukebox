@@ -220,17 +220,18 @@ test('paleta estándar ordenada, colores Custom y contraste legible', () => {
   const shared = {};
   vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
   const colors = shared.StudioColorTools;
-  assert.equal(colors.standardColors.length, 14);
+  assert.equal(colors.standardColors.length, 15);
+  assert.equal(colors.standardColors[0].hex, 'transparent');
   assert.equal(colors.standardColors.find((color) => color.name === 'Rojo').hex, '#ff0000');
   assert.equal(colors.standardColors.find((color) => color.name === 'Azul').hex, '#0000ff');
-  const palette = colors.palette(['#ABCDEF', '#abcdef', '#ffffff'], '#123456');
-  assert.equal(palette.length, 16);
-  assert.equal(palette[14].name, 'Custom');
-  assert.equal(palette[14].hex, '#abcdef');
-  assert.equal(palette[15].hex, '#123456');
+  const palette = colors.palette(['#ABCDEF', '#abcdef', '#ffffff', '#123456']);
+  assert.equal(palette.length, 17);
+  assert.equal(palette[15].name, 'Custom');
+  assert.equal(palette[15].hex, '#abcdef');
+  assert.equal(palette[16].hex, '#123456');
   assert.equal(colors.textColor('#ffff00'), '#000000');
   assert.equal(colors.textColor('#0000ff'), '#ffffff');
-  for (const color of palette) {
+  for (const color of palette.filter((color) => colors.valid(color.hex))) {
     const rgb = color.hex
       .slice(1)
       .match(/../g)
@@ -249,7 +250,7 @@ test('paleta estándar ordenada, colores Custom y contraste legible', () => {
   }
 });
 
-test('personalizar usa un borrador y solo guardar añade y aplica el color', () => {
+test('personalizar añade el color sin aplicarlo hasta seleccionarlo', () => {
   const shared = {};
   vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
   const component = shared.StudioComponents.ColorPicker;
@@ -275,6 +276,51 @@ test('personalizar usa un borrador y solo guardar añade y aplica el color', () 
   picker.editHex('#ab12cd');
   picker.saveColor();
   assert.deepEqual(added, ['#ab12cd']);
-  assert.deepEqual(emitted, [['update:modelValue', '#ab12cd']]);
+  assert.deepEqual(emitted, []);
   assert.equal(picker.customOpen, false);
+  assert.equal(picker.open, true);
+  picker.choose('#ab12cd');
+  assert.deepEqual(emitted, [['update:modelValue', '#ab12cd']]);
+});
+
+test('fondos por capa, transparencias y JSON conservan el mismo dibujo', () => {
+  const template = tools.newTemplate();
+  const card = { ...sample, customDesign: template.design };
+  assert.ok(template.design.elements.every((layer) => layer.background === 'transparent'));
+  assert.doesNotMatch(
+    tools.render(card, { width: 76, height: 38 }, { fit }),
+    /data-text-background/,
+  );
+  template.design.elements[1].background = '#ff0000';
+  template.design.elements[1].rotation = 15;
+  template.design.elements[1].opacity = 0.5;
+  const clean = tools.normalizeTemplate(JSON.parse(JSON.stringify(template)));
+  assert.equal(clean.design.elements[1].background, '#ff0000');
+  const svg = tools.render(
+    { ...card, customDesign: clean.design },
+    { width: 76, height: 38 },
+    { fit },
+  );
+  const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+  const background = doc.querySelector('[data-text-background]');
+  assert.equal(background.getAttribute('fill'), '#ff0000');
+  assert.equal(background.parentNode.getAttribute('opacity'), '0.5');
+  assert.match(background.parentNode.getAttribute('transform'), /rotate\(15/);
+  assert.equal(background.nextElementSibling.localName, 'text');
+  assert.equal(background.nextElementSibling.getAttribute('fill'), sample.artistInk);
+  assert.equal(doc.querySelectorAll('[data-text-background]').length, 1);
+  clean.design.elements[1].background = 'transparent';
+  assert.doesNotMatch(
+    tools.render({ ...card, customDesign: clean.design }, { width: 76, height: 38 }, { fit }),
+    /data-text-background/,
+  );
+  clean.design.elements[0].background = 'url(https://external.invalid)';
+  assert.equal(tools.normalizeTemplate(clean).design.elements[0].background, 'transparent');
+  const transparent = tools.render(
+    { ...card, paper: 'transparent', ink: 'transparent' },
+    { width: 76, height: 38 },
+    { fit },
+  );
+  const transparentDoc = new DOMParser().parseFromString(transparent, 'image/svg+xml');
+  assert.equal(transparentDoc.querySelector('svg > rect').getAttribute('fill'), 'transparent');
 });
