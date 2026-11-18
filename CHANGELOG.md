@@ -1,3 +1,7 @@
+# 7.22.0
+
+- Publicación de las mejoras de cabeceras y edición de capas de la versión 7.21.1.
+
 # 7.21.1
 
 - Cabeceras de modales más bajas con fondo al 90 % de transparencia.
