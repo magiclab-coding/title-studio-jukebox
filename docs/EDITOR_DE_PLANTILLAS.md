@@ -18,6 +18,8 @@ edición de sus propiedades, reordenación y borrado. Puedes seleccionarla,
 cambiar su visibilidad o duplicarla como una capa desbloqueada. **Vaciar
 lienzo** conserva las capas bloqueadas. El estado del candado se guarda en la
 plantilla y en su JSON. Las plantillas anteriores se abren desbloqueadas.
+La papelera de cada fila borra esa capa directamente. Está desactivada en las
+capas bloqueadas. Puedes recuperar una capa borrada con **Deshacer**.
 
 La geometría usa un lienzo lógico de 300 × 150 unidades, adaptado al tamaño
 físico de etiqueta del proyecto, que se muestra junto a la vista previa.
@@ -110,7 +112,14 @@ o tarjeta que se está editando. Es un acceso directo al valor actual; no añade
 colores personalizados. Los Custom se nombran Custom 1, Custom 2 y siguientes,
 según su orden visible. Al borrar uno, se renumeran los que quedan.
 
-Vincular tinta a decide si la capa toma el color compartido de Canciones,
-Artista, Elementos o Papel, o un color Propio independiente.
-Tinta modifica ese color. Fondo modifica únicamente el fondo de la capa de
-texto seleccionada. Los dos controles aparecen juntos, con igual tamaño y eje.
+**Vincular tinta con** y **Vincular fondo con** tienen una fila cada uno en las
+capas de texto. Cada desplegable permite elegir Color de canción, Color de
+artista, Color de elementos, Color de papel o Color propio. A su lado, la
+muestra **Tinta** o **Fondo** permite editar el color compartido o propio.
+El fondo de las capas existentes conserva su valor y el de las nuevas
+empieza con Color propio transparente.
+
+En **Diseños y plantillas**, pulsa el nombre o la vista previa de un diseño
+predefinido o propio para abrir **Estilo del diseño**. **Guardar estilo**
+establece sus colores, fuentes y tamaños para las próximas tarjetas que usen
+la plantilla. El lápiz abre el editor de capas.

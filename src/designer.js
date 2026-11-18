@@ -12,6 +12,15 @@
     { key: 'label', label: 'Sello', sample: 'Sello' },
     { key: 'year', label: 'Año', sample: '1957' },
   ];
+  const colorRoles = [
+    { key: 'ink', label: 'Color de canción' },
+    { key: 'artistInk', label: 'Color de artista' },
+    { key: 'graphicsInk', label: 'Color de elementos' },
+    { key: 'paper', label: 'Color de papel' },
+    { key: 'fixed', label: 'Color propio' },
+  ];
+  const normalizeColorRole = (value) =>
+    colorRoles.some((role) => role.key === value) ? value : 'fixed';
   const clone = (value) => JSON.parse(JSON.stringify(value));
   const id = () => globalThis.crypto?.randomUUID?.() || Date.now() + '-' + Math.random();
   const num = (value, fallback, min, max) => {
@@ -209,6 +218,7 @@
       fontSize: 20,
       align: 'center',
       colorRole: field.startsWith('artist') ? 'artistInk' : field ? 'ink' : 'graphicsInk',
+      backgroundRole: 'fixed',
       background: 'transparent',
       fill: '#213d36',
       stroke: '#213d36',
@@ -277,9 +287,8 @@
           strokeRole: ['ink', 'artistInk', 'graphicsInk', 'paper'].includes(raw.strokeRole)
             ? raw.strokeRole
             : 'fixed',
-          colorRole: ['ink', 'artistInk', 'graphicsInk', 'paper', 'fixed'].includes(raw.colorRole)
-            ? raw.colorRole
-            : 'fixed',
+          colorRole: normalizeColorRole(raw.colorRole),
+          backgroundRole: normalizeColorRole(raw.backgroundRole),
           background: color(raw.background, 'transparent'),
           fill: raw.fill === 'none' ? 'none' : color(raw.fill),
           stroke: color(raw.stroke),
@@ -305,19 +314,15 @@
   }
   function normalizeTemplate(raw) {
     const design = normalizeDesign(raw?.design);
-    const legacyArtist = design.elements.find(
-      (layer) =>
-        layer.type === 'text' && layer.field.startsWith('artist') && layer.colorRole === 'paper',
+    // Los diseños anteriores a los vínculos de fondo usaban el papel como tinta inversa.
+    const legacyArtists = design.elements.filter(
+      (layer, index) =>
+        layer.type === 'text' &&
+        layer.field.startsWith('artist') &&
+        layer.colorRole === 'paper' &&
+        raw.design.elements[index].backgroundRole == null,
     );
-    if (legacyArtist)
-      design.elements.forEach((layer) => {
-        if (
-          layer.type === 'text' &&
-          layer.field.startsWith('artist') &&
-          layer.colorRole === 'paper'
-        )
-          layer.colorRole = 'artistInk';
-      });
+    legacyArtists.forEach((layer) => (layer.colorRole = 'artistInk'));
     return {
       ...newTemplate(),
       id: typeof raw?.id === 'string' && /^custom-[\w-]+$/.test(raw.id) ? raw.id : '',
@@ -326,7 +331,9 @@
           .trim()
           .slice(0, 80) || 'Mi plantilla',
       ink: color(raw?.ink, '#28548a'),
-      artistInk: legacyArtist ? color(raw?.paper, legacyArtist.fill) : color(raw?.artistInk),
+      artistInk: legacyArtists.length
+        ? color(raw?.paper, legacyArtists[0].fill)
+        : color(raw?.artistInk),
       graphicsInk: color(raw?.graphicsInk),
       paper: color(raw?.paper, '#ffffff'),
       font: String(raw?.font || 'DM Sans').slice(0, 100),
@@ -562,15 +569,16 @@
           '" font-weight="400">' +
           escape(m.text) +
           '</text>';
-        // El fondo pertenece a la capa y comparte su geometría, opacidad y giro.
-        if (e.background !== 'transparent')
+        const background =
+          e.backgroundRole === 'fixed' ? e.background : color(card[e.backgroundRole], e.background);
+        if (background !== 'transparent')
           shape =
             '<rect data-text-background="true" width="' +
             e.width +
             '" height="' +
             e.height +
             '" fill="' +
-            e.background +
+            background +
             '"/>' +
             shape;
       } else if (e.type === 'rect')
@@ -694,6 +702,7 @@
   }
   globalThis.StudioTemplateTools = {
     fields,
+    colorRoles,
     clone,
     id,
     element,
@@ -734,6 +743,9 @@ globalThis.StudioComponents.TemplateDesigner = {
   computed: {
     fields() {
       return globalThis.StudioTemplateTools.fields;
+    },
+    colorRoles() {
+      return globalThis.StudioTemplateTools.colorRoles;
     },
     layers() {
       return this.model.design.elements;
@@ -853,10 +865,10 @@ globalThis.StudioComponents.TemplateDesigner = {
       this.layers.push(e);
       this.selectedId = e.id;
     },
-    remove() {
-      if (!this.selectedLayer || this.selectedLayer.locked) return;
-      this.model.design.elements = this.layers.filter((e) => e.id !== this.selectedId);
-      this.selectedId = '';
+    remove(layer = this.selectedLayer) {
+      if (!layer || layer.locked) return;
+      this.model.design.elements = this.layers.filter((e) => e.id !== layer.id);
+      if (this.selectedId === layer.id) this.selectedId = '';
     },
     canOrder(direction) {
       const index = this.layers.findIndex((layer) => layer.id === this.selectedId);
@@ -1137,6 +1149,9 @@ globalThis.StudioComponents.TemplateDesigner = {
                     <path v-else d="m3 3 18 18M10 5.2c.7-.1 1.3-.2 2-.2 6.5 0 10 7 10 7a16 16 0 0 1-2.4 3.2M6.1 6.1C3.5 8.4 2 12 2 12s3.5 7 10 7c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/>
                   </svg>
                 </button>
+                <button type="button" class="control-icon danger" :disabled="layer.locked" @click="remove(layer)" title="Eliminar capa" :aria-label="'Eliminar capa: ' + layer.name">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>
+                </button>
               </li>
             </ol>
             <p v-if="!layers.length" class="small-muted">Añade campos, formas o un gráfico para empezar.</p>
@@ -1150,7 +1165,6 @@ globalThis.StudioComponents.TemplateDesigner = {
                 <button class="control-icon" type="button" :disabled="layers.length >= 80" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
                 <button class="control-icon" type="button" :disabled="!canOrder(1)" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
                 <button class="control-icon" type="button" :disabled="!canOrder(-1)" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
-                <button class="control-icon danger" type="button" :disabled="selectedLayer.locked" @click="remove" title="Eliminar capa" aria-label="Eliminar capa"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg></button>
               </div>
               <fieldset class="designer-property-fields" :disabled="selectedLayer.locked" aria-label="Ajustes de capa">
                 <div class="designer-measures">
@@ -1180,10 +1194,14 @@ globalThis.StudioComponents.TemplateDesigner = {
                 <color-picker :paper="model.paper" v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
                 <template v-if="!['svg','image'].includes(selectedLayer.type)">
                   <div class="designer-color-row">
-                    <label>Vincular tinta a<select v-model="selectedLayer.colorRole" aria-label="Vincular tinta a"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
-                    <option value="paper">Papel</option><option value="fixed">Propio</option></select></label>
-                    <color-picker :paper="model.paper" v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker><color-picker :paper="model.paper" v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
-                    <color-picker :paper="model.paper" v-if="selectedLayer.type==='text'" label="Fondo" v-model="selectedLayer.background"></color-picker>
+                    <label>Vincular tinta con<select v-model="selectedLayer.colorRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
+                    <color-picker :paper="model.paper" v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker>
+                    <color-picker :paper="model.paper" v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
+                  </div>
+                  <div v-if="selectedLayer.type==='text'" class="designer-color-row">
+                    <label>Vincular fondo con<select v-model="selectedLayer.backgroundRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
+                    <color-picker :paper="model.paper" v-if="selectedLayer.backgroundRole==='fixed'" label="Fondo" v-model="selectedLayer.background"></color-picker>
+                    <color-picker :paper="model.paper" v-else label="Fondo" v-model="model[selectedLayer.backgroundRole]"></color-picker>
                   </div>
                   <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
                   <template v-if="['rect','ellipse'].includes(selectedLayer.type)">

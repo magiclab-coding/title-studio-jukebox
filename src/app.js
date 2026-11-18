@@ -1088,8 +1088,8 @@ createApp({
           font: template.font || 'Georgia',
           artistFont: '',
           graphicsInk: template.graphicsInk,
-          customDesign: template.design ? StudioTemplateTools.clone(template.design) : null,
           ...(settings.value.templateDefaults?.[template.id] || {}),
+          customDesign: template.design ? StudioTemplateTools.clone(template.design) : null,
         };
       }
       notify('Estilos mezclados');
@@ -1108,7 +1108,6 @@ createApp({
     }
     function useTemplate(t) {
       const target = styleDialog.value ? styleCard.value : current.value;
-      t = { ...t, ...(settings.value.templateDefaults?.[t.id] || {}) };
       Object.assign(target, {
         style: t.id,
         ink: t.ink,
@@ -1117,25 +1116,21 @@ createApp({
         artistFont: '',
         artistInk: t.artistInk || '#202020',
         graphicsInk: t.graphicsInk,
-        customDesign: t.design ? StudioTemplateTools.clone(t.design) : null,
-        ...(t.design ? { titlePx: 20, artistPx: 19 } : {}),
+        ...(t.design ? { titlePx: t.titlePx ?? 20, artistPx: t.artistPx ?? 19 } : {}),
         // Los predeterminados personalizados se copian a esta posición.
         ...(settings.value.templateDefaults?.[t.id] || {}),
+        customDesign: t.design ? StudioTemplateTools.clone(t.design) : null,
       });
     }
 
     // Los valores del catálogo se guardan en ajustes; las posiciones conservan sus copias.
     function editTemplateDefaults(t) {
-      if (t.design) {
-        openTemplateDesigner(t);
-        return;
-      }
       batchStyle.value = normalize({
         ...current.value,
         ...t,
         style: t.id,
-        customDesign: null,
         ...(settings.value.templateDefaults?.[t.id] || {}),
+        customDesign: t.design ? StudioTemplateTools.clone(t.design) : null,
       });
       defaultStyleId.value = t.id;
       stylePanel.value = 'edit';
@@ -1150,8 +1145,11 @@ createApp({
         target.customDesign = {
           ...target.customDesign,
           elements: target.customDesign.elements.map((layer) =>
-            layer.type === 'text' && layer.field?.startsWith('artist')
-              ? { ...layer, colorRole: 'artistInk' }
+            layer.type === 'text' &&
+            layer.field?.startsWith('artist') &&
+            layer.colorRole === 'paper' &&
+            layer.backgroundRole == null
+              ? { ...layer, colorRole: 'artistInk', backgroundRole: 'fixed' }
               : layer,
           ),
         };
@@ -1159,9 +1157,12 @@ createApp({
     }
     function finishStyle() {
       if (defaultStyleId.value) {
+        const appearance = appearanceOf(batchStyle.value);
+        // La geometría sigue perteneciendo a la plantilla del catálogo.
+        delete appearance.customDesign;
         settings.value.templateDefaults = {
           ...(settings.value.templateDefaults || {}),
-          [defaultStyleId.value]: appearanceOf(batchStyle.value),
+          [defaultStyleId.value]: appearance,
         };
       }
       styleDialog.value = false;
@@ -2354,7 +2355,14 @@ createApp({
               name: template.name + ' (copia)',
             },
           );
-        } else designerInitial.value = template ? StudioTemplateTools.clone(template) : null;
+        } else {
+          designerInitial.value = template
+            ? StudioTemplateTools.clone({
+                ...template,
+                ...(settings.value.templateDefaults?.[template.id] || {}),
+              })
+            : null;
+        }
       } catch (error) {
         notify('No se pudo abrir la plantilla: ' + error.message);
         return;
