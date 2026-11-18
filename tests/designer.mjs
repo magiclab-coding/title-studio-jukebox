@@ -78,10 +78,15 @@ test('normalización limita valores, rechaza recursos y conserva copias transpor
   t.name = 'Transportable';
   t.design.elements[0].x = -999;
   t.design.elements[0].fontSize = Infinity;
+  t.design.elements[0].locked = true;
+  delete t.design.elements[1].locked;
   const normalized = tools.normalizeTemplate(t);
   assert.equal(normalized.design.elements[0].x, 0);
   assert.equal(normalized.design.elements[0].fontSize, 20);
-  assert.equal(tools.normalizeTemplate(JSON.parse(JSON.stringify(normalized))).id, t.id);
+  assert.equal(normalized.design.elements[1].locked, false);
+  const restored = tools.normalizeTemplate(JSON.parse(JSON.stringify(normalized)));
+  assert.equal(restored.id, t.id);
+  assert.equal(restored.design.elements[0].locked, true);
   assert.throws(() => tools.normalizeDesign({ elements: Array(81).fill(tools.element()) }));
   assert.throws(() =>
     tools.normalizeDesign({
