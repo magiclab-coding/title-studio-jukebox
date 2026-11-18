@@ -26,7 +26,7 @@ físico de etiqueta del proyecto, que se muestra junto a la vista previa.
 En pantallas estrechas las propiedades aparecen debajo del lienzo y las medidas
 se disponen en una sola columna.
 En móvil, Deshacer, Rehacer y Cerrar se mantienen arriba y el icono Guardar
-queda abajo al desplazar el contenido.
+queda en la misma cabecera al desplazar el contenido.
 
 Los campos del disco se rellenan automáticamente al usar la plantilla.
 El campo **Artista central** combina Artista A y Artista B con una barra.

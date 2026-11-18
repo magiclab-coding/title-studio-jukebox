@@ -688,7 +688,28 @@
                             : 'Estilo' + (styleCard.number ? ' ' + styleCard.number : '')
                       }}
                     </h3>
-                    <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
+                    <div class="modal-header-actions">
+                      <button
+                        class="control-icon modal-mobile-save"
+                        type="button"
+                        :aria-label="
+                          styleAll
+                            ? 'Aplicar a ' + compositionCards.length + ' tarjetas'
+                            : 'Guardar estilo'
+                        "
+                        @click="styleAll ? applyAll() : finishStyle()"
+                      >
+                        <span aria-hidden="true">✓</span>
+                      </button>
+                      <button
+                        class="control-icon modal-close"
+                        type="button"
+                        @click="styleDialog = false"
+                        aria-label="Cerrar estilos"
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
                   <div class="style-modal-content">
                     <div v-if="defaultStyleId" class="style-preview-header">
@@ -818,9 +839,21 @@
                       </fieldset>
                     </div>
                   </div>
-                  <v-btn v-if="styleAll" color="primary" block @click="applyAll"
+                  <v-btn
+                    v-if="styleAll"
+                    class="modal-desktop-save"
+                    color="primary"
+                    block
+                    @click="applyAll"
                     >Aplicar a {{ compositionCards.length }} tarjetas</v-btn
-                  ><v-btn v-else color="primary" block @click="finishStyle">Guardar estilo</v-btn>
+                  ><v-btn
+                    v-else
+                    class="modal-desktop-save"
+                    color="primary"
+                    block
+                    @click="finishStyle"
+                    >Guardar estilo</v-btn
+                  >
                 </section></v-dialog
               >
               <v-dialog v-model="picker" max-width="540"

@@ -437,7 +437,8 @@ try {
         assert.ok(Math.abs(before.top - after.top) < 1, JSON.stringify({ before, after }));
         assert.ok(Math.abs(before.bottom - after.bottom) < 1, JSON.stringify({ before, after }));
         assert.equal(Math.round((await save.boundingBox()).width), 42);
-        assert.ok(await save.locator('svg').isVisible());
+        assert.ok(await save.locator('span').isVisible());
+        assert.equal(Math.round(before.top), Math.round(before.bottom));
         assert.ok(await editor.locator('.designer-cancel').isHidden());
         await scroll.evaluate((node) => (node.scrollTop = 0));
       }

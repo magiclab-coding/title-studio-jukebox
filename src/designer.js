@@ -1096,12 +1096,13 @@ globalThis.StudioComponents.TemplateDesigner = {
   },
   template: `
     <section class="template-designer" @keydown="keydown">
-        <header class="designer-heading">
+        <header class="designer-heading dialog-heading">
           <h2>{{ initial ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
-          <div class="designer-heading-actions">
+          <div class="designer-heading-actions modal-header-actions">
             <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
             <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
-            <button class="control-icon" type="button" @click="close" title="Cerrar editor" aria-label="Cerrar editor de plantilla">×</button>
+            <button class="control-icon modal-mobile-save" type="button" :disabled="!canSave" @click="save" title="Guardar plantilla" aria-label="Guardar plantilla"><span aria-hidden="true">✓</span></button>
+            <button class="control-icon modal-close" type="button" @click="close" title="Cerrar editor" aria-label="Cerrar editor de plantilla">×</button>
           </div>
         </header>
         <div class="designer-content">
@@ -1230,7 +1231,6 @@ globalThis.StudioComponents.TemplateDesigner = {
           <button type="button" class="text-btn designer-cancel" @click="close">Cancelar</button>
           <v-btn class="designer-save" color="primary" :disabled="!canSave" @click="save" title="Guardar plantilla" aria-label="Guardar plantilla">
             <span class="designer-save-label">Guardar plantilla</span>
-            <svg class="designer-save-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4L19 6"/></svg>
           </v-btn>
         </footer>
         <input ref="assetFile" type="file" class="sr-only" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp" @change="importAsset" />
