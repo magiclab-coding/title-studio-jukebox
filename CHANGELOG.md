@@ -1,4 +1,4 @@
-# 7.19.1
+# 7.20.0
 
 - Encabezados de modales coherentes: cierre a la izquierda, título centrado en una línea y acciones en grupos opacos.
 - En pantallas pequeñas, X/Y, ancho/alto y giro/opacidad ocupan dos columnas.
