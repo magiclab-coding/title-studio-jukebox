@@ -4573,6 +4573,9 @@ select:disabled {
   margin-top: 16px;
   padding-top: 16px;
 }
+.designer-save-icon {
+  display: none;
+}
 .template-entry {
   min-width: 0;
   display: flex;
@@ -4612,17 +4615,50 @@ select:disabled {
 }
 @media (max-width: 480px) {
   .template-designer {
-    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
     max-height: calc(100dvh - 24px);
   }
+  .designer-content {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px 14px 12px;
+  }
+  .designer-heading,
+  .designer-footer {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 8px 14px;
+    background: #fff;
+  }
   .designer-heading {
-    flex-wrap: wrap;
+    border-bottom: 1px solid #e0e6e0;
   }
   .designer-heading h2 {
-    font-size: 20px;
+    font-size: clamp(16px, 5vw, 20px);
   }
-  .designer-heading-actions {
-    margin-left: auto;
+  .designer-heading-actions .control-icon,
+  .designer-footer .designer-save {
+    box-shadow: 0 2px 5px #213d3620;
+  }
+  .designer-footer .designer-cancel,
+  .designer-save-label {
+    display: none;
+  }
+  .designer-footer .designer-save {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: 8px;
+  }
+  .designer-save-icon {
+    display: block;
   }
   .designer-identity {
     flex-wrap: wrap;

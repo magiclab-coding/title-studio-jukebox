@@ -363,9 +363,11 @@ try {
           await palette.getByRole('button', { name: 'Usar Azul #0000FF', exact: true }).click();
           await palette.waitFor({ state: 'hidden' });
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
+          const previousInkRole = await inkLink.inputValue();
           await palette
-            .getByRole('button', { name: 'Usar Papel actual #0000FF', exact: true })
+            .getByRole('button', { name: 'Vincular a Papel actual #0000FF', exact: true })
             .click();
+          assert.equal(await inkLink.inputValue(), 'paper');
           assert.equal(
             await visual
               .locator('.designer-drawing svg text')
@@ -374,9 +376,15 @@ try {
             '#0000ff',
           );
           await palette.waitFor({ state: 'hidden' });
+          await inkLink.selectOption(previousInkRole);
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           await palette.getByRole('button', { name: 'Usar Custom 2 #AB12CD', exact: true }).click();
-          await backgroundLink.selectOption('paper');
+          await palette.waitFor({ state: 'hidden' });
+          await visual.getByRole('button', { name: 'Fondo', exact: true }).click();
+          await palette
+            .getByRole('button', { name: 'Vincular a Papel actual #0000FF', exact: true })
+            .click();
+          assert.equal(await backgroundLink.inputValue(), 'paper');
           assert.equal(
             await visual.locator('[data-text-background]').getAttribute('fill'),
             '#0000ff',
@@ -411,6 +419,28 @@ try {
       await editor.waitFor();
       await editor.getByLabel('Nombre', { exact: true }).fill('Plantilla navegador ' + width);
       assert.equal(await editor.locator('.designer-layers li').count(), 3);
+      if (width === 360) {
+        const scroll = editor.locator('.designer-content');
+        const close = editor.getByRole('button', { name: 'Cerrar editor de plantilla' });
+        const save = editor.getByRole('button', { name: 'Guardar plantilla', exact: true });
+        await close.hover();
+        const bounds = async () => ({
+          top: (await close.boundingBox()).y,
+          bottom: (await save.boundingBox()).y,
+        });
+        const before = await bounds();
+        await scroll.evaluate((node) => (node.scrollTop = node.scrollHeight));
+        await page.waitForFunction(
+          () => document.querySelector('.designer-content').scrollTop > 100,
+        );
+        const after = await bounds();
+        assert.ok(Math.abs(before.top - after.top) < 1, JSON.stringify({ before, after }));
+        assert.ok(Math.abs(before.bottom - after.bottom) < 1, JSON.stringify({ before, after }));
+        assert.equal(Math.round((await save.boundingBox()).width), 42);
+        assert.ok(await save.locator('svg').isVisible());
+        assert.ok(await editor.locator('.designer-cancel').isHidden());
+        await scroll.evaluate((node) => (node.scrollTop = 0));
+      }
       // Carga real de las fuentes locales y elección con muestra en el selector compartido.
       const loaded = await page.evaluate(async () => {
         const families = ['Courier Prime', 'Cutive Mono', 'Special Elite', 'IBM Plex Mono'];
@@ -625,6 +655,9 @@ try {
       assert.equal((await downloadPromise).suggestedFilename(), 'title-studio-plantilla.json');
       await stage.scrollIntoViewIfNeeded();
       await page.screenshot({ path: '.test-artifacts/designer-' + width + '.png', fullPage: true });
+      await editor.getByRole('button', { name: 'Título cara A', exact: true }).click();
+      await editor.getByRole('button', { name: 'Fondo', exact: true }).click();
+      await page.getByRole('button', { name: /Vincular a Papel actual/ }).click();
       await editor.getByRole('button', { name: 'Guardar plantilla', exact: true }).click();
       await editor.waitFor({ state: 'detached' });
       const card = page
@@ -636,7 +669,15 @@ try {
       await card.locator('.template-name').click();
       await styleTitle.waitFor();
       await styleModal.locator('.custom-style-preview svg image').waitFor({ state: 'visible' });
+      await styleModal.getByRole('button', { name: 'Color del papel', exact: true }).click();
+      await page.getByRole('button', { name: 'Usar Verde #008000', exact: true }).click();
+      const linkedBackground = styleModal.locator('.custom-style-preview [data-text-background]');
+      assert.equal(await linkedBackground.getAttribute('fill'), '#008000');
       await styleModal.getByRole('button', { name: 'Guardar estilo' }).click();
+      await styleModal.waitFor({ state: 'hidden' });
+      await card.locator('.template-name').click();
+      assert.equal(await linkedBackground.getAttribute('fill'), '#008000');
+      await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
       await styleModal.waitFor({ state: 'hidden' });
       await page
         .getByRole('button', { name: 'Editar plantilla Plantilla navegador ' + width, exact: true })
