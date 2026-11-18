@@ -1,3 +1,9 @@
+# 7.13.0
+
+- Paleta estándar ordenada en filas con nombre y hexadecimal dentro del color y texto con contraste.
+- Colores personalizados identificados como Custom; se elimina la recopilación automática de tonos de las plantillas.
+- Modal compacto con rueda adaptable a la altura y muestra, hexadecimal e iconos de cancelar y guardar alineados en una fila.
+
 # 7.12.0
 
 - Paleta activa compacta con los colores de la aplicación, plantillas y proyecto.

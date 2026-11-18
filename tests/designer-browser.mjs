@@ -86,7 +86,36 @@ try {
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           const palette = page.locator('.color-popover:visible');
           await palette.locator('.color-swatches button').first().waitFor();
-          assert.ok((await palette.locator('.color-swatches button').count()) >= 30);
+          // La animación del menú escala sus medidas hasta que termina.
+          await palette.locator('.color-swatches button').first().hover();
+          assert.equal(
+            await palette
+              .locator('.color-swatches button > span')
+              .filter({ hasNotText: 'Custom' })
+              .count(),
+            14,
+          );
+          await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).waitFor();
+          const colorRows = await palette.locator('.color-swatches button').evaluateAll((nodes) =>
+            nodes.map((node) => {
+              const rect = node.getBoundingClientRect();
+              return {
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height,
+                text: node.textContent,
+              };
+            }),
+          );
+          assert.ok(
+            colorRows.every(
+              (row) => row.height === 40 && Math.abs(row.left - colorRows[0].left) < 1,
+            ),
+            'Un color por fila',
+          );
+          assert.ok(colorRows[5].text.includes('Rojo') && colorRows[5].text.includes('#FF0000'));
+          await palette.screenshot({ path: '.test-artifacts/palette-rows-' + width + '.png' });
           assert.equal(
             await palette.locator('input').count(),
             0,
@@ -112,6 +141,69 @@ try {
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           await palette.getByRole('button', { name: 'Personalizar color…', exact: true }).click();
           await customColor.waitFor();
+          // La rueda y las acciones deben caber juntas incluso con poca altura útil.
+          await page.setViewportSize({ width, height: 560 });
+          await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).click();
+          await page.waitForFunction(() => {
+            const input = document.querySelector('.color-custom-modal input[type="text"]');
+            return input && Math.abs(input.getBoundingClientRect().height - 42) < 0.01;
+          });
+          const compactLayout = await customColor.evaluate((node) => {
+            const bounds = node.getBoundingClientRect();
+            const controls = Array.from(
+              node.querySelectorAll(
+                '.color-custom-value input, .color-custom-value button, .color-sample',
+              ),
+            ).map((control) => {
+              const r = control.getBoundingClientRect();
+              return {
+                width: r.width,
+                height: r.height,
+                center: r.top + r.height / 2,
+                left: r.left,
+                right: r.right,
+              };
+            });
+            const wheel = node.querySelector('.color-wheel').getBoundingClientRect();
+            return {
+              left: bounds.left,
+              right: bounds.right,
+              top: bounds.top,
+              bottom: bounds.bottom,
+              overflow: node.scrollWidth - node.clientWidth,
+              controls,
+              wheelTop: wheel.top,
+              wheelBottom: wheel.bottom,
+            };
+          });
+          // Las animaciones pueden dejar diferencias de milésimas de píxel.
+          const near42 = (value) => Math.abs(value - 42) < 0.1;
+          assert.ok(
+            compactLayout.left >= 0 &&
+              compactLayout.right <= width + 1 &&
+              compactLayout.top >= 0 &&
+              compactLayout.bottom <= 560,
+            'Modal completo en pantalla',
+          );
+          assert.ok(compactLayout.overflow <= 1, 'Sin desbordamiento horizontal');
+          assert.ok(
+            compactLayout.controls.every(
+              (control) =>
+                near42(control.height) &&
+                Math.abs(control.center - compactLayout.controls[0].center) < 1,
+            ),
+            'Muestra, campo e iconos alineados',
+          );
+          assert.ok(
+            compactLayout.controls.slice(2).every((control) => near42(control.width)),
+            'Iconos homogéneos',
+          );
+          assert.ok(
+            compactLayout.wheelTop >= compactLayout.top &&
+              compactLayout.wheelBottom <= compactLayout.bottom,
+            'Rueda completa',
+          );
+          await customColor.screenshot({ path: '.test-artifacts/compact-color-' + width + '.png' });
           const wheel = customColor.getByRole('group', { name: 'Rueda cromática', exact: true });
           await wheel.click({ position: { x: 150, y: 80 } });
           assert.match(
@@ -121,8 +213,9 @@ try {
           await customColor.getByLabel('Hexadecimal de Tinta', { exact: true }).fill('#ab12cd');
           await customColor.getByRole('button', { name: 'Guardar color', exact: true }).click();
           await customColor.waitFor({ state: 'hidden' });
+          await page.setViewportSize({ width, height: 900 });
           await visual.getByRole('button', { name: 'Papel', exact: true }).click();
-          await palette.getByRole('button', { name: 'Usar #ab12cd', exact: true }).waitFor();
+          await palette.getByRole('button', { name: 'Usar Custom #AB12CD', exact: true }).waitFor();
           await page.keyboard.press('Escape');
           const savedColor = await page.evaluate(
             () => JSON.parse(localStorage.getItem('title-studio-v3')).settings.colorPalette,
@@ -185,10 +278,19 @@ try {
         ['Courier Prime', 'Cutive Mono', 'Special Elite', 'IBM Plex Mono'],
       );
       await fontSearch.fill('typewriter');
+      await page.waitForFunction(() => {
+        const editor = document.querySelector('.template-designer');
+        return editor.querySelectorAll('.font-options button').length === 5;
+      });
       assert.equal(await editor.locator('.font-options button').count(), 5);
       await fontSearch.fill('maquina');
+      await page.waitForFunction(() => {
+        const editor = document.querySelector('.template-designer');
+        return editor.querySelectorAll('.font-options button').length === 5;
+      });
       assert.equal(await editor.locator('.font-options button').count(), 5);
       await fontSearch.fill('sin coincidencias');
+      await editor.getByText('No hay fuentes con ese nombre.', { exact: true }).waitFor();
       assert.ok(
         await editor.getByText('No hay fuentes con ese nombre.', { exact: true }).isVisible(),
       );
