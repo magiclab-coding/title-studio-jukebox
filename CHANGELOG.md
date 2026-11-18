@@ -1,3 +1,13 @@
+# 7.21.0
+
+- Publicación de las mejoras del editor y los modales móviles de la versión 7.20.1.
+
+# 7.20.1
+
+- Cabeceras móviles semitransparentes con confirmación neutra.
+- Relleno y trazo en filas separadas, con controles desactivados cuando no se aplican.
+- La selección en el lienzo permite elegir capas situadas debajo de una capa bloqueada.
+
 # 7.20.0
 
 - Encabezados de modales coherentes: cierre a la izquierda, título centrado en una línea y acciones en grupos opacos.

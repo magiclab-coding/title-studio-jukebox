@@ -291,6 +291,7 @@
           backgroundRole: normalizeColorRole(raw.backgroundRole),
           background: color(raw.background, 'transparent'),
           fill: raw.fill === 'none' ? 'none' : color(raw.fill),
+          fillEnabled: raw.fillEnabled ?? raw.fill !== 'none',
           stroke: color(raw.stroke),
           strokeWidth: num(raw.strokeWidth, 0, 0, 20),
           radius: num(raw.radius, 0, 0, 75),
@@ -532,6 +533,7 @@
       const flag = { category: 'showGenre', rpm: 'showRpm', number: 'showNumber' }[e.field];
       if (flag && card[flag] === false) continue;
       const fill = e.colorRole === 'fixed' ? e.fill : color(card[e.colorRole], color(e.fill));
+      const shapeFill = e.fillEnabled ? fill : 'none';
       const stroke = e.strokeRole === 'fixed' ? e.stroke : color(card[e.strokeRole], e.stroke);
       const transform =
         'translate(' +
@@ -590,7 +592,7 @@
           '" rx="' +
           e.radius +
           '" fill="' +
-          fill +
+          shapeFill +
           '" stroke="' +
           stroke +
           '" stroke-width="' +
@@ -607,7 +609,7 @@
           '" ry="' +
           e.height / 2 +
           '" fill="' +
-          fill +
+          shapeFill +
           '" stroke="' +
           stroke +
           '" stroke-width="' +
@@ -622,7 +624,7 @@
           '" stroke="' +
           fill +
           '" stroke-width="' +
-          (e.strokeWidth || 1) +
+          e.strokeWidth +
           '" fill="none"/>';
       else if (e.type === 'svg') {
         // Las fuentes de texto gráfico también viajan dentro del recurso SVG.
@@ -834,6 +836,27 @@ globalThis.StudioComponents.TemplateDesigner = {
       if (layer[role] === 'fixed') layer[property] = value;
       else this.model[layer[role]] = value;
     },
+    toggleShapeFill(enabled) {
+      const layer = this.selectedLayer;
+      if (!layer || layer.locked) return;
+      layer.fillEnabled = enabled;
+      if (enabled && layer.fill === 'none') layer.fill = '#213d36';
+    },
+    paintValue(role, property) {
+      const layer = this.selectedLayer;
+      return layer[role] === 'fixed' ? layer[property] : this.model[layer[role]];
+    },
+    setOwnStroke(value) {
+      const layer = this.selectedLayer;
+      if (!layer || layer.locked || !(layer.strokeWidth > 0)) return;
+      if (layer.type === 'line') {
+        layer.fill = value;
+        layer.colorRole = 'fixed';
+      } else {
+        layer.stroke = value;
+        layer.strokeRole = 'fixed';
+      }
+    },
     undo() {
       if (!this.undoStack.length) return;
       this.redoStack.push(JSON.stringify(this.model));
@@ -916,7 +939,7 @@ globalThis.StudioComponents.TemplateDesigner = {
         y = ((event.clientY - box.top) * 150) / box.height;
       if (!resize) {
         e = [...this.layers].reverse().find((layer) => {
-          if (!layer.visible) return false;
+          if (!layer.visible || layer.locked) return false;
           const angle = (-layer.rotation * Math.PI) / 180;
           const dx = x - layer.x - layer.width / 2,
             dy = y - layer.y - layer.height / 2;
@@ -1207,25 +1230,32 @@ globalThis.StudioComponents.TemplateDesigner = {
                   </template>
                   <color-picker :paper="model.paper" v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
                   <template v-if="!['svg','image'].includes(selectedLayer.type)">
+                    <template v-if="selectedLayer.type==='text'">
                     <div class="designer-color-row">
                       <label>Vincular tinta con<select v-model="selectedLayer.colorRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
                       <color-picker :paper="model.paper" :paper-linked="selectedLayer.colorRole === 'paper'" label="Tinta"
                         :model-value="selectedLayer.colorRole === 'fixed' ? selectedLayer.fill : model[selectedLayer.colorRole]"
                         @update:model-value="setLayerPaint('colorRole', 'fill', $event)" @link-paper="selectedLayer.colorRole = 'paper'"></color-picker>
                     </div>
-                    <div v-if="selectedLayer.type==='text'" class="designer-color-row">
+                    <div class="designer-color-row">
                       <label>Vincular fondo con<select v-model="selectedLayer.backgroundRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
                       <color-picker :paper="model.paper" :paper-linked="selectedLayer.backgroundRole === 'paper'" label="Fondo"
                         :model-value="selectedLayer.backgroundRole === 'fixed' ? selectedLayer.background : model[selectedLayer.backgroundRole]"
                         @update:model-value="setLayerPaint('backgroundRole', 'background', $event)" @link-paper="selectedLayer.backgroundRole = 'paper'"></color-picker>
                     </div>
-                    <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
-                    <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
-                      <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
+                    </template>
+                    <template v-if="['rect','ellipse','line'].includes(selectedLayer.type)">
+                      <div v-if="selectedLayer.type !== 'line'" class="designer-border-row designer-object-paint-row">
+                        <label class="designer-check">Relleno<input type="checkbox" :checked="selectedLayer.fillEnabled ?? selectedLayer.fill !== 'none'" @change="toggleShapeFill($event.target.checked)" /></label>
+                        <label>Vincular relleno con<select v-model="selectedLayer.colorRole" :disabled="!(selectedLayer.fillEnabled ?? selectedLayer.fill !== 'none')"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
+                        <color-picker :paper="model.paper" :disabled="!(selectedLayer.fillEnabled ?? selectedLayer.fill !== 'none')" :paper-linked="selectedLayer.colorRole === 'paper'" label="Color relleno" caption="Color" :model-value="selectedLayer.colorRole === 'fixed' ? (selectedLayer.fill === 'none' ? 'transparent' : selectedLayer.fill) : model[selectedLayer.colorRole]" @update:model-value="setLayerPaint('colorRole', 'fill', $event)" @link-paper="selectedLayer.colorRole = 'paper'"></color-picker>
+                      </div>
                       <div class="designer-border-row">
-                        <label>Grosor<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
-                        <label>Vincular borde con<select v-model="selectedLayer.strokeRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
-                        <color-picker :paper="model.paper" :paper-linked="selectedLayer.strokeRole === 'paper'" label="Color" :model-value="selectedLayer.strokeRole === 'fixed' ? selectedLayer.stroke : model[selectedLayer.strokeRole]" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'" @link-paper="selectedLayer.strokeRole = 'paper'"></color-picker>
+                        <label>Grosor<input class="designer-stroke-width" type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
+                        <label>Vincular trazo con<select v-model="selectedLayer[selectedLayer.type === 'line' ? 'colorRole' : 'strokeRole']" :disabled="!(selectedLayer.strokeWidth > 0)"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
+                        <color-picker :paper="model.paper" :disabled="!(selectedLayer.strokeWidth > 0)" :paper-linked="selectedLayer[selectedLayer.type === 'line' ? 'colorRole' : 'strokeRole'] === 'paper'" label="Color trazo" caption="Color"
+                          :model-value="paintValue(selectedLayer.type === 'line' ? 'colorRole' : 'strokeRole', selectedLayer.type === 'line' ? 'fill' : 'stroke')"
+                          @update:model-value="setOwnStroke($event)" @link-paper="selectedLayer[selectedLayer.type === 'line' ? 'colorRole' : 'strokeRole'] = 'paper'"></color-picker>
                       </div>
                       <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
                     </template>

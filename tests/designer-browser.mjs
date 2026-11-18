@@ -521,7 +521,8 @@ try {
       );
       await editor.getByRole('button', { name: 'Añadir rectángulo', exact: true }).click();
       await editor.getByLabel('Nombre de la capa', { exact: true }).fill('Fondo central');
-      const borderRole = editor.getByRole('combobox', { name: 'Vincular borde con', exact: true });
+      await editor.locator('.designer-stroke-width').fill('3');
+      const borderRole = editor.getByRole('combobox', { name: 'Vincular trazo con', exact: true });
       assert.deepEqual(await borderRole.locator('option').allTextContents(), [
         'Color de canción',
         'Color de artista',
@@ -538,17 +539,17 @@ try {
       assert.equal(await borderPreview.getAttribute('stroke'), '#ff0000');
       await editor
         .locator('.designer-border-row')
-        .getByRole('button', { name: 'Color', exact: true })
+        .getByRole('button', { name: 'Color trazo', exact: true })
         .click();
       await page
-        .locator('.color-popover:visible')
+        .getByRole('region', { name: 'Selector de Color trazo' })
         .getByRole('button', { name: 'Usar Verde #008000', exact: true })
         .click();
       assert.equal(await borderRole.inputValue(), 'fixed');
       assert.equal(await borderPreview.getAttribute('stroke'), '#008000');
       const borderControls = await editor
         .locator(
-          '.designer-border-row input, .designer-border-row select, .designer-border-row .color-trigger',
+          '.designer-border-row:not(.designer-object-paint-row) input, .designer-border-row:not(.designer-object-paint-row) select, .designer-border-row:not(.designer-object-paint-row) .color-trigger',
         )
         .evaluateAll((nodes) =>
           nodes.map((node) => {
@@ -691,11 +692,13 @@ try {
       await stage.scrollIntoViewIfNeeded();
       const lockedRect = await stage.boundingBox();
       const lockX = lockedRect.x + (80 * lockedRect.width) / 300;
-      const lockY = lockedRect.y + (90 * lockedRect.height) / 150;
-      await page.mouse.move(lockX, lockY);
-      await page.mouse.down();
-      await page.mouse.move(lockX + 15, lockY + 5, { steps: 3 });
-      await page.mouse.up();
+      const lockY = lockedRect.y + (110 * lockedRect.height) / 150;
+      await page.mouse.click(lockX, lockY);
+      assert.equal(
+        await editor.getByLabel('Nombre de la capa', { exact: true }).inputValue(),
+        'Título cara B',
+      );
+      await row.locator('.designer-layer-name').click();
       await stage.focus();
       await page.keyboard.press('ArrowRight');
       await page.keyboard.press('Delete');
