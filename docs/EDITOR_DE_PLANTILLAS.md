@@ -124,6 +124,14 @@ Seleccionar **Papel actual** en la paleta de Tinta o Fondo vincula esa
 propiedad a **Color de papel**. El vínculo sigue los cambios de Papel en
 **Estilo del diseño**. Para vincular un color que se guardó anteriormente como
 propio, elige **Papel actual** o selecciona **Color de papel** en el desplegable.
+El borde de rectángulos y elipses también puede vincularse a los colores de
+canción, artista, elementos o papel; el grosor, el vínculo y la muestra de color
+se mantienen en una única fila.
+
+En pantallas pequeñas, las medidas de las capas se agrupan en dos columnas:
+X/Y, ancho/alto y giro/opacidad. Los encabezados de los modales mantienen el
+cierre a la izquierda, el título centrado en una línea y las acciones agrupadas
+en controles redondeados. Los títulos largos se recortan para caber.
 
 En **Diseños y plantillas**, pulsa el nombre o la vista previa de un diseño
 predefinido o propio para abrir **Estilo del diseño**. **Guardar estilo**
