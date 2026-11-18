@@ -4429,6 +4429,9 @@ select:disabled {
   pointer-events: none;
   box-sizing: border-box;
 }
+.designer-selection.locked {
+  border-style: solid;
+}
 .designer-resize {
   position: absolute;
   bottom: -10px;
@@ -4502,15 +4505,27 @@ select:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.designer-layer-lock[aria-pressed='true'] {
+  color: #934531;
+  background: #f8eee7;
+  border-color: #b9553b;
+}
 .designer-properties {
   min-width: 0;
   padding-left: 16px;
   border-left: 1px solid #e0e6e0;
 }
+.designer-property-fields {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
 .designer-properties > label,
-.designer-properties > .font-picker,
-.designer-properties > .designer-measures,
-.designer-properties > .designer-color-row,
+.designer-property-fields > label,
+.designer-property-fields > .font-picker,
+.designer-property-fields > .designer-measures,
+.designer-property-fields > .designer-color-row,
 .designer-layer-actions,
 .designer-align {
   margin-bottom: 12px;
