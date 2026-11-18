@@ -4719,34 +4719,65 @@ select:disabled {
   overflow-y: auto;
   padding: 3px;
 }
-.color-swatches button {
+.color-row {
   display: flex;
+  align-items: center;
   flex: 0 0 auto;
+  height: 40px;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px #0003;
+}
+.color-row.chosen {
+  outline: 2px solid var(--rust);
+  outline-offset: 1px;
+}
+.color-swatches .color-choice {
+  display: flex;
+  flex: 1;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  width: 100%;
+  gap: 10px;
+  min-width: 0;
   height: 40px;
-  min-height: 40px;
   padding: 7px 10px;
-  border: 1px solid #0003;
-  border-radius: 5px;
+  border: 0;
+  background: transparent;
+  border-radius: inherit;
+  color: inherit;
   font: inherit;
   font-size: 13px;
-  cursor: pointer;
 }
 .color-swatches code {
   color: inherit;
   background: transparent;
   font-size: 12px;
 }
-.color-swatches button:focus-visible {
+.color-remove {
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 4px;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+}
+.color-remove:hover {
+  background: #ffffff50;
+}
+.color-choice:focus-visible,
+.color-remove:focus-visible,
+.color-personalize:focus-visible {
   outline: 2px solid var(--rust);
   outline-offset: 1px;
 }
-.color-swatches button[aria-pressed='true'] {
-  outline: 2px solid var(--rust);
-  outline-offset: 2px;
+/* El damero identifica una ausencia real de tinta, no un relleno blanco. */
+.checkerboard {
+  background-color: #fff;
+  background-image: conic-gradient(#dde2dd 25%, #fff 0 50%, #dde2dd 0 75%, #fff 0);
+  background-size: 12px 12px;
 }
 .style-paper {
   gap: 20px;
@@ -4756,16 +4787,21 @@ select:disabled {
 }
 
 /* La paleta rápida no mezcla controles con el editor del color personalizado. */
-.color-personalize {
-  display: block;
+.color-swatches .color-personalize {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
   width: 100%;
-  margin-top: 12px;
-  padding: 10px 0 0;
-  border-top: 1px solid #dce3dd;
-  text-align: left;
+  height: 40px;
+  min-height: 40px;
+  padding: 7px 10px;
+  border: 1px solid #cdd7d1;
+  border-radius: 5px;
+  background: #f2f5f2;
   color: #213d36;
+  text-align: left;
   font: inherit;
-  cursor: pointer;
+  font-size: 13px;
 }
 .color-custom-modal {
   padding: 16px;

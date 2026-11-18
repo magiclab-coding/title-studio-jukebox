@@ -1,6 +1,7 @@
 // --- Paleta del proyecto y conversión de la rueda cromática ---
 globalThis.StudioColorTools = {
   standardColors: [
+    { name: 'Transparente', hex: 'transparent' },
     { name: 'Blanco', hex: '#ffffff' },
     { name: 'Negro', hex: '#000000' },
     { name: 'Gris claro', hex: '#d1d5db' },
@@ -20,14 +21,15 @@ globalThis.StudioColorTools = {
     return this.standardColors.map((color) => color.hex);
   },
   valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
-  palette(values = [], current) {
+  paint: (value) => value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value),
+  palette(values = []) {
     const colors = this.standardColors.map((color) => ({ ...color }));
     const seen = new Set(this.baseColors);
-    for (const value of [...values, current]) {
+    for (const value of values) {
       if (!this.valid(value)) continue;
       const hex = value.toLowerCase();
       if (!seen.has(hex)) {
-        colors.push({ name: 'Custom', hex });
+        colors.push({ name: 'Custom', hex, custom: true });
         seen.add(hex);
       }
     }
@@ -35,6 +37,7 @@ globalThis.StudioColorTools = {
   },
   // Elige texto blanco o negro por contraste, también en tonos personalizados.
   textColor(hex) {
+    if (hex === 'transparent') return '#263c37';
     const channels = hex
       .slice(1)
       .match(/../g)
@@ -102,7 +105,7 @@ globalThis.StudioComponents = {
     },
     computed: {
       colors() {
-        return StudioColorTools.palette(this.studioPalette?.getColors() || [], this.modelValue);
+        return StudioColorTools.palette(this.studioPalette?.getColors() || []);
       },
       validHex() {
         return StudioColorTools.valid(this.hex);
@@ -117,8 +120,11 @@ globalThis.StudioComponents = {
     },
     methods: {
       colorText: (hex) => StudioColorTools.textColor(hex),
+      removeColor(value) {
+        this.studioPalette?.remove(value);
+      },
       choose(value) {
-        if (!StudioColorTools.valid(value)) return;
+        if (!StudioColorTools.paint(value)) return;
         this.$emit('update:modelValue', value.toLowerCase());
         this.open = false;
       },
@@ -164,8 +170,13 @@ globalThis.StudioComponents = {
         if (!StudioColorTools.valid(this.hex)) return;
         const color = this.hex.toLowerCase();
         this.studioPalette?.add(color);
-        this.choose(color);
+        // Crear un color no modifica la capa: se aplica al elegirlo en la lista.
         this.customOpen = false;
+        this.open = true;
+        this.$nextTick?.(() => {
+          const list = this.$refs.paletteList;
+          if (list) list.scrollTop = list.scrollHeight;
+        });
       },
     },
     template: `<div class="color-picker">
@@ -173,17 +184,25 @@ globalThis.StudioComponents = {
       <v-menu v-model="open" :close-on-content-click="false" location="bottom end">
         <template #activator="{ props }">
           <button v-bind="props" type="button" class="color-trigger" :aria-label="label" :title="label">
-            <span :style="{backgroundColor: modelValue || '#000000'}"></span>
+            <span :class="{checkerboard: modelValue === 'transparent'}" :style="{backgroundColor: modelValue || '#000000'}"></span>
           </button>
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
-          <div class="color-swatches" role="group" aria-label="Paleta activa">
-            <button v-for="color in colors" :key="color.hex" type="button" :style="{backgroundColor:color.hex, color:colorText(color.hex)}"
-              :aria-label="'Usar ' + color.name + ' ' + color.hex.toUpperCase()" :aria-pressed="modelValue?.toLowerCase() === color.hex" @click="choose(color.hex)">
-              <span>{{ color.name }}</span><code>{{ color.hex.toUpperCase() }}</code>
-            </button>
+          <div ref="paletteList" class="color-swatches" role="group" aria-label="Paleta activa">
+            <div v-for="color in colors" :key="color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:modelValue?.toLowerCase() === color.hex}"
+              :style="{backgroundColor:color.hex, color:colorText(color.hex)}">
+              <button type="button" class="color-choice"
+                :aria-label="'Usar ' + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
+                :aria-pressed="modelValue?.toLowerCase() === color.hex" @click="choose(color.hex)">
+                <span>{{ color.name }}</span><code>{{ color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase() }}</code>
+              </button>
+              <button v-if="color.custom" type="button" class="color-remove" @click.stop="removeColor(color.hex)"
+                :aria-label="'Eliminar color ' + color.hex.toUpperCase()" :title="'Eliminar ' + color.hex.toUpperCase()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>
+              </button>
+            </div>
+            <button type="button" class="color-personalize" @click="customize">Personalizar color…</button>
           </div>
-          <button type="button" class="color-personalize" @click="customize">Personalizar color…</button>
         </section>
       </v-menu>
       <v-dialog v-model="customOpen" max-width="360">

@@ -82,3 +82,16 @@ Las fuentes de máquina de escribir aparecen primero en los selectores. El campo
 Buscar fuente filtra por nombre y admite términos como "máquina" o "typewriter".
 Courier Prime, Cutive Mono, Special Elite e IBM Plex Mono se encuentran tanto en
 el editor como en los estilos de composición y conservan ñ y acentos.
+
+## Paleta y fondo del texto
+
+Transparente aparece primero, con damero; Personalizar color es la última fila.
+Los Custom se guardan por orden de creación, del más antiguo al más nuevo.
+Guardar desde la rueda añade el color a la paleta compartida sin aplicarlo.
+Para usarlo, selecciónalo después en la lista. La papelera solo elimina el color
+de la paleta y conserva las capas y tarjetas que ya lo usan.
+
+Cada capa de texto tiene Fondo del texto, transparente de forma predeterminada.
+El fondo ocupa el rectángulo de esa capa y comparte su giro y opacidad.
+No modifica la tinta, el papel ni otras capas. El archivo JSON, las posiciones
+de composición y la salida SVG/PDF conservan este fondo.

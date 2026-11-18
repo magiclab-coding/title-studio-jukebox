@@ -1,3 +1,10 @@
+# 7.14.0
+
+- Transparente como primera opción y Personalizar color como última fila de la paleta.
+- Colores Custom ordenados por creación, con borrado independiente de las tarjetas existentes.
+- Guardar desde la rueda solo añade el color; se aplica al seleccionarlo después.
+- Fondo independiente por capa de texto, transparente por defecto y conservado en composición, JSON e impresión.
+
 # 7.13.0
 
 - Paleta estándar ordenada en filas con nombre y hexadecimal dentro del color y texto con contraste.
