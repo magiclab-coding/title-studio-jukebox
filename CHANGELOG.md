@@ -1,3 +1,9 @@
+# 7.15.0
+
+- Custom numerados de forma correlativa según su orden en la paleta, con renumeración tras borrar.
+- Papel actual como segunda opción después de Transparente, actualizado al editar la tarjeta o plantilla.
+- Selector Vincular tinta a y controles Tinta y Fondo alineados en la misma fila.
+
 # 7.14.0
 
 - Transparente como primera opción y Personalizar color como última fila de la paleta.

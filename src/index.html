@@ -736,12 +736,14 @@
                     <div class="style-editor-fields">
                       <div class="style-paper">
                         <color-picker
+                          :paper="styleCard.paper"
                           label="Color del papel"
                           caption="Papel"
                           :model-value="styleCard.paper"
                           @update:model-value="setStyleColor('paper', $event)"
                         ></color-picker>
                         <color-picker
+                          :paper="styleCard.paper"
                           label="Color de elementos gráficos"
                           caption="Elementos"
                           :model-value="styleCard.graphicsInk || styleCard.artistInk || '#202020'"
@@ -763,6 +765,7 @@
                             v-model.number="styleCard.titlePx"
                             aria-label="Tamaño canciones" /></label
                         ><color-picker
+                          :paper="styleCard.paper"
                           label="Color canciones"
                           caption="Color"
                           :model-value="styleCard.ink"
@@ -785,6 +788,7 @@
                             v-model.number="styleCard.artistPx"
                             aria-label="Tamaño artista" /></label
                         ><color-picker
+                          :paper="styleCard.paper"
                           label="Color artista"
                           caption="Color"
                           :model-value="styleCard.artistInk"
