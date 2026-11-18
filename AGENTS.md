@@ -73,3 +73,7 @@ modifica los originales. No añadir campos duplicados ni un editor de textos sep
 - Conservar format:check, pruebas, compilación y pruebas de navegador como controles obligatorios.
 - Mantener Ubuntu 24.04 para la versión fijada de Playwright; no usar ubuntu-latest sin comprobar compatibilidad.
 - No ocultar fallos reales ni cambiar las notificaciones de la cuenta para simular una corrección.
+
+Cuando una interacción cambie el diseño visual, ejecuta la aplicación con los
+cambios y captura la interfaz real en el tamaño de pantalla relevante. Presenta
+la captura al usuario y espera su aprobación estética antes de abrir cualquier PR.

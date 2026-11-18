@@ -195,9 +195,11 @@
               </header>
               <v-dialog v-model="groupDialog" max-width="420"
                 ><form class="panel group-dialog" @submit.prevent="saveGroup">
-                  <h3>
-                    {{ groupEditing ? 'Renombrar lista de discos' : 'Nueva lista de discos' }}
-                  </h3>
+                  <div class="dialog-heading">
+                    <h3>
+                      {{ groupEditing ? 'Renombrar lista de discos' : 'Nueva lista de discos' }}
+                    </h3>
+                  </div>
                   <label>Nombre<input v-model="groupName" maxlength="100" autofocus /></label>
                   <div class="modal-footer">
                     <v-btn @click="groupDialog = false">Cancelar</v-btn
@@ -502,7 +504,9 @@
                       </div>
                       <v-dialog v-model="deleteSheetDialog" max-width="420"
                         ><section class="panel group-dialog">
-                          <h3>Eliminar hoja {{ composePage + 1 }}</h3>
+                          <div class="dialog-heading">
+                            <h3>Eliminar hoja {{ composePage + 1 }}</h3>
+                          </div>
                           <p>
                             Se retirarán sus tarjetas de esta composición. Los discos originales se
                             conservan. Puedes deshacer el cambio.

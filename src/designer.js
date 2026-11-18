@@ -1166,6 +1166,15 @@ globalThis.StudioComponents.TemplateDesigner = {
                 <button type="button" class="text-btn" :disabled="!hasUnlockedLayers" @click="clear">Vaciar lienzo</button>
               </div>
               <p class="designer-help">Arrastra las capas o ajusta sus medidas. Flechas para mover · Mayús para pasos de 10.</p>
+              <div v-if="selectedLayer" class="designer-current-layer">
+                <label for="designer-current-layer-name">Capa Actual</label>
+                <input id="designer-current-layer-name" v-model="selectedLayer.name" :disabled="selectedLayer.locked" maxlength="80" />
+                <div class="designer-layer-actions" role="group" aria-label="Acciones de la capa actual">
+                  <button class="control-icon" type="button" :disabled="!canOrder(1)" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
+                  <button class="control-icon" type="button" :disabled="!canOrder(-1)" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
+                  <button class="control-icon" type="button" :disabled="layers.length >= 80" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
+                </div>
+              </div>
               <div class="designer-layer-heading"><h3>Capas</h3><small>{{ layers.length }} / 80</small></div>
               <ol class="designer-layers" aria-label="Capas, de delante hacia atrás">
                 <li v-for="layer in [...layers].reverse()" :key="layer.id" :class="{active:layer.id===selectedId}">
@@ -1197,12 +1206,6 @@ globalThis.StudioComponents.TemplateDesigner = {
               <h3>Propiedades</h3>
               <template v-if="selectedLayer">
                 <p v-if="selectedLayer.locked" class="small-muted" role="status">Capa bloqueada. Usa el candado de la lista para editarla.</p>
-                <label>Nombre de la capa<input v-model="selectedLayer.name" :disabled="selectedLayer.locked" maxlength="80" /></label>
-                <div class="designer-layer-actions">
-                  <button class="control-icon" type="button" :disabled="layers.length >= 80" @click="duplicate" title="Duplicar capa" aria-label="Duplicar capa">⧉</button>
-                  <button class="control-icon" type="button" :disabled="!canOrder(1)" @click="order(1)" title="Traer hacia delante" aria-label="Traer capa hacia delante">↑</button>
-                  <button class="control-icon" type="button" :disabled="!canOrder(-1)" @click="order(-1)" title="Enviar hacia atrás" aria-label="Enviar capa hacia atrás">↓</button>
-                </div>
                 <fieldset class="designer-property-fields" :disabled="selectedLayer.locked" aria-label="Ajustes de capa">
                   <div class="designer-measures">
                     <label>X<input type="number" min="0" max="300" v-model.number="selectedLayer.x" /></label>
