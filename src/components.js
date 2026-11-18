@@ -109,9 +109,11 @@ globalThis.StudioComponents = {
       label: String,
       caption: String,
       paper: { type: String, default: '#ffffff' },
+      // Solo las capas admiten guardar un vínculo al papel desde la paleta.
+      paperLinked: { type: Boolean, default: null },
     },
     inject: { studioPalette: { default: null } },
-    emits: ['update:modelValue'],
+    emits: ['update:modelValue', 'link-paper'],
     data() {
       return { open: false, customOpen: false, hex: '#000000', h: 0, s: 0, v: 1 };
     },
@@ -132,6 +134,20 @@ globalThis.StudioComponents = {
     },
     methods: {
       colorText: (hex) => StudioColorTools.textColor(hex),
+      canLinkPaper(color) {
+        return color.id === 'current-paper' && this.paperLinked !== null;
+      },
+      isChosen(color) {
+        return this.canLinkPaper(color)
+          ? this.paperLinked
+          : this.modelValue?.toLowerCase() === color.hex;
+      },
+      chooseRow(color) {
+        if (this.canLinkPaper(color)) {
+          this.$emit('link-paper');
+          this.open = false;
+        } else this.choose(color.hex);
+      },
       removeColor(value) {
         this.studioPalette?.remove(value);
       },
@@ -201,11 +217,11 @@ globalThis.StudioComponents = {
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
           <div ref="paletteList" class="color-swatches" role="group" aria-label="Paleta activa">
-            <div v-for="color in colors" :key="color.id || color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:modelValue?.toLowerCase() === color.hex}"
+            <div v-for="color in colors" :key="color.id || color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:isChosen(color)}"
               :style="{backgroundColor:color.hex, color:colorText(color.hex)}">
               <button type="button" class="color-choice"
-                :aria-label="'Usar ' + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
-                :aria-pressed="modelValue?.toLowerCase() === color.hex" @click="choose(color.hex)">
+                :aria-label="(canLinkPaper(color) ? 'Vincular a ' : 'Usar ') + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
+                :aria-pressed="isChosen(color)" @click="chooseRow(color)">
                 <span>{{ color.name }}</span><code>{{ color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase() }}</code>
               </button>
               <button v-if="color.custom" type="button" class="color-remove" @click.stop="removeColor(color.hex)"
