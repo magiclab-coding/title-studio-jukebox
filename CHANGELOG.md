@@ -1,3 +1,7 @@
+# 7.21.0
+
+- Publicación de las mejoras del editor y los modales móviles de la versión 7.20.1.
+
 # 7.20.1
 
 - Cabeceras móviles semitransparentes con confirmación neutra.
