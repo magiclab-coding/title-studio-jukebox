@@ -380,7 +380,8 @@ function labelContent(record, text = {}) {
 
 function makeSvg(c, settings) {
   if (c.customDesign) return StudioTemplateTools.render(c, settings, { fit: fitLabelText });
-  const color = (value, fallback) => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
+  const color = (value, fallback) =>
+    value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
   const ink = color(c.ink, '#005bbb');
   const artistInk = color(c.artistInk, '#202020');
   const paper = color(c.paper, '#ffffff');
@@ -488,6 +489,7 @@ function makeSvg(c, settings) {
       ? `<text ${c.designBindings ? 'data-disc-field="number" data-disc-width="80" ' : ''}x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
       : '');
 
+  if (c.artistInk === 'transparent') artistFill = 'transparent';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(titleA, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(titleB, 112, titlePx)}${meta}</svg>`;
 }
 
@@ -539,6 +541,7 @@ createApp({
       studioPalette: {
         getColors: () => this.activePalette,
         add: (color) => this.savePaletteColor(color),
+        remove: (color) => this.removePaletteColor(color),
       },
     };
   },
@@ -604,18 +607,27 @@ createApp({
     const allCards = computed(() => collections.value.flatMap((c) => c.cards));
     // Los colores propios forman parte de los ajustes y de las copias JSON.
     // Solo estándares y colores guardados: los tonos de las tarjetas no llenan el menú.
+    // Las paletas antiguas se guardaban de más reciente a más antigua.
+    const customPalette = computed(() => {
+      const colors = [...(settings.value.colorPalette || [])];
+      if (settings.value.colorPaletteOrder !== 'oldest-first') colors.reverse();
+      return [
+        ...new Set(colors.filter(StudioColorTools.valid).map((color) => color.toLowerCase())),
+      ];
+    });
     const activePalette = computed(() => [
-      ...new Set(
-        [...StudioColorTools.baseColors, ...(settings.value.colorPalette || [])]
-          .filter(StudioColorTools.valid)
-          .map((color) => color.toLowerCase()),
-      ),
+      ...new Set([...StudioColorTools.baseColors, ...customPalette.value]),
     ]);
     function savePaletteColor(color) {
       if (!StudioColorTools.valid(color)) return;
-      settings.value.colorPalette = [
-        ...new Set([color.toLowerCase(), ...(settings.value.colorPalette || [])]),
-      ];
+      settings.value.colorPalette = [...new Set([...customPalette.value, color.toLowerCase()])];
+      settings.value.colorPaletteOrder = 'oldest-first';
+    }
+    function removePaletteColor(color) {
+      settings.value.colorPalette = customPalette.value.filter(
+        (value) => value !== color.toLowerCase(),
+      );
+      settings.value.colorPaletteOrder = 'oldest-first';
     }
     // El disco aporta el contenido; cada posición conserva su propio estilo.
     const appearanceKeys = [
@@ -2540,6 +2552,7 @@ createApp({
       deleteTemplateDesign,
       activePalette,
       savePaletteColor,
+      removePaletteColor,
       fontOptions,
       columns,
       cards,

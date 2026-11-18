@@ -18,7 +18,8 @@
     const n = value === '' || value == null ? NaN : Number(value);
     return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
   };
-  const color = (value, fallback = '#213d36') => (/^#[0-9a-f]{6}$/i.test(value) ? value : fallback);
+  const color = (value, fallback = '#213d36') =>
+    value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
   const escape = (value) =>
     String(value ?? '').replace(
       /[<>&"']/g,
@@ -207,6 +208,7 @@
       fontSize: 20,
       align: 'center',
       colorRole: field.startsWith('artist') ? 'artistInk' : field ? 'ink' : 'graphicsInk',
+      background: 'transparent',
       fill: '#213d36',
       stroke: '#213d36',
       strokeWidth: type === 'line' ? 2 : 0,
@@ -276,6 +278,7 @@
           colorRole: ['ink', 'artistInk', 'graphicsInk', 'paper', 'fixed'].includes(raw.colorRole)
             ? raw.colorRole
             : 'fixed',
+          background: color(raw.background, 'transparent'),
           fill: raw.fill === 'none' ? 'none' : color(raw.fill),
           stroke: color(raw.stroke),
           strokeWidth: num(raw.strokeWidth, 0, 0, 20),
@@ -557,6 +560,17 @@
           '" font-weight="400">' +
           escape(m.text) +
           '</text>';
+        // El fondo pertenece a la capa y comparte su geometría, opacidad y giro.
+        if (e.background !== 'transparent')
+          shape =
+            '<rect data-text-background="true" width="' +
+            e.width +
+            '" height="' +
+            e.height +
+            '" fill="' +
+            e.background +
+            '"/>' +
+            shape;
       } else if (e.type === 'rect')
         shape =
           '<rect width="' +
@@ -1126,6 +1140,7 @@ globalThis.StudioComponents.TemplateDesigner = {
                   <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
                 </div>
               </template>
+              <color-picker v-if="selectedLayer.type==='text'" label="Fondo del texto" v-model="selectedLayer.background"></color-picker>
               <color-picker v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
               <template v-if="!['svg','image'].includes(selectedLayer.type)">
                 <div class="designer-color-row">
