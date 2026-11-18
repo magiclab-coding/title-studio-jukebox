@@ -31,6 +31,24 @@ const sample = {
   showNumber: true,
 };
 
+test('el fondo vinculado sigue la tarjeta y conserva su color propio al desvincularlo', () => {
+  const template = tools.newTemplate();
+  const title = template.design.elements[0];
+  title.background = '#abcdef';
+  title.backgroundRole = 'artistInk';
+  const restored = tools.normalizeTemplate(JSON.parse(JSON.stringify(template)));
+  assert.equal(restored.design.elements[0].backgroundRole, 'artistInk');
+  const card = { ...sample, customDesign: restored.design };
+  const render = () => tools.render(card, { width: 76, height: 38 }, { fit });
+  assert.match(render(), /data-text-background="true"[^>]*fill="#654321"/);
+  card.artistInk = 'transparent';
+  assert.doesNotMatch(render(), /data-text-background/);
+  delete restored.design.elements[0].backgroundRole;
+  assert.match(render(), /data-text-background="true"[^>]*fill="#abcdef"/);
+  template.design.elements[1].colorRole = 'paper';
+  assert.equal(tools.normalizeTemplate(template).design.elements[1].colorRole, 'paper');
+});
+
 test('campos vinculados, color, visibilidad, orden y recorte usan el mismo dibujo', () => {
   const t = tools.newTemplate();
   const card = { ...sample, customDesign: t.design };
@@ -205,6 +223,7 @@ test('el artista en inversa mantiene su color al cambiar el papel y admite otro 
   const legacy = tools.newTemplate();
   legacy.paper = '#ffffff';
   legacy.design.elements[1].colorRole = 'paper';
+  delete legacy.design.elements[1].backgroundRole;
   legacy.design.elements[1].fill = '#ffffff';
   const template = tools.normalizeTemplate(legacy);
   assert.equal(template.artistInk, '#ffffff');

@@ -682,7 +682,7 @@
                     <h3>
                       {{
                         defaultStyleId
-                          ? 'Valores predeterminados del diseño'
+                          ? 'Estilo del diseño'
                           : styleAll
                             ? 'Estilo para toda la composición'
                             : 'Estilo' + (styleCard.number ? ' ' + styleCard.number : '')
@@ -691,7 +691,13 @@
                     <button @click="styleDialog = false" aria-label="Cerrar estilos">×</button>
                   </div>
                   <div class="style-modal-content">
-                    <div class="style-preview-header" data-hint="Seleccionar plantilla">
+                    <div v-if="defaultStyleId" class="style-preview-header">
+                      <div
+                        class="custom-style-preview"
+                        v-html="svg(previewRecord(styleCard))"
+                      ></div>
+                    </div>
+                    <div v-else class="style-preview-header" data-hint="Seleccionar plantilla">
                       <button
                         type="button"
                         class="custom-style-preview style-preview-selector"

@@ -1,3 +1,9 @@
+# 7.17.0
+
+- Tinta y Fondo en filas separadas, con vínculos independientes y nombres de color explícitos.
+- El configurador Estilo del diseño se abre desde cualquier plantilla del catálogo.
+- Papelera en cada fila de capas, junto al candado y al ojo, con borrado reversible.
+
 # 7.16.0
 
 - Candado por capa en el editor de plantillas y ojo para mostrar u ocultar.
