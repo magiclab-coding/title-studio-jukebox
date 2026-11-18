@@ -1,3 +1,9 @@
+# 7.20.0
+
+- Encabezados de modales coherentes: cierre a la izquierda, título centrado en una línea y acciones en grupos opacos.
+- En pantallas pequeñas, X/Y, ancho/alto y giro/opacidad ocupan dos columnas.
+- Borde con grosor, vínculo de color y muestra en una sola fila; el color puede seguir el papel, canción, artista o elementos.
+
 # 7.19.0
 
 - Cabeceras, iconos y botones comunes para los modales de estilo y plantillas. En móvil, Guardar y Aplicar pasan a la cabecera compacta.

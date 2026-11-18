@@ -688,19 +688,7 @@
                             : 'Estilo' + (styleCard.number ? ' ' + styleCard.number : '')
                       }}
                     </h3>
-                    <div class="modal-header-actions">
-                      <button
-                        class="control-icon modal-mobile-save"
-                        type="button"
-                        :aria-label="
-                          styleAll
-                            ? 'Aplicar a ' + compositionCards.length + ' tarjetas'
-                            : 'Guardar estilo'
-                        "
-                        @click="styleAll ? applyAll() : finishStyle()"
-                      >
-                        <span aria-hidden="true">✓</span>
-                      </button>
+                    <div class="modal-icon-group modal-close-group">
                       <button
                         class="control-icon modal-close"
                         type="button"
@@ -709,6 +697,22 @@
                       >
                         ×
                       </button>
+                    </div>
+                    <div class="modal-header-actions">
+                      <div class="modal-icon-group modal-primary-group">
+                        <button
+                          class="control-icon modal-mobile-save"
+                          type="button"
+                          :aria-label="
+                            styleAll
+                              ? 'Aplicar a ' + compositionCards.length + ' tarjetas'
+                              : 'Guardar estilo'
+                          "
+                          @click="styleAll ? applyAll() : finishStyle()"
+                        >
+                          <span aria-hidden="true">✓</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div class="style-modal-content">
