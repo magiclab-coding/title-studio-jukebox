@@ -1097,12 +1097,18 @@ globalThis.StudioComponents.TemplateDesigner = {
   template: `
     <section class="template-designer" @keydown="keydown">
         <header class="designer-heading dialog-heading">
-          <h2>{{ initial ? 'Editar plantilla' : 'Crear plantilla' }}</h2>
-          <div class="designer-heading-actions modal-header-actions">
-            <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
-            <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
-            <button class="control-icon modal-mobile-save" type="button" :disabled="!canSave" @click="save" title="Guardar plantilla" aria-label="Guardar plantilla"><span aria-hidden="true">✓</span></button>
+          <div class="modal-icon-group modal-close-group">
             <button class="control-icon modal-close" type="button" @click="close" title="Cerrar editor" aria-label="Cerrar editor de plantilla">×</button>
+          </div>
+          <h2><span class="modal-title-full">{{ initial ? 'Editar plantilla' : 'Crear plantilla' }}</span><span class="modal-title-compact">{{ initial ? 'Editar' : 'Crear' }}</span></h2>
+          <div class="designer-heading-actions modal-header-actions">
+            <div class="modal-icon-group">
+              <button class="control-icon" type="button" @click="undo" :disabled="!undoStack.length" title="Deshacer" aria-label="Deshacer en plantilla">↶</button>
+              <button class="control-icon" type="button" @click="redo" :disabled="!redoStack.length" title="Rehacer" aria-label="Rehacer en plantilla">↷</button>
+            </div>
+            <div class="modal-icon-group modal-primary-group">
+              <button class="control-icon modal-mobile-save" type="button" :disabled="!canSave" @click="save" title="Guardar plantilla" aria-label="Guardar plantilla"><span aria-hidden="true">✓</span></button>
+            </div>
           </div>
         </header>
         <div class="designer-content">
@@ -1216,7 +1222,11 @@ globalThis.StudioComponents.TemplateDesigner = {
                     <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
                     <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
                       <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
-                      <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><color-picker :paper="model.paper" label="Color borde" :model-value="selectedLayer.stroke" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'"></color-picker></div>
+                      <div class="designer-border-row">
+                        <label>Grosor<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
+                        <label>Vincular borde con<select v-model="selectedLayer.strokeRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
+                        <color-picker :paper="model.paper" :paper-linked="selectedLayer.strokeRole === 'paper'" label="Color" :model-value="selectedLayer.strokeRole === 'fixed' ? selectedLayer.stroke : model[selectedLayer.strokeRole]" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'" @link-paper="selectedLayer.strokeRole = 'paper'"></color-picker>
+                      </div>
                       <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
                     </template>
                   </template>

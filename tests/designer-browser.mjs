@@ -74,6 +74,26 @@ try {
           (node) => node.offsetHeight <= parseFloat(getComputedStyle(node).lineHeight) + 1,
         ),
       );
+      const styleHeader = styleModal.locator('.dialog-heading');
+      const styleClose = styleModal.getByRole('button', { name: 'Cerrar estilos', exact: true });
+      const headerPositions = await Promise.all([
+        styleClose.boundingBox(),
+        styleTitle.boundingBox(),
+        styleHeader.boundingBox(),
+      ]);
+      assert.ok(
+        headerPositions[0].x < headerPositions[1].x,
+        'Cerrar queda a la izquierda del título',
+      );
+      assert.ok(
+        Math.abs(
+          headerPositions[1].x +
+            headerPositions[1].width / 2 -
+            headerPositions[2].x -
+            headerPositions[2].width / 2,
+        ) < 3,
+        'El título queda centrado en el modal',
+      );
       await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
       await styleModal.waitFor({ state: 'hidden' });
       for (const name of builtinNames) {
@@ -436,7 +456,7 @@ try {
         const after = await bounds();
         assert.ok(Math.abs(before.top - after.top) < 1, JSON.stringify({ before, after }));
         assert.ok(Math.abs(before.bottom - after.bottom) < 1, JSON.stringify({ before, after }));
-        assert.equal(Math.round((await save.boundingBox()).width), 42);
+        assert.equal(Math.round((await save.boundingBox()).width), 30);
         assert.ok(await save.locator('span').isVisible());
         assert.equal(Math.round(before.top), Math.round(before.bottom));
         assert.ok(await editor.locator('.designer-cancel').isHidden());
@@ -501,6 +521,45 @@ try {
       );
       await editor.getByRole('button', { name: 'Añadir rectángulo', exact: true }).click();
       await editor.getByLabel('Nombre de la capa', { exact: true }).fill('Fondo central');
+      const borderRole = editor.getByRole('combobox', { name: 'Vincular borde con', exact: true });
+      assert.deepEqual(await borderRole.locator('option').allTextContents(), [
+        'Color de canción',
+        'Color de artista',
+        'Color de elementos',
+        'Color de papel',
+        'Color propio',
+      ]);
+      await borderRole.selectOption('paper');
+      assert.equal(await borderRole.inputValue(), 'paper');
+      const borderPreview = editor.locator('.designer-drawing svg rect[stroke-width]').last();
+      await editor.getByRole('button', { name: 'Papel', exact: true }).click();
+      const borderPalette = page.locator('.color-popover:visible');
+      await borderPalette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).click();
+      assert.equal(await borderPreview.getAttribute('stroke'), '#ff0000');
+      await editor
+        .locator('.designer-border-row')
+        .getByRole('button', { name: 'Color', exact: true })
+        .click();
+      await page
+        .locator('.color-popover:visible')
+        .getByRole('button', { name: 'Usar Verde #008000', exact: true })
+        .click();
+      assert.equal(await borderRole.inputValue(), 'fixed');
+      assert.equal(await borderPreview.getAttribute('stroke'), '#008000');
+      const borderControls = await editor
+        .locator(
+          '.designer-border-row input, .designer-border-row select, .designer-border-row .color-trigger',
+        )
+        .evaluateAll((nodes) =>
+          nodes.map((node) => {
+            const rect = node.getBoundingClientRect();
+            return { top: rect.top, bottom: rect.bottom, height: rect.height };
+          }),
+        );
+      assert.equal(borderControls.length, 3);
+      assert.ok(
+        borderControls.every((control) => Math.abs(control.bottom - borderControls[0].bottom) < 2),
+      );
       await editor.getByLabel('Ancho', { exact: true }).fill('160');
       await editor.getByRole('button', { name: 'Centrar horizontalmente', exact: true }).click();
       assert.equal(await editor.getByLabel('X', { exact: true }).inputValue(), '70');
@@ -584,10 +643,10 @@ try {
         'Campos con la misma altura',
       );
       if (width === 360)
-        assert.ok(
-          layout.inputs.every((input) => Math.abs(input.left - layout.inputs[0].left) < 1),
-          'Una entrada por fila en móvil',
-        );
+        for (let i = 0; i < 6; i += 2) {
+          assert.ok(Math.abs(layout.inputs[i].top - layout.inputs[i + 1].top) < 1);
+          assert.ok(layout.inputs[i].left < layout.inputs[i + 1].left);
+        }
 
       // El candado protege la capa, mientras el ojo sigue controlando el dibujo.
       const lockName = 'Bloqueo de capa: adorno.svg';
