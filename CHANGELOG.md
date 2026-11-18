@@ -1,3 +1,8 @@
+# 7.18.0
+
+- Papel actual establece un vínculo dinámico cuando se elige desde Tinta o Fondo de una capa.
+- Deshacer, Rehacer y Cerrar quedan visibles arriba del editor en móvil y Guardar aparece como icono abajo.
+
 # 7.17.0
 
 - Tinta y Fondo en filas separadas, con vínculos independientes y nombres de color explícitos.

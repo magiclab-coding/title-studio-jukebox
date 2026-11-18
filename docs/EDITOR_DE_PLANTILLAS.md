@@ -25,6 +25,8 @@ La geometría usa un lienzo lógico de 300 × 150 unidades, adaptado al tamaño
 físico de etiqueta del proyecto, que se muestra junto a la vista previa.
 En pantallas estrechas las propiedades aparecen debajo del lienzo y las medidas
 se disponen en una sola columna.
+En móvil, Deshacer, Rehacer y Cerrar se mantienen arriba y el icono Guardar
+queda abajo al desplazar el contenido.
 
 Los campos del disco se rellenan automáticamente al usar la plantilla.
 El campo **Artista central** combina Artista A y Artista B con una barra.
@@ -118,6 +120,10 @@ artista, Color de elementos, Color de papel o Color propio. A su lado, la
 muestra **Tinta** o **Fondo** permite editar el color compartido o propio.
 El fondo de las capas existentes conserva su valor y el de las nuevas
 empieza con Color propio transparente.
+Seleccionar **Papel actual** en la paleta de Tinta o Fondo vincula esa
+propiedad a **Color de papel**. El vínculo sigue los cambios de Papel en
+**Estilo del diseño**. Para vincular un color que se guardó anteriormente como
+propio, elige **Papel actual** o selecciona **Color de papel** en el desplegable.
 
 En **Diseños y plantillas**, pulsa el nombre o la vista previa de un diseño
 predefinido o propio para abrir **Estilo del diseño**. **Guardar estilo**

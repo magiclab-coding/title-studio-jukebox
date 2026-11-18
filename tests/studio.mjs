@@ -626,6 +626,41 @@ assert.equal(
   existingAppearance,
 );
 assert.match(app.templatePreview(app.templates[0], app.current.value), /#123456/);
+
+// En el configurador, cada color compartido actualiza la tinta y el fondo vinculados.
+const linkedColors = [
+  ['ink', '#315171'],
+  ['artistInk', '#325272'],
+  ['graphicsInk', '#335373'],
+  ['paper', '#345474'],
+];
+const layerTools = context.StudioTemplateTools;
+const linkedTemplate = layerTools.newTemplate();
+linkedTemplate.id = 'custom-linked-colors';
+linkedTemplate.design.elements = linkedColors.map(([role]) => ({
+  ...layerTools.element(),
+  text: role,
+  colorRole: role,
+  backgroundRole: role,
+}));
+app.editTemplateDefaults(linkedTemplate);
+for (const [role, paint] of linkedColors) {
+  app.setStyleColor(role, paint);
+  const svg = app.svg(app.previewRecord(app.styleCard.value));
+  assert.match(
+    svg,
+    new RegExp(
+      'data-text-background="true"[^>]*fill="' +
+        paint +
+        '"[^>]*><text[^>]*fill="' +
+        paint +
+        '"[^>]*>' +
+        role,
+    ),
+  );
+}
+app.openStyle();
+app.finishStyle();
 console.log('PASS: persistent template defaults preserve existing composition appearances');
 
 // Dos hojas a la misma altura: el puntero debe escoger la segunda por su coordenada X.
