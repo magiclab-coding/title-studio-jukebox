@@ -22,14 +22,21 @@ globalThis.StudioColorTools = {
   },
   valid: (value) => /^#[0-9a-f]{6}$/i.test(value),
   paint: (value) => value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value),
-  palette(values = []) {
+  palette(values = [], paper = '#ffffff') {
     const colors = this.standardColors.map((color) => ({ ...color }));
+    // El papel es contextual: no se guarda como un color Custom.
+    colors.splice(1, 0, {
+      id: 'current-paper',
+      name: 'Papel actual',
+      hex: this.paint(paper) ? paper.toLowerCase() : '#ffffff',
+    });
     const seen = new Set(this.baseColors);
+    let customNumber = 0;
     for (const value of values) {
       if (!this.valid(value)) continue;
       const hex = value.toLowerCase();
       if (!seen.has(hex)) {
-        colors.push({ name: 'Custom', hex, custom: true });
+        colors.push({ name: 'Custom ' + ++customNumber, hex, custom: true });
         seen.add(hex);
       }
     }
@@ -97,7 +104,12 @@ globalThis.StudioColorTools = {
 globalThis.StudioComponents = {
   // La elección rápida aplica un color; la personalización trabaja en un borrador.
   ColorPicker: {
-    props: { modelValue: String, label: String, caption: String },
+    props: {
+      modelValue: String,
+      label: String,
+      caption: String,
+      paper: { type: String, default: '#ffffff' },
+    },
     inject: { studioPalette: { default: null } },
     emits: ['update:modelValue'],
     data() {
@@ -105,7 +117,7 @@ globalThis.StudioComponents = {
     },
     computed: {
       colors() {
-        return StudioColorTools.palette(this.studioPalette?.getColors() || []);
+        return StudioColorTools.palette(this.studioPalette?.getColors() || [], this.paper);
       },
       validHex() {
         return StudioColorTools.valid(this.hex);
@@ -189,7 +201,7 @@ globalThis.StudioComponents = {
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
           <div ref="paletteList" class="color-swatches" role="group" aria-label="Paleta activa">
-            <div v-for="color in colors" :key="color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:modelValue?.toLowerCase() === color.hex}"
+            <div v-for="color in colors" :key="color.id || color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:modelValue?.toLowerCase() === color.hex}"
               :style="{backgroundColor:color.hex, color:colorText(color.hex)}">
               <button type="button" class="color-choice"
                 :aria-label="'Usar ' + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
