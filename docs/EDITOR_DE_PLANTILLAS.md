@@ -95,3 +95,15 @@ Cada capa de texto tiene Fondo del texto, transparente de forma predeterminada.
 El fondo ocupa el rectángulo de esa capa y comparte su giro y opacidad.
 No modifica la tinta, el papel ni otras capas. El archivo JSON, las posiciones
 de composición y la salida SVG/PDF conservan este fondo.
+
+## Papel actual y tintas vinculadas
+
+La segunda fila de la paleta es Papel actual y refleja el papel de la plantilla
+o tarjeta que se está editando. Es un acceso directo al valor actual; no añade
+colores personalizados. Los Custom se nombran Custom 1, Custom 2 y siguientes,
+según su orden visible. Al borrar uno, se renumeran los que quedan.
+
+Vincular tinta a decide si la capa toma el color compartido de Canciones,
+Artista, Elementos o Papel, o un color Propio independiente.
+Tinta modifica ese color. Fondo modifica únicamente el fondo de la capa de
+texto seleccionada. Los dos controles aparecen juntos, con igual tamaño y eje.

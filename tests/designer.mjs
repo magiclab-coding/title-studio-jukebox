@@ -225,10 +225,10 @@ test('paleta estándar ordenada, colores Custom y contraste legible', () => {
   assert.equal(colors.standardColors.find((color) => color.name === 'Rojo').hex, '#ff0000');
   assert.equal(colors.standardColors.find((color) => color.name === 'Azul').hex, '#0000ff');
   const palette = colors.palette(['#ABCDEF', '#abcdef', '#ffffff', '#123456']);
-  assert.equal(palette.length, 17);
-  assert.equal(palette[15].name, 'Custom');
-  assert.equal(palette[15].hex, '#abcdef');
-  assert.equal(palette[16].hex, '#123456');
+  assert.equal(palette.length, 18);
+  assert.equal(palette[16].name, 'Custom 1');
+  assert.equal(palette[16].hex, '#abcdef');
+  assert.equal(palette[17].hex, '#123456');
   assert.equal(colors.textColor('#ffff00'), '#000000');
   assert.equal(colors.textColor('#0000ff'), '#ffffff');
   for (const color of palette.filter((color) => colors.valid(color.hex))) {
@@ -323,4 +323,28 @@ test('fondos por capa, transparencias y JSON conservan el mismo dibujo', () => {
   );
   const transparentDoc = new DOMParser().parseFromString(transparent, 'image/svg+xml');
   assert.equal(transparentDoc.querySelector('svg > rect').getAttribute('fill'), 'transparent');
+});
+
+test('papel contextual en segunda posición y Custom correlativos tras borrar', () => {
+  const shared = {};
+  vm.runInNewContext(readFileSync('src/components.js', 'utf8'), shared);
+  const tools = shared.StudioColorTools;
+  const palette = tools.palette(['#abcdef', '#123456', '#abcdef'], '#abcdef');
+  assert.equal(palette[0].hex, 'transparent');
+  assert.equal(palette[1].name, 'Papel actual');
+  assert.equal(palette[1].hex, '#abcdef');
+  assert.equal(palette[1].id, 'current-paper');
+  assert.deepEqual(Array.from(palette.filter((color) => color.custom).map((color) => color.name)), [
+    'Custom 1',
+    'Custom 2',
+  ]);
+  const deleted = tools.palette(['#123456'], '#ff0000');
+  assert.equal(deleted[1].hex, '#ff0000');
+  assert.equal(deleted.at(-1).name, 'Custom 1');
+  assert.equal(deleted.at(-1).hex, '#123456');
+  const component = shared.StudioComponents.ColorPicker;
+  const picker = { paper: '#111abc', studioPalette: { getColors: () => ['#123456'] } };
+  assert.equal(component.computed.colors.call(picker)[1].hex, '#111abc');
+  picker.paper = 'transparent';
+  assert.equal(component.computed.colors.call(picker)[1].hex, 'transparent');
 });

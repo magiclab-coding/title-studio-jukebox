@@ -1069,7 +1069,7 @@ globalThis.StudioComponents.TemplateDesigner = {
         </header>
         <div class="designer-identity">
           <label>Nombre<input v-model="model.name" maxlength="80" placeholder="Nombre de tu plantilla" /></label>
-          <color-picker label="Papel" v-model="model.paper"></color-picker>
+          <color-picker :paper="model.paper" label="Papel" v-model="model.paper"></color-picker>
           <button class="control-icon" type="button" @click="$refs.templateFile.click()" title="Importar plantilla JSON" aria-label="Importar plantilla JSON">↥</button>
           <button class="control-icon" type="button" @click="exportTemplate" title="Exportar plantilla JSON" aria-label="Exportar plantilla JSON">↧</button>
         </div>
@@ -1140,18 +1140,18 @@ globalThis.StudioComponents.TemplateDesigner = {
                   <label>Alineación<select v-model="selectedLayer.align"><option value="left">Izquierda</option><option value="center">Centro</option><option value="right">Derecha</option></select></label>
                 </div>
               </template>
-              <color-picker v-if="selectedLayer.type==='text'" label="Fondo del texto" v-model="selectedLayer.background"></color-picker>
-              <color-picker v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
+              <color-picker :paper="model.paper" v-if="selectedLayer.type === 'svg' && selectedLayer.palette" label="Elementos" v-model="model.graphicsInk"></color-picker>
               <template v-if="!['svg','image'].includes(selectedLayer.type)">
                 <div class="designer-color-row">
-                  <label>Color<select v-model="selectedLayer.colorRole"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
+                  <label>Vincular tinta a<select v-model="selectedLayer.colorRole" aria-label="Vincular tinta a"><option value="ink">Canciones</option><option value="artistInk">Artista</option><option value="graphicsInk">Elementos</option>
                   <option value="paper">Papel</option><option value="fixed">Propio</option></select></label>
-                  <color-picker v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker><color-picker v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
+                  <color-picker :paper="model.paper" v-if="selectedLayer.colorRole==='fixed'" label="Tinta" v-model="selectedLayer.fill"></color-picker><color-picker :paper="model.paper" v-else label="Tinta" v-model="model[selectedLayer.colorRole]"></color-picker>
+                  <color-picker :paper="model.paper" v-if="selectedLayer.type==='text'" label="Fondo" v-model="selectedLayer.background"></color-picker>
                 </div>
                 <label v-if="selectedLayer.type==='line'">Grosor<input type="number" min="0.5" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label>
                 <template v-if="['rect','ellipse'].includes(selectedLayer.type)">
                   <label class="designer-check"><input type="checkbox" :checked="selectedLayer.fill==='none'" @change="selectedLayer.fill=$event.target.checked ? 'none' : '#213d36'; selectedLayer.colorRole='fixed'" />Sin relleno</label>
-                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><color-picker label="Color borde" :model-value="selectedLayer.stroke" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'"></color-picker></div>
+                  <div class="designer-measures"><label>Borde<input type="number" min="0" max="20" step="0.5" v-model.number="selectedLayer.strokeWidth" /></label><color-picker :paper="model.paper" label="Color borde" :model-value="selectedLayer.stroke" @update:model-value="selectedLayer.stroke = $event; selectedLayer.strokeRole = 'fixed'"></color-picker></div>
                   <label v-if="selectedLayer.type==='rect'">Redondeo<input type="number" min="0" max="75" v-model.number="selectedLayer.radius" /></label>
                 </template>
               </template>
