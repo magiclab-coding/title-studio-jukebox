@@ -870,6 +870,7 @@ assert.equal(
 assert.equal(app.svg(modalCard), app.svg(app.previewRecord(app.compositionCards.value[0])));
 // El color de artista no puede teñir el papel, ni siquiera en copias antiguas.
 appliedDesign.elements[1].colorRole = 'paper';
+delete appliedDesign.elements[1].backgroundRole;
 const paperBeforeArtistEdit = app.styleCard.value.paper;
 app.setStyleColor('artistInk', '#ab12cd');
 assert.equal(app.styleCard.value.paper, paperBeforeArtistEdit);
@@ -887,7 +888,9 @@ assert.equal(JSON.stringify(appliedDesign), beforeDesignEdit);
 const customBackup = JSON.parse(storage.get('title-studio-v3'));
 assert.equal(customBackup.settings.customTemplates[0].design.elements[0].x, 30);
 assert.ok(app.svg(app.compositionCards.value[0]).includes('viewBox='));
-const beforeCustomRestore = JSON.stringify(app.composition.value.items[0].appearance.customDesign);
+const beforeCustomRestore = JSON.stringify(
+  designTools.normalizeDesign(app.composition.value.items[0].appearance.customDesign),
+);
 app.pendingBackup.value = customBackup;
 app.loadBackup();
 await nextTick();
@@ -897,9 +900,31 @@ assert.equal(
 );
 assert.equal(app.settings.value.customTemplates[0].id, catalogOwn.id);
 app.view.value = 'templates';
-app.editTemplateDefaults(app.settings.value.customTemplates[0]);
+const savedOwn = app.settings.value.customTemplates[0];
+app.editTemplateDefaults(savedOwn);
+assert.equal(app.styleDialog.value, true);
+assert.equal(app.designerDialog.value, false);
+assert.equal(app.styleCard.value.customDesign.elements[0].x, 30);
+app.setStyleColor('ink', '#654321');
+app.styleCard.value.titlePx = 24;
+app.finishStyle();
+const ownDefaults = app.settings.value.templateDefaults[catalogOwn.id];
+assert.equal(ownDefaults.ink, '#654321');
+assert.equal(ownDefaults.customDesign, undefined);
+app.editTemplateDefaults(savedOwn);
+assert.equal(app.styleCard.value.titlePx, 24);
+assert.match(app.svg(app.previewRecord(app.styleCard.value)), /fill="#654321"/);
+app.finishStyle();
+app.openStyle(true);
+app.useTemplate(savedOwn);
+assert.equal(app.styleCard.value.ink, '#654321');
+assert.equal(app.styleCard.value.titlePx, 24);
+assert.equal(app.styleCard.value.customDesign.elements[0].x, 30);
+app.finishStyle();
+app.openTemplateDesigner(savedOwn);
 assert.equal(app.designerDialog.value, true);
 assert.equal(app.designerInitial.value.id, catalogOwn.id);
+assert.equal(app.designerInitial.value.ink, '#654321');
 app.designerInitial.value.design.elements[0].x = 88;
 assert.equal(app.settings.value.customTemplates[0].design.elements[0].x, 30);
 app.designerDialog.value = false;

@@ -62,6 +62,20 @@ try {
         'Typewriter',
         'Sello Rock',
       ];
+      const styleModal = page.locator('.style-modal:visible');
+      await page.getByRole('button', { name: 'Valores de plantilla Ribbon No. 45' }).click();
+      const styleTitle = styleModal.getByRole('heading', {
+        name: 'Estilo del diseño',
+        exact: true,
+      });
+      await styleTitle.waitFor();
+      assert.ok(
+        await styleTitle.evaluate(
+          (node) => node.offsetHeight <= parseFloat(getComputedStyle(node).lineHeight) + 1,
+        ),
+      );
+      await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
+      await styleModal.waitFor({ state: 'hidden' });
       for (const name of builtinNames) {
         await page.getByRole('button', { name: 'Editar plantilla ' + name, exact: true }).click();
         const visual = page.locator('.template-designer');
@@ -96,31 +110,43 @@ try {
           const paperRow = palette.locator('.color-row').nth(1);
           assert.ok((await paperRow.innerText()).includes('Papel actual'));
           assert.ok((await paperRow.innerText()).includes(background.toUpperCase()));
-          const inkRow = await visual.locator('.designer-color-row').evaluate((node) => {
-            return Array.from(node.querySelectorAll('select, .color-trigger')).map((control) => {
-              const rect = control.getBoundingClientRect();
-              return {
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-                center: rect.top + rect.height / 2,
-              };
-            });
-          });
-          assert.equal(inkRow.length, 3);
-          assert.ok(
-            inkRow.every(
-              (control) =>
-                Math.abs(control.height - 42) < 0.1 &&
-                Math.abs(control.center - inkRow[0].center) < 1,
+          const colorControls = await visual.locator('.designer-color-row').evaluateAll((rows) =>
+            rows.map((row) =>
+              Array.from(row.querySelectorAll('select, .color-trigger'), (control) => {
+                const rect = control.getBoundingClientRect();
+                return {
+                  left: rect.left,
+                  width: rect.width,
+                  height: rect.height,
+                  center: rect.top + rect.height / 2,
+                };
+              }),
             ),
           );
-          assert.equal(inkRow[1].width, inkRow[2].width);
-          assert.ok(inkRow[0].left < inkRow[1].left && inkRow[1].left < inkRow[2].left);
-          assert.equal(
-            await visual.getByRole('combobox', { name: 'Vincular tinta a', exact: true }).count(),
-            1,
+          assert.equal(colorControls.length, 2);
+          for (const [select, picker] of colorControls) {
+            assert.ok(Math.abs(select.height - 42) < 0.1 && Math.abs(picker.height - 42) < 0.1);
+            assert.ok(Math.abs(select.center - picker.center) < 1 && select.left < picker.left);
+          }
+          assert.equal(colorControls[0][1].left, colorControls[1][1].left);
+          assert.equal(colorControls[0][1].width, colorControls[1][1].width);
+          const inkLink = visual.getByRole('combobox', { name: 'Vincular tinta con', exact: true });
+          const backgroundLink = visual.getByRole('combobox', {
+            name: 'Vincular fondo con',
+            exact: true,
+          });
+          assert.deepEqual(await inkLink.locator('option').allTextContents(), [
+            'Color de canción',
+            'Color de artista',
+            'Color de elementos',
+            'Color de papel',
+            'Color propio',
+          ]);
+          assert.deepEqual(
+            await backgroundLink.locator('option').allTextContents(),
+            await inkLink.locator('option').allTextContents(),
           );
+          assert.equal(await backgroundLink.inputValue(), 'fixed');
           const colorRows = await palette.locator('.color-row').evaluateAll((nodes) =>
             nodes.map((node) => {
               const rect = node.getBoundingClientRect();
@@ -350,6 +376,23 @@ try {
           await palette.waitFor({ state: 'hidden' });
           await visual.getByRole('button', { name: 'Tinta', exact: true }).click();
           await palette.getByRole('button', { name: 'Usar Custom 2 #AB12CD', exact: true }).click();
+          await backgroundLink.selectOption('paper');
+          assert.equal(
+            await visual.locator('[data-text-background]').getAttribute('fill'),
+            '#0000ff',
+          );
+          await visual.getByRole('button', { name: 'Fondo', exact: true }).click();
+          await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).click();
+          assert.equal(
+            await visual.locator('[data-text-background]').getAttribute('fill'),
+            '#ff0000',
+          );
+          assert.equal(
+            await visual.locator('.designer-drawing > svg > rect').getAttribute('fill'),
+            '#ff0000',
+          );
+          await backgroundLink.selectOption('fixed');
+          await visual.locator('[data-text-background]').waitFor({ state: 'detached' });
           await page.screenshot({
             path: '.test-artifacts/integrated-editor-' + width + '.png',
             fullPage: true,
@@ -534,9 +577,9 @@ try {
           return { width: rect.width, height: rect.height, center: rect.top + rect.height / 2 };
         }),
       );
-      assert.equal(buttons.length, 2);
+      assert.equal(buttons.length, 3);
       assert.ok(buttons.every((button) => button.width === 42 && button.height === 42));
-      assert.ok(Math.abs(buttons[0].center - buttons[1].center) < 1);
+      assert.ok(buttons.every((button) => Math.abs(button.center - buttons[0].center) < 1));
       await row.screenshot({ path: '.test-artifacts/locked-layer-' + width + '.png' });
       const image = editor.locator('.designer-drawing svg image');
       await eye.click();
@@ -547,9 +590,14 @@ try {
       await image.waitFor({ state: 'visible' });
       const xInput = editor.getByLabel('X', { exact: true });
       assert.ok(await xInput.isDisabled());
-      assert.ok(await editor.getByRole('button', { name: 'Eliminar capa' }).isDisabled());
+      assert.ok(await row.getByRole('button', { name: 'Eliminar capa: adorno.svg' }).isDisabled());
       assert.ok(await editor.getByRole('button', { name: 'Enviar capa hacia atrás' }).isDisabled());
       assert.equal(await handle.count(), 0);
+      await editor.getByRole('button', { name: 'Eliminar capa: Título cara A' }).click();
+      assert.equal(await editor.locator('.designer-layers li').count(), 4);
+      assert.equal(await row.locator('.designer-layer-name').getAttribute('aria-pressed'), 'true');
+      await editor.getByRole('button', { name: 'Deshacer en plantilla', exact: true }).click();
+      assert.equal(await editor.locator('.designer-layers li').count(), 5);
       await stage.scrollIntoViewIfNeeded();
       const lockedRect = await stage.boundingBox();
       const lockX = lockedRect.x + (80 * lockedRect.width) / 300;
@@ -585,6 +633,11 @@ try {
       await card.waitFor();
       await page.reload();
       await card.waitFor();
+      await card.locator('.template-name').click();
+      await styleTitle.waitFor();
+      await styleModal.locator('.custom-style-preview svg image').waitFor({ state: 'visible' });
+      await styleModal.getByRole('button', { name: 'Guardar estilo' }).click();
+      await styleModal.waitFor({ state: 'hidden' });
       await page
         .getByRole('button', { name: 'Editar plantilla Plantilla navegador ' + width, exact: true })
         .click();
