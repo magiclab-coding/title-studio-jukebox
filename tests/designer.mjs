@@ -37,6 +37,7 @@ test('la tinta automática persiste y contrasta con el papel, la cartela y el fo
   assert.equal(colors.automaticInk('#000000'), '#ffffff');
   assert.equal(colors.automaticInk('#ffffff'), '#000000');
   assert.equal(colors.automaticInk('#ff0000'), '#ffffff');
+  assert.equal(colors.automaticInk('#ff69b4'), '#ffffff');
   assert.equal(colors.automaticInk('#ffff00'), '#0000ff');
   assert.equal(colors.automaticInk('#0000ff'), '#ffff00');
   for (const background of ['#ED649E', '#EF4444', '#A8653C', '#EA580C', '#3B82F6']) {

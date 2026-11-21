@@ -80,8 +80,10 @@ globalThis.StudioColorTools = {
       (Math.min(complementLuminance, luminance) + 0.05);
     // Conserva el tono complementario si ya ofrece contraste alto.
     if (contrast >= 7) return complement;
-    // En fondos de color, mantenemos la tinta clara hasta el umbral de la muestra.
-    return 1.05 / (luminance + 0.05) >= 3 ? '#ffffff' : '#000000';
+    // El rosa intenso de la paleta admite blanco incluso justo por debajo de 3:1.
+    const vividPink = h >= 315 && h <= 345 && s >= 0.5;
+    const whiteThreshold = vividPink ? 2.6 : 3;
+    return 1.05 / (luminance + 0.05) >= whiteThreshold ? '#ffffff' : '#000000';
   },
   toHex(h, s, v) {
     const c = v * s,
@@ -177,7 +179,10 @@ globalThis.StudioComponents = {
       },
     },
     methods: {
-      colorText: (hex) => StudioColorTools.textColor(hex),
+      colorText: (hex) =>
+        hex === 'transparent'
+          ? StudioColorTools.textColor(hex)
+          : StudioColorTools.automaticInk(hex),
       canLinkPaper(color) {
         return color.id === 'current-paper' && this.paperLinked !== null;
       },
