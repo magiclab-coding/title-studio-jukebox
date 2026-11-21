@@ -5,6 +5,7 @@ import { DOMParser } from 'linkedom';
 import { test } from 'node:test';
 
 const context = { DOMParser, StudioComponents: {}, crypto: globalThis.crypto };
+vm.runInNewContext(readFileSync('src/components.js', 'utf8'), context);
 vm.runInNewContext(readFileSync('src/designer.js', 'utf8'), context);
 const tools = context.StudioTemplateTools;
 const fit = (value, font, px, width) => {
@@ -30,6 +31,48 @@ const sample = {
   showRpm: true,
   showNumber: true,
 };
+
+test('la tinta automática persiste y contrasta con el papel, la cartela y el fondo propio', () => {
+  const colors = context.StudioColorTools;
+  for (const background of ['#ffffff', '#000000', '#777777', '#ff0000', '#0000ff', '#f6f5e7']) {
+    const foreground = colors.automaticInk(background);
+    const levels = [foreground, background]
+      .map((value) => colors.luminance(value))
+      .sort((a, b) => a - b);
+    assert.ok((levels[1] + 0.05) / (levels[0] + 0.05) >= 4.5, background);
+  }
+  const template = tools.newTemplate();
+  const title = template.design.elements[0];
+  template.ink = 'auto';
+  title.colorRole = 'fixed';
+  title.fill = 'auto';
+  const panel = {
+    ...tools.element('rect'),
+    x: title.x,
+    y: title.y,
+    width: title.width,
+    height: title.height,
+    colorRole: 'fixed',
+    fill: '#8000ff',
+  };
+  template.design.elements.unshift(panel);
+  const restored = tools.normalizeTemplate(JSON.parse(JSON.stringify(template)));
+  const card = { ...sample, ...restored, customDesign: restored.design };
+  const layer = restored.design.elements[1];
+  const renderedInk = () =>
+    new DOMParser()
+      .parseFromString(tools.render(card, { width: 76, height: 38 }, { fit }), 'image/svg+xml')
+      .querySelector('text')
+      .getAttribute('fill');
+  assert.equal(restored.ink, 'auto');
+  assert.equal(layer.fill, 'auto');
+  assert.equal(renderedInk(), colors.automaticInk(panel.fill));
+  layer.background = '#000000';
+  assert.equal(renderedInk(), colors.automaticInk(layer.background));
+  layer.background = 'transparent';
+  restored.design.elements[0].visible = false;
+  assert.equal(renderedInk(), colors.automaticInk(card.paper));
+});
 
 test('el fondo vinculado sigue la tarjeta y conserva su color propio al desvincularlo', () => {
   const template = tools.newTemplate();

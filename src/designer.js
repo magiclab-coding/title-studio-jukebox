@@ -29,6 +29,7 @@
   };
   const color = (value, fallback = '#213d36') =>
     value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+  const inkColor = (value, fallback) => (value === 'auto' ? value : color(value, fallback));
   const escape = (value) =>
     String(value ?? '').replace(
       /[<>&"']/g,
@@ -290,7 +291,12 @@
           colorRole: normalizeColorRole(raw.colorRole),
           backgroundRole: normalizeColorRole(raw.backgroundRole),
           background: color(raw.background, 'transparent'),
-          fill: raw.fill === 'none' ? 'none' : color(raw.fill),
+          fill:
+            raw.fill === 'none'
+              ? 'none'
+              : raw.type === 'text'
+                ? inkColor(raw.fill)
+                : color(raw.fill),
           fillEnabled: raw.fillEnabled ?? raw.fill !== 'none',
           stroke: color(raw.stroke),
           strokeWidth: num(raw.strokeWidth, 0, 0, 20),
@@ -331,10 +337,11 @@
         String(raw?.name || '')
           .trim()
           .slice(0, 80) || 'Mi plantilla',
-      ink: color(raw?.ink, '#28548a'),
-      artistInk: legacyArtists.length
-        ? color(raw?.paper, legacyArtists[0].fill)
-        : color(raw?.artistInk),
+      ink: inkColor(raw?.ink, '#28548a'),
+      artistInk:
+        legacyArtists.length && raw?.artistInk !== 'auto'
+          ? color(raw?.paper, legacyArtists[0].fill)
+          : inkColor(raw?.artistInk),
       graphicsInk: color(raw?.graphicsInk),
       paper: color(raw?.paper, '#ffffff'),
       font: String(raw?.font || 'DM Sans').slice(0, 100),
@@ -418,7 +425,11 @@
             align,
             baseline: node.getAttribute('dominant-baseline') || 'alphabetic',
             fill,
-            colorRole: field.startsWith('artist') ? 'artistInk' : roleFor(fill, 'ink'),
+            colorRole: field.startsWith('artist')
+              ? 'artistInk'
+              : ['a', 'b'].includes(field) && base.ink === 'auto'
+                ? 'ink'
+                : roleFor(fill, 'ink'),
             opacity,
           });
           continue;
@@ -485,8 +496,10 @@
         id: '',
         // Conserva el blanco de un artista en inversa sin vincularlo al papel.
         artistInk:
-          layers.find((layer) => layer.type === 'text' && layer.field.startsWith('artist'))?.fill ||
-          base.artistInk,
+          base.artistInk === 'auto'
+            ? 'auto'
+            : layers.find((layer) => layer.type === 'text' && layer.field.startsWith('artist'))
+                ?.fill || base.artistInk,
         design: { version: 1, elements: layers },
       });
     } finally {
@@ -503,6 +516,36 @@
           ? card[e.field] || ''
           : e.text;
   const isArtist = (e) => e.field.startsWith('artist');
+  const roleColor = (card, role, ownColor) =>
+    role === 'fixed' ? ownColor : color(card[role], ownColor);
+  function textBackdrop(layer, card) {
+    const paper = color(card.paper, '#ffffff');
+    const background = roleColor(card, layer.backgroundRole, layer.background);
+    if (StudioColorTools.valid(background)) return background;
+    // Una cartela rectangular situada debajo puede ser el fondo de toda la capa.
+    let backdrop = paper;
+    for (const panel of card.customDesign.elements) {
+      if (panel.id === layer.id) break;
+      if (
+        panel.type === 'rect' &&
+        panel.visible !== false &&
+        panel.fillEnabled !== false &&
+        !panel.rotation &&
+        !panel.radius &&
+        !layer.rotation &&
+        panel.x <= layer.x &&
+        panel.y <= layer.y &&
+        panel.x + panel.width >= layer.x + layer.width &&
+        panel.y + panel.height >= layer.y + layer.height
+      )
+        backdrop = StudioColorTools.blend(
+          roleColor(card, panel.colorRole, panel.fill),
+          backdrop,
+          panel.opacity ?? 1,
+        );
+    }
+    return backdrop;
+  }
   function metrics(e, card, fit) {
     const artist = isArtist(e);
     const styleFont = (artist && card.artistFont) || card.font || 'DM Sans';
@@ -532,12 +575,13 @@
     const design = normalizeDesign(card.customDesign);
     const H = (300 * settings.height) / settings.width;
     const fonts = new Set([card.font || 'DM Sans', card.artistFont || card.font || 'DM Sans']);
+    const normalizedCard = { ...card, customDesign: design };
     let layers = '';
     for (const e of design.elements) {
       if (!e.visible) continue;
       const flag = { category: 'showGenre', rpm: 'showRpm', number: 'showNumber' }[e.field];
       if (flag && card[flag] === false) continue;
-      const fill = e.colorRole === 'fixed' ? e.fill : color(card[e.colorRole], color(e.fill));
+      const fill = roleColor(card, e.colorRole, e.fill);
       const shapeFill = e.fillEnabled ? fill : 'none';
       const stroke = e.strokeRole === 'fixed' ? e.stroke : color(card[e.strokeRole], e.stroke);
       const transform =
@@ -554,6 +598,10 @@
         ')';
       let shape = '';
       if (e.type === 'text') {
+        const automatic = card[e.colorRole] === 'auto' || fill === 'auto';
+        const textFill = automatic
+          ? StudioColorTools.automaticInk(textBackdrop(e, normalizedCard))
+          : fill;
         const m = metrics(e, card, helpers.fit);
         fonts.add(m.family);
         const anchor = { left: 'start', center: 'middle', right: 'end' }[e.align];
@@ -568,7 +616,7 @@
           '" text-anchor="' +
           anchor +
           '" fill="' +
-          fill +
+          textFill +
           '" font-family="' +
           escape(m.family) +
           '" font-size="' +
@@ -576,8 +624,7 @@
           '" font-weight="400">' +
           escape(m.text) +
           '</text>';
-        const background =
-          e.backgroundRole === 'fixed' ? e.background : color(card[e.backgroundRole], e.background);
+        const background = roleColor(card, e.backgroundRole, e.background);
         if (background !== 'transparent')
           shape =
             '<rect data-text-background="true" width="' +
@@ -717,6 +764,7 @@
     normalizeDesign,
     normalizeTemplate,
     fromBuiltinSvg,
+    textBackdrop,
     sanitizeSvg,
     render,
     overflow,
@@ -840,6 +888,16 @@ globalThis.StudioComponents.TemplateDesigner = {
       if (!layer || layer.locked) return;
       if (layer[role] === 'fixed') layer[property] = value;
       else this.model[layer[role]] = value;
+    },
+    setTextInk(value) {
+      const layer = this.selectedLayer;
+      if (!layer || layer.locked) return;
+      if (value === 'auto' && !['ink', 'artistInk'].includes(layer.colorRole))
+        layer.colorRole = 'fixed';
+      this.setLayerPaint('colorRole', 'fill', value);
+    },
+    selectedTextBackdrop() {
+      return globalThis.StudioTemplateTools.textBackdrop(this.selectedLayer, this.previewCard);
     },
     toggleShapeFill(enabled) {
       const layer = this.selectedLayer;
@@ -1241,9 +1299,9 @@ globalThis.StudioComponents.TemplateDesigner = {
                     <template v-if="selectedLayer.type==='text'">
                     <div class="designer-color-row">
                       <label>Vincular tinta con<select v-model="selectedLayer.colorRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>
-                      <color-picker :paper="model.paper" :paper-linked="selectedLayer.colorRole === 'paper'" label="Tinta"
+                      <color-picker :paper="model.paper" :paper-linked="selectedLayer.colorRole === 'paper'" :automatic-background="selectedTextBackdrop()" label="Tinta"
                         :model-value="selectedLayer.colorRole === 'fixed' ? selectedLayer.fill : model[selectedLayer.colorRole]"
-                        @update:model-value="setLayerPaint('colorRole', 'fill', $event)" @link-paper="selectedLayer.colorRole = 'paper'"></color-picker>
+                        @update:model-value="setTextInk($event)" @link-paper="selectedLayer.colorRole = 'paper'"></color-picker>
                     </div>
                     <div class="designer-color-row">
                       <label>Vincular fondo con<select v-model="selectedLayer.backgroundRole"><option v-for="role in colorRoles" :key="role.key" :value="role.key">{{ role.label }}</option></select></label>

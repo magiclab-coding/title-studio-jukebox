@@ -1,3 +1,7 @@
+# 7.24.1
+
+- La paleta de tinta ofrece un color automático complementario al fondo, con contraste ajustado.
+
 # 7.24.0
 
 - Publicación de la corrección de fuentes en Estilo del diseño.

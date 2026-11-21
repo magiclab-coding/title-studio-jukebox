@@ -378,14 +378,36 @@ function labelContent(record, text = {}) {
   };
 }
 
+const cardPaint = (value, fallback) => (StudioColorTools.paint(value) ? value : fallback);
+const graphicInk = (c) => cardPaint(c.graphicsInk, cardPaint(c.artistInk, '#202020'));
+const inverseArtist = (style) => ['ribbon', 'chevron', 'inverse'].includes(style);
+function inkBackdrop(card, key) {
+  const paper = cardPaint(card.paper, '#ffffff');
+  if (card.customDesign) {
+    const text = card.customDesign.elements.find(
+      (layer) =>
+        layer.type === 'text' &&
+        layer.visible !== false &&
+        (key === 'artistInk' ? layer.field.startsWith('artist') : ['a', 'b'].includes(layer.field)),
+    );
+    return text ? StudioTemplateTools.textBackdrop(text, card) : paper;
+  }
+  if (key === 'artistInk') {
+    const graphics = graphicInk(card);
+    if (inverseArtist(card.style) && graphics !== 'transparent') return graphics;
+    if (card.style === 'ghosts') return StudioColorTools.blend(graphics, paper, 0.16);
+  }
+  return paper;
+}
 function makeSvg(c, settings) {
   if (c.customDesign) return StudioTemplateTools.render(c, settings, { fit: fitLabelText });
-  const color = (value, fallback) =>
-    value === 'transparent' || /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
-  const ink = color(c.ink, '#005bbb');
-  const artistInk = color(c.artistInk, '#202020');
-  const paper = color(c.paper, '#ffffff');
-  const decorationInk = color(c.graphicsInk, artistInk);
+  const paper = cardPaint(c.paper, '#ffffff');
+  const ink = c.ink === 'auto' ? StudioColorTools.automaticInk(paper) : cardPaint(c.ink, '#005bbb');
+  const artistInk =
+    c.artistInk === 'auto'
+      ? StudioColorTools.automaticInk(paper)
+      : cardPaint(c.artistInk, '#202020');
+  const decorationInk = graphicInk(c);
   const H = (300 * settings.height) / settings.width;
   const sy = H / 150;
   const font = c.font || 'Georgia';
@@ -489,6 +511,8 @@ function makeSvg(c, settings) {
       ? `<text ${c.designBindings ? 'data-disc-field="number" data-disc-width="80" ' : ''}x="10" y="${139 * sy}" fill="${artistInk}" font-family="Arial" font-size="7">${esc(c.number)}</text>`
       : '');
 
+  if (c.artistInk === 'auto')
+    artistFill = StudioColorTools.automaticInk(inkBackdrop(c, 'artistInk'));
   if (c.artistInk === 'transparent') artistFill = 'transparent';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${settings.width}mm" height="${settings.height}mm" viewBox="0 0 300 ${H}" role="img" aria-label="${esc(name + ' ' + c.a)}"><style>${fontCss}</style><rect width="300" height="${H}" fill="${paper}"/>${art}${tx(titleA, 37, titlePx)}${tx(name, 75, artistPx, artistFont, artistFill)}${tx(titleB, 112, titlePx)}${meta}</svg>`;
 }
@@ -1155,6 +1179,8 @@ createApp({
     }
     function setStyleColor(key, value) {
       const target = styleCard.value;
+      if (key === 'artistInk' && value === 'auto' && !target.graphicsInk)
+        target.graphicsInk = graphicInk(target);
       target[key] = value;
       // Las copias antiguas podían vincular el artista blanco al papel.
       if (key === 'artistInk' && target.customDesign) {
@@ -2346,7 +2372,7 @@ createApp({
               paper: sample.paper,
               artistInk: sample.artistInk,
               font: sample.font,
-              graphicsInk: sample.graphicsInk || sample.artistInk,
+              graphicsInk: graphicInk(sample),
               name: template.name + ' (copia)',
             },
           );
@@ -2460,6 +2486,7 @@ createApp({
       editTemplateDefaults,
       finishStyle,
       setStyleColor,
+      inkBackdrop,
       setStyleFont,
       styleCard,
       useTemplate,
