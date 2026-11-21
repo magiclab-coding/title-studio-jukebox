@@ -266,7 +266,8 @@ try {
             ),
             'Un color por fila',
           );
-          assert.ok(colorRows[7].text.includes('Rojo') && colorRows[7].text.includes('#FF0000'));
+          assert.ok(colorRows[2].text.includes('Automático'));
+          assert.ok(colorRows[8].text.includes('Rojo') && colorRows[8].text.includes('#FF0000'));
           await palette.screenshot({ path: '.test-artifacts/palette-rows-' + width + '.png' });
           assert.equal(
             await palette.locator('input').count(),
