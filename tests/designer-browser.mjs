@@ -160,11 +160,17 @@ try {
         const swatches = page.locator('.color-popover:visible');
         const pink = swatches.getByRole('button', { name: 'Usar Rosa #FF69B4', exact: true });
         const yellow = swatches.getByRole('button', { name: 'Usar Amarillo #FFFF00', exact: true });
+        const orange = swatches.getByRole('button', { name: 'Usar Naranja #FF8000', exact: true });
         const textColor = (swatch) =>
           swatch.locator('span').evaluate((el) => getComputedStyle(el).color);
         assert.equal(await textColor(pink), 'rgb(255, 255, 255)');
         assert.equal(await textColor(yellow), 'rgb(0, 0, 255)');
-        await pink.click();
+        assert.equal(await textColor(orange), 'rgb(255, 255, 255)');
+        await orange.click();
+        assert.equal(await artist.getAttribute('fill'), '#ffffff');
+        await swatches.waitFor({ state: 'hidden' });
+        await preview.screenshot({ path: '.test-artifacts/tinta-naranja-movil.png' });
+        await chooseColor('Color de elementos gráficos', 'Usar Rosa #FF69B4');
         assert.equal(await artist.getAttribute('fill'), '#ffffff');
         await swatches.waitFor({ state: 'hidden' });
         await preview.screenshot({ path: '.test-artifacts/tinta-rosa-intenso-movil.png' });

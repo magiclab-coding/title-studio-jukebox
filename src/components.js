@@ -80,9 +80,8 @@ globalThis.StudioColorTools = {
       (Math.min(complementLuminance, luminance) + 0.05);
     // Conserva el tono complementario si ya ofrece contraste alto.
     if (contrast >= 7) return complement;
-    // El rosa intenso de la paleta admite blanco incluso justo por debajo de 3:1.
-    const vividPink = h >= 315 && h <= 345 && s >= 0.5;
-    const whiteThreshold = vividPink ? 2.6 : 3;
+    // La preferencia por blanco en tonos saturados se aplica a todos los matices.
+    const whiteThreshold = s >= 0.5 ? 2.5 : 3;
     return 1.05 / (luminance + 0.05) >= whiteThreshold ? '#ffffff' : '#000000';
   },
   toHex(h, s, v) {
