@@ -1,3 +1,7 @@
+# 7.25.0
+
+- Publicación de la tinta automática de alto contraste para canciones, artistas y capas de texto.
+
 # 7.24.1
 
 - La paleta de tinta ofrece un color automático complementario al fondo y prioriza un contraste de 7:1. En fondos neutros elige blanco o negro.
