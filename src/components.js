@@ -45,13 +45,52 @@ globalThis.StudioColorTools = {
   // Elige texto blanco o negro por contraste, también en tonos personalizados.
   textColor(hex) {
     if (hex === 'transparent') return '#263c37';
+    return this.luminance(hex) > 0.179 ? '#000000' : '#ffffff';
+  },
+  luminance(hex) {
     const channels = hex
       .slice(1)
       .match(/../g)
       .map((part) => parseInt(part, 16) / 255)
       .map((value) => (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4));
-    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
-    return luminance > 0.179 ? '#000000' : '#ffffff';
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  },
+  blend(foreground, background, opacity) {
+    const under = this.valid(background) ? background : '#ffffff';
+    if (!this.valid(foreground)) return under;
+    let hex = '#';
+    for (const offset of [1, 3, 5]) {
+      const from = parseInt(under.slice(offset, offset + 2), 16);
+      const to = parseInt(foreground.slice(offset, offset + 2), 16);
+      hex += Math.round(from + (to - from) * opacity)
+        .toString(16)
+        .padStart(2, '0');
+    }
+    return hex;
+  },
+  automaticInk(background) {
+    const backdrop = this.valid(background) ? background : '#ffffff';
+    const { h, s, v } = this.fromHex(backdrop);
+    const complement = this.toHex((h + 180) % 360, s, v);
+    const luminance = this.luminance(backdrop);
+    const contrast = (hex) => {
+      const ink = this.luminance(hex);
+      return (Math.max(ink, luminance) + 0.05) / (Math.min(ink, luminance) + 0.05);
+    };
+    const targetContrast = 7;
+    const endpoint = contrast('#000000') >= contrast('#ffffff') ? '#000000' : '#ffffff';
+    // Los neutros usan el máximo contraste. Algunos fondos medios no permiten 7:1.
+    if (!s || contrast(endpoint) < targetContrast) return endpoint;
+    if (contrast(complement) >= targetContrast) return complement;
+    // Conserva el matiz complementario al acercarlo al extremo legible.
+    let low = 0;
+    let high = 255;
+    while (high - low > 1) {
+      const middle = Math.floor((high + low) / 2);
+      if (contrast(this.blend(endpoint, complement, middle / 255)) >= targetContrast) high = middle;
+      else low = middle;
+    }
+    return this.blend(endpoint, complement, high / 255);
   },
   toHex(h, s, v) {
     const c = v * s,
@@ -110,6 +149,7 @@ globalThis.StudioComponents = {
       caption: String,
       disabled: { type: Boolean, default: false },
       paper: { type: String, default: '#ffffff' },
+      automaticBackground: { type: String, default: null },
       // Solo las capas admiten guardar un vínculo al papel desde la paleta.
       paperLinked: { type: Boolean, default: null },
     },
@@ -120,7 +160,19 @@ globalThis.StudioComponents = {
     },
     computed: {
       colors() {
-        return StudioColorTools.palette(this.studioPalette?.getColors() || [], this.paper);
+        const colors = StudioColorTools.palette(this.studioPalette?.getColors() || [], this.paper);
+        if (this.automaticBackground !== null)
+          colors.splice(2, 0, {
+            id: 'auto',
+            name: 'Automático',
+            hex: StudioColorTools.automaticInk(this.automaticBackground),
+          });
+        return colors;
+      },
+      swatch() {
+        return this.modelValue === 'auto'
+          ? StudioColorTools.automaticInk(this.automaticBackground)
+          : this.modelValue || '#000000';
       },
       validHex() {
         return StudioColorTools.valid(this.hex);
@@ -139,6 +191,7 @@ globalThis.StudioComponents = {
         return color.id === 'current-paper' && this.paperLinked !== null;
       },
       isChosen(color) {
+        if (color.id === 'auto') return this.modelValue === 'auto';
         return this.canLinkPaper(color)
           ? this.paperLinked
           : this.modelValue?.toLowerCase() === color.hex;
@@ -147,18 +200,22 @@ globalThis.StudioComponents = {
         if (this.canLinkPaper(color)) {
           this.$emit('link-paper');
           this.open = false;
-        } else this.choose(color.hex);
+        } else this.choose(color.id === 'auto' ? 'auto' : color.hex);
       },
       removeColor(value) {
         this.studioPalette?.remove(value);
       },
       choose(value) {
-        if (!StudioColorTools.paint(value)) return;
+        if (
+          !StudioColorTools.paint(value) &&
+          !(value === 'auto' && this.automaticBackground !== null)
+        )
+          return;
         this.$emit('update:modelValue', value.toLowerCase());
         this.open = false;
       },
       customize() {
-        this.hex = StudioColorTools.valid(this.modelValue) ? this.modelValue : '#ffffff';
+        this.hex = StudioColorTools.valid(this.swatch) && this.modelValue ? this.swatch : '#ffffff';
         Object.assign(this, StudioColorTools.fromHex(this.hex));
         this.open = false;
         this.customOpen = true;
@@ -212,8 +269,8 @@ globalThis.StudioComponents = {
       <span class="field-caption">{{ caption || label }}</span>
       <v-menu v-model="open" :close-on-content-click="false" location="bottom end">
         <template #activator="{ props }">
-          <button v-bind="props" type="button" class="color-trigger" :disabled="disabled" :aria-label="label" :title="label">
-            <span :class="{checkerboard: modelValue === 'transparent'}" :style="{backgroundColor: modelValue || '#000000'}"></span>
+          <button v-bind="props" type="button" class="color-trigger" :disabled="disabled" :aria-label="label" :title="label" :aria-description="modelValue === 'auto' ? 'Automático' : null">
+            <span :class="{checkerboard: modelValue === 'transparent'}" :style="{backgroundColor: swatch}"></span>
           </button>
         </template>
         <section class="color-popover" :aria-label="'Selector de ' + label">
@@ -221,7 +278,7 @@ globalThis.StudioComponents = {
             <div v-for="color in colors" :key="color.id || color.hex" class="color-row" :class="{checkerboard:color.hex === 'transparent', chosen:isChosen(color)}"
               :style="{backgroundColor:color.hex, color:colorText(color.hex)}">
               <button type="button" class="color-choice"
-                :aria-label="(canLinkPaper(color) ? 'Vincular a ' : 'Usar ') + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
+                :aria-label="color.id === 'auto' ? 'Usar Automático' : (canLinkPaper(color) ? 'Vincular a ' : 'Usar ') + color.name + ' ' + (color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase())"
                 :aria-pressed="isChosen(color)" @click="chooseRow(color)">
                 <span>{{ color.name }}</span><code>{{ color.hex === 'transparent' ? '#00000000' : color.hex.toUpperCase() }}</code>
               </button>

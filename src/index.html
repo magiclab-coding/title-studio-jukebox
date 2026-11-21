@@ -803,6 +803,7 @@
                         ><color-picker
                           :paper="styleCard.paper"
                           label="Color canciones"
+                          :automatic-background="inkBackdrop(styleCard, 'ink')"
                           caption="Color"
                           :model-value="styleCard.ink"
                           @update:model-value="setStyleColor('ink', $event)"
@@ -827,6 +828,7 @@
                         ><color-picker
                           :paper="styleCard.paper"
                           label="Color artista"
+                          :automatic-background="inkBackdrop(styleCard, 'artistInk')"
                           caption="Color"
                           :model-value="styleCard.artistInk"
                           @update:model-value="setStyleColor('artistInk', $event)"

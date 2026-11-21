@@ -143,3 +143,10 @@ establece sus colores, fuentes y tamaños para las próximas tarjetas que usen
 la plantilla. Al elegir una fuente, la vista previa actualiza las canciones o
 el artista, incluso si sus capas tienen una tipografía propia. El lápiz abre
 el editor de capas.
+
+En **Color canciones**, **Color artista** y **Tinta** de una capa de texto,
+**Automático** usa el tono complementario al fondo y lo aclara u oscurece
+para alcanzar un contraste de 7:1 cuando el fondo lo permite. Para los
+fondos neutros y aquellos en los que no se puede alcanzar esa relación,
+elige el blanco o negro que da más contraste. La elección se guarda y se
+recalcula al modificar el fondo. La vista previa y el PDF usan la misma tinta.

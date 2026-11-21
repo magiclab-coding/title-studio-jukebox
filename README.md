@@ -47,13 +47,14 @@ se incluyen en la distribución para que pantalla y PDF utilicen el mismo diseñ
 
 ## Ramas y publicación
 
-Cada cambio empieza en una rama `feature/*` desde `develop`. Tras pasar las
-pruebas se integra en `develop` e incrementa el parche, sin publicar.
+Cada cambio empieza en una rama `feature/*` desde `develop` y se integra allí
+tras pasar las pruebas. Si se queda en `develop`, incrementa el parche.
 
 Solo una petición de publicación autoriza el paso de `develop` a `main`.
-La publicación incrementa el número menor y reinicia el parche. GitHub Actions
-crea el tag y la Release del commit publicado y despliega su artefacto en Pages.
-Después se sincroniza `develop` con `main`.
+Si el encargo ya incluye publicar, el commit que prepara la versión se incluye
+en la misma PR del cambio. La publicación incrementa el número menor y reinicia
+el parche. GitHub Actions crea el tag y la Release del commit publicado y
+despliega su artefacto en Pages. Después se sincroniza `develop` con `main`.
 
 [Flujo completo](docs/FLUJO_GITHUB.md) · [Reglas del proyecto](AGENTS.md).
 

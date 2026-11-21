@@ -31,7 +31,8 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const browser = await chromium.launch();
 await mkdir('.test-artifacts', { recursive: true });
 try {
-  for (const width of [360, 720, 1280]) {
+  async function checkViewport(width) {
+    const start = performance.now();
     const context = await browser.newContext({
       viewport: { width, height: 900 },
       acceptDownloads: true,
@@ -129,6 +130,56 @@ try {
       }
       await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
       await styleModal.waitFor({ state: 'hidden' });
+      if (width === 360) {
+        const ribbon = page.getByRole('button', { name: 'Valores de plantilla Ribbon No. 45' });
+        await ribbon.click();
+        const chooseColor = async (label, choice) => {
+          await styleModal.getByRole('button', { name: label, exact: true }).click();
+          await page
+            .locator('.color-popover:visible')
+            .getByRole('button', { name: choice })
+            .click();
+        };
+        const preview = styleModal.locator('.custom-style-preview svg');
+        const song = preview.locator('text').first();
+        const artist = preview.locator('text').filter({ hasText: /Elvis Presley/i });
+        await chooseColor('Color canciones', 'Usar Automático');
+        await chooseColor('Color artista', 'Usar Automático');
+        const songInk = await song.getAttribute('fill');
+        const artistInk = await artist.getAttribute('fill');
+        await chooseColor('Color del papel', 'Usar Negro #000000');
+        assert.notEqual(await song.getAttribute('fill'), songInk);
+        assert.equal(await song.getAttribute('fill'), '#ffffff');
+        assert.equal(await artist.getAttribute('fill'), artistInk);
+        await chooseColor('Color de elementos gráficos', 'Usar Amarillo #FFFF00');
+        assert.notEqual(await artist.getAttribute('fill'), artistInk);
+        assert.equal(await artist.getAttribute('fill'), '#0000ff');
+        await styleModal.getByRole('button', { name: 'Guardar estilo' }).click();
+        await styleModal.waitFor({ state: 'hidden' });
+        await page.reload();
+        await ribbon.click();
+        await styleModal.getByRole('button', { name: 'Color canciones' }).click();
+        const automatic = page
+          .locator('.color-popover:visible')
+          .getByRole('button', { name: 'Usar Automático' });
+        await automatic.waitFor();
+        assert.equal(await automatic.getAttribute('aria-pressed'), 'true');
+        await automatic.hover();
+        await page.screenshot({
+          path: '.test-artifacts/tinta-automatica-movil.png',
+          animations: 'disabled',
+        });
+        await automatic.click();
+        await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
+        await styleModal.waitFor({ state: 'hidden' });
+        // Las demás pruebas parten del catálogo original.
+        await page.evaluate(() => localStorage.clear());
+        await page.reload();
+        await page
+          .locator('.icon-rail')
+          .getByRole('button', { name: 'Diseños y plantillas', exact: true })
+          .click();
+      }
       for (const name of builtinNames) {
         await page.getByRole('button', { name: 'Editar plantilla ' + name, exact: true }).click();
         const visual = page.locator('.template-designer');
@@ -157,7 +208,7 @@ try {
           await palette.locator('.color-choice').first().hover();
           assert.equal(
             await palette.locator('.color-choice > span').filter({ hasNotText: 'Custom' }).count(),
-            16,
+            17,
           );
           await palette.getByRole('button', { name: 'Usar Rojo #FF0000', exact: true }).waitFor();
           const paperRow = palette.locator('.color-row').nth(1);
@@ -218,7 +269,8 @@ try {
             ),
             'Un color por fila',
           );
-          assert.ok(colorRows[7].text.includes('Rojo') && colorRows[7].text.includes('#FF0000'));
+          assert.ok(colorRows[2].text.includes('Automático'));
+          assert.ok(colorRows[8].text.includes('Rojo') && colorRows[8].text.includes('#FF0000'));
           await palette.screenshot({ path: '.test-artifacts/palette-rows-' + width + '.png' });
           assert.equal(
             await palette.locator('input').count(),
@@ -873,11 +925,20 @@ try {
       );
       assert.deepEqual(errors, [], 'Sin errores de ejecución Vue');
       console.log(
-        'PASS: editor real, importación, historial, guardado y medidas a ' + width + ' px',
+        `PASS: editor real, importación, historial, guardado y medidas a ${width} px (${((performance.now() - start) / 1000).toFixed(1)} s)`,
       );
     } finally {
       await context.close();
     }
+  }
+  // Cada anchura utiliza su propia sesión y escribe capturas con nombres distintos.
+  const results = await Promise.allSettled([360, 720, 1280].map(checkViewport));
+  const failures = results.filter((result) => result.status === 'rejected');
+  if (failures.length) {
+    throw new AggregateError(
+      failures.map((failure) => failure.reason),
+      'Fallaron las comprobaciones de navegador',
+    );
   }
 } finally {
   await browser.close();

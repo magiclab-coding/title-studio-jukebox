@@ -11,8 +11,9 @@ Cada interacción crea una rama `feature/YYYYMMDD-HHMMSS-descripcion` desde la
 bash scripts/new-interaction.sh descripcion-corta
 ```
 
-La implementación incrementa el parche de `package.json` y su lockfile. Una vez
-validados los cambios se integra mediante PR en `develop`. La CI instala con
+Si el trabajo queda en `develop`, la implementación incrementa el parche de
+`package.json` y su lockfile. Si el encargo incluye publicar, se aplica la
+preparación de versión descrita en Publicación. La CI instala con
 `npm ci`, valida el formato, ejecuta las pruebas, compila y comprueba el editor
 en navegador.
 
@@ -33,6 +34,16 @@ Los pushes a `develop` y a `feature/*` no publican el sitio.
 La publicación requiere petición explícita del usuario. Se incrementa el número
 menor de versión y se pone el parche a cero; por ejemplo, 7.4.2 → 7.5.0.
 Solo `develop` puede ser origen de una PR hacia `main`.
+
+- **Publicación solicitada junto con el cambio.** Prepara `package.json`,
+  `package-lock.json` y `CHANGELOG.md` en un commit separado en la misma rama
+  `feature/*`. Abre una sola PR a `develop` con el cambio y el commit de versión.
+  Tras superar sus comprobaciones e integrarla, abre la PR de publicación a
+  `main` y espera a que pasen todas sus comprobaciones.
+- **Publicación solicitada después de integrar el cambio.** Si hace falta
+  preparar la versión, hazlo en una nueva rama `feature/*` y pasa su PR por
+  `develop`. Si la versión de esa publicación ya está preparada, reutilízala al
+  abrir la PR a `main`.
 
 `release-pages.yml` se ejecuta en cada push a `main`. Valida el código, resuelve
 la versión, compila una distribución minificada, crea una Release del commit
