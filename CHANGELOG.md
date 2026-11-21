@@ -1,3 +1,7 @@
+# 7.28.0
+
+- La tinta automática usa el mismo umbral de blanco para todos los tonos saturados, incluido el naranja de la paleta.
+
 # 7.27.0
 
 - La tinta automática usa blanco sobre rosa intenso y aplica el mismo contraste al texto de las muestras en la paleta.
