@@ -77,3 +77,19 @@ modifica los originales. No añadir campos duplicados ni un editor de textos sep
 Cuando una interacción cambie el diseño visual, ejecuta la aplicación con los
 cambios y captura la interfaz real en el tamaño de pantalla relevante. Presenta
 la captura al usuario y espera su aprobación estética antes de abrir cualquier PR.
+
+## Anotaciones, issues y mensajes de commit
+
+- Registra cada anotación o propuesta del usuario como una issue de GitHub antes
+  de implementarla. Incluye el texto disponible, la fecha original y las
+  capturas autorizadas. Añade las aclaraciones de la misma anotación como
+  seguimiento fechado en su issue.
+- Etiqueta cada issue con un tipo como `bug`, `feat`, `docs`, `test`, `ci` o
+  `release`, y con el área correspondiente, por ejemplo `discos`,
+  `composición`, `editor`, `modales`, `móvil` o `impresión`.
+- Escribe la primera línea de todos los commits como
+  `[tipo][contexto] Descripción`. Coloca primero el tipo y después uno o más
+  contextos, cada uno en sus propios corchetes. Aplica el formato a los commits
+  de integración y publicación.
+- Incluye en el cuerpo `Refs #N` para cada issue tratada por el commit. Usa
+  `Closes #N` en la integración final cuando corresponda cerrarla.

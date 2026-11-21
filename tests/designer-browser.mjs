@@ -42,6 +42,24 @@ try {
     page.on('dialog', (dialog) => dialog.accept());
     try {
       await page.goto('http://127.0.0.1:' + server.address().port);
+      if (width === 360) {
+        await page
+          .locator('.icon-rail')
+          .getByRole('button', { name: 'Impresión y salida', exact: true })
+          .click();
+        assert.equal(
+          await page.getByRole('button', { name: /Imprimir con el navegador/ }).count(),
+          0,
+        );
+        const pdf = page.getByRole('button', { name: /Descargar PDF · 1:1/ });
+        const downloadReady = page.waitForEvent('download');
+        await pdf.click();
+        const download = await downloadReady;
+        assert.match(download.suggestedFilename(), /-1a1\.pdf$/);
+        assert.ok(
+          (await readFile(await download.path())).subarray(0, 5).equals(Buffer.from('%PDF-')),
+        );
+      }
       await page
         .locator('.icon-rail')
         .getByRole('button', { name: 'Diseños y plantillas', exact: true })

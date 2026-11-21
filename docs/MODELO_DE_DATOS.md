@@ -60,7 +60,7 @@ Las posiciones se acoplan a huecos de una cuadrícula. La composición puede
 mostrar varias hojas según anchura y zoom, y mover tarjetas entre ellas.
 
 El centrado de etiquetas afecta solo al eje horizontal; se respeta el margen
-superior y la escala física. Pantalla, SVG, impresión y PDF comparten el dibujo.
+superior y la escala física. La vista previa y el PDF comparten el dibujo SVG.
 El PDF conserva la configuración seleccionada; la impresora o el visor pueden
 requerir **Tamaño real** o **100 %** para evitar reescalado.
 

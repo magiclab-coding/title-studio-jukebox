@@ -1,3 +1,11 @@
+# 7.23.0
+
+- La vista de salida ofrece únicamente la descarga de etiquetas en PDF a escala 1:1.
+
+# 7.22.1
+
+- La salida de etiquetas se descarga como PDF a escala 1:1. Se retira la impresión directa desde el navegador.
+
 # 7.22.0
 
 - Publicación de las mejoras de cabeceras y edición de capas de la versión 7.21.1.

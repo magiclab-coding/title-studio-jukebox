@@ -12,7 +12,7 @@ Aplicación para organizar discos de vinilo y diseñar sus etiquetas de jukebox.
 - Crear composiciones con discos de cualquier colección, huecos, varias hojas y estilos independientes.
 - Personalizar los textos de cada tarjeta conservando los originales del disco.
 - Ajustar fuentes, tamaños y colores, con avisos cuando el texto se recorta.
-- Imprimir o descargar un PDF con las medidas físicas de las etiquetas.
+- Descargar un PDF a escala 1:1 con las medidas físicas de las etiquetas.
 
 ## Desarrollo local
 
