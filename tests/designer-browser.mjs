@@ -31,7 +31,8 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const browser = await chromium.launch();
 await mkdir('.test-artifacts', { recursive: true });
 try {
-  for (const width of [360, 720, 1280]) {
+  async function checkViewport(width) {
+    const start = performance.now();
     const context = await browser.newContext({
       viewport: { width, height: 900 },
       acceptDownloads: true,
@@ -873,11 +874,20 @@ try {
       );
       assert.deepEqual(errors, [], 'Sin errores de ejecución Vue');
       console.log(
-        'PASS: editor real, importación, historial, guardado y medidas a ' + width + ' px',
+        `PASS: editor real, importación, historial, guardado y medidas a ${width} px (${((performance.now() - start) / 1000).toFixed(1)} s)`,
       );
     } finally {
       await context.close();
     }
+  }
+  // Cada anchura utiliza su propia sesión y escribe capturas con nombres distintos.
+  const results = await Promise.allSettled([360, 720, 1280].map(checkViewport));
+  const failures = results.filter((result) => result.status === 'rejected');
+  if (failures.length) {
+    throw new AggregateError(
+      failures.map((failure) => failure.reason),
+      'Fallaron las comprobaciones de navegador',
+    );
   }
 } finally {
   await browser.close();
