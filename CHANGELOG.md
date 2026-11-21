@@ -1,3 +1,7 @@
+# 7.27.0
+
+- La tinta automática usa blanco sobre rosa intenso y aplica el mismo contraste al texto de las muestras en la paleta.
+
 # 7.26.0
 
 - Publicación del ajuste de tinta automática para tonos medios, conservando los complementarios de alto contraste.
