@@ -84,6 +84,9 @@ try {
         assert.equal(await menu.getByRole('checkbox', { checked: false }).count(), 0);
         await menu.getByRole('button', { name: 'Artistas y canciones', exact: true }).click();
         assert.equal(await menu.getByRole('checkbox', { checked: true }).count(), 4);
+        await page.getByText('PDF descargado con medidas 1:1', { exact: true }).waitFor({
+          state: 'hidden',
+        });
         await page.screenshot({
           path: '.test-artifacts/selector-columnas-movil.png',
           animations: 'disabled',
