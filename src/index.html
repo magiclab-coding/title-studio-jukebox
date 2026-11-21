@@ -303,8 +303,8 @@
                             view = 'print';
                             printSource = 'composition';
                           "
-                          title="Imprimir composición"
-                          aria-label="Imprimir composición"
+                          title="Preparar PDF de la composición"
+                          aria-label="Preparar PDF de la composición"
                         >
                           ▤
                         </button>
@@ -1545,13 +1545,6 @@
                       :loading="pdfBusy"
                       :disabled="!validPrint || !printCards.length || pdfBusy"
                       >↓ Descargar PDF · 1:1</v-btn
-                    ><v-btn
-                      block
-                      variant="outlined"
-                      class="native-print"
-                      @click="printAll"
-                      :disabled="!validPrint || !printCards.length"
-                      >↗ Imprimir con el navegador</v-btn
                     >
                     <p class="small-muted">
                       El PDF conserva el papel, la orientación y las medidas elegidas. Al
@@ -1749,7 +1742,6 @@
         ></v-app
       >
     </div>
-    <div id="print-output"></div>
     <script src="vendor/vue.js"></script>
     <script src="vendor/vuetify.js"></script>
     <script src="vendor/xlsx.js"></script>

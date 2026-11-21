@@ -1011,9 +1011,6 @@ textarea {
   color: var(--muted);
   font-size: 13px;
 }
-#print-output {
-  display: none;
-}
 .scrim {
   display: none;
 }
@@ -1282,34 +1279,6 @@ textarea {
   }
   .transfer {
     padding: 23px;
-  }
-}
-/* --- Salida a impresora: oculta la interfaz y conserva colores y medidas --- */
-@media print {
-  body > * {
-    display: none !important;
-  }
-  #print-output {
-    display: block !important;
-  }
-  .print-page {
-    display: grid;
-    align-content: start;
-    break-after: page;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-  .print-page:last-child {
-    break-after: auto;
-  }
-  .print-page svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-  * {
-    print-color-adjust: exact !important;
-    -webkit-print-color-adjust: exact !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1826,16 +1795,6 @@ button:disabled {
     padding: 0 8px;
   }
 }
-@media print {
-  .print-page {
-    position: relative;
-    break-inside: avoid;
-    overflow: hidden;
-  }
-  .print-page > div {
-    box-sizing: border-box;
-  }
-}
 
 .close-sidebar {
   position: absolute;
@@ -2010,9 +1969,6 @@ label select {
 .section-label {
   font-size: 9px;
 }
-.native-print {
-  margin-top: 10px;
-}
 .positioned-label {
   touch-action: none;
   cursor: grab;
@@ -2161,21 +2117,6 @@ label select {
   }
   .page-controls {
     gap: 8px;
-  }
-}
-@media print {
-  html,
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-  }
-  .print-page {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    border: 0 !important;
   }
 }
 /* Composition: compact controls, persistent empty slots and card-scoped actions. */

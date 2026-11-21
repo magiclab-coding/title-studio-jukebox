@@ -2207,7 +2207,7 @@ createApp({
         notify(e.message);
       }
     }
-    // --- Salida física: PDF e impresión del navegador ---
+    // --- Salida física en PDF ---
     // Congela contenido y medidas para que la salida no cambie mientras se genera.
     function printJob() {
       const s = JSON.parse(JSON.stringify(settings.value)),
@@ -2250,27 +2250,6 @@ createApp({
       } finally {
         pdfBusy.value = false;
       }
-    }
-    // El CSS fija milímetros; el escalado final sigue dependiendo del diálogo de impresión.
-    function printAll() {
-      if (!validPrint.value || !printCards.value.length) return;
-      const { s, dims, pages } = printJob();
-      document.getElementById('print-output').innerHTML =
-        `<style>@page{size:${dims[0]}mm ${dims[1]}mm;margin:0}</style>` +
-        pages
-          .map(
-            (items) =>
-              `<section class="print-page" style="position:relative;width:${dims[0]}mm;height:${dims[1]}mm">` +
-              items
-                .map(
-                  (item) =>
-                    `<div style="position:absolute;left:${item.x}mm;top:${item.y}mm;width:${s.width}mm;height:${s.height}mm;${s.guides ? 'outline:.15mm dashed #888' : ''}">${makeSvg(item.card, s)}</div>`,
-                )
-                .join('') +
-              '</section>',
-          )
-          .join('');
-      Vue.nextTick(() => window.print());
     }
     const previewItems = computed(() =>
       printSource.value === 'composition'
@@ -2632,7 +2611,6 @@ createApp({
       readFile,
       parsePasted,
       commitImport,
-      printAll,
       exportSample: () =>
         download(
           'plantilla-title-studio.csv',
