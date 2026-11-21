@@ -146,9 +146,10 @@ el editor de capas.
 
 En **Color canciones**, **Color artista** y **Tinta** de una capa de texto,
 **Automático** conserva el tono complementario si alcanza un contraste de
-7:1. En los demás fondos de color usa blanco si alcanza 3:1 y negro si el
-fondo es más claro. En rosas intensos como `#FF69B4` el umbral para blanco
-es 2,6:1. En fondos neutros elige el blanco o negro de mayor contraste.
+7:1. En los demás fondos de color usa blanco si su contraste llega a 2,5:1
+con saturación del 50 % o superior en el modelo HSV (tono, saturación y
+valor), o a 3:1 en los tonos menos saturados. Para fondos más claros usa
+negro. En fondos neutros elige el blanco o negro de mayor contraste.
 Los desplegables usan la misma regla para el texto sobre cada muestra.
 La elección se guarda y se recalcula al modificar el fondo. La vista previa
 y el PDF usan la misma tinta.
