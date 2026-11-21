@@ -1,3 +1,7 @@
+# 7.24.0
+
+- Publicación de la corrección de fuentes en Estilo del diseño.
+
 # 7.23.1
 
 - Las fuentes elegidas en Estilo del diseño se aplican a la vista previa y se guardan para las próximas tarjetas.
