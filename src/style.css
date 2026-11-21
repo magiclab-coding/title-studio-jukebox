@@ -4205,6 +4205,21 @@ select:disabled {
     min-width: 0;
     max-width: 100%;
   }
+  /* En pantallas estrechas, el menú se ancla al ancho de la tabla. */
+  .disc-library .table-heading {
+    position: relative;
+  }
+  .disc-library .table-heading .column-chooser {
+    position: static;
+  }
+  .disc-library .column-menu {
+    inset-inline: 12px;
+    width: auto;
+    max-width: 340px;
+  }
+  .disc-library .column-menu .column-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* En móvil se conservan los avisos y todas las acciones de la fila de escritorio. */

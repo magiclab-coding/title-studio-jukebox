@@ -1,3 +1,7 @@
+# 7.28.1
+
+- El selector de columnas de Discos queda dentro de la tabla en pantallas estrechas.
+
 # 7.28.0
 
 - La tinta automática usa el mismo umbral de blanco para todos los tonos saturados, incluido el naranja de la paleta.
