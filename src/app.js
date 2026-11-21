@@ -514,6 +514,8 @@ function templatePreview(t, card, settings, sampleMeta = false) {
       customDesign: t.design || t.customDesign || null,
       font: t.font || 'Georgia',
       artistFont: t.artistFont || '',
+      fontOverride: t.fontOverride,
+      artistFontOverride: t.artistFontOverride,
       ...Object.fromEntries(
         ['titlePx', 'artistPx', 'showGenre', 'showRpm', 'showNumber']
           .filter((k) => t[k] !== undefined)
@@ -638,6 +640,8 @@ createApp({
       'paper',
       'font',
       'artistFont',
+      'fontOverride',
+      'artistFontOverride',
       'size',
       'artistSize',
       'showMeta',
@@ -1086,7 +1090,9 @@ createApp({
           paper: template.paper,
           artistInk: template.artistInk || '#202020',
           font: template.font || 'Georgia',
-          artistFont: '',
+          artistFont: template.artistFont || '',
+          fontOverride: false,
+          artistFontOverride: false,
           graphicsInk: template.graphicsInk,
           ...(settings.value.templateDefaults?.[template.id] || {}),
           customDesign: template.design ? StudioTemplateTools.clone(template.design) : null,
@@ -1113,7 +1119,9 @@ createApp({
         ink: t.ink,
         paper: t.paper,
         font: t.font || 'Georgia',
-        artistFont: '',
+        artistFont: t.artistFont || '',
+        fontOverride: false,
+        artistFontOverride: false,
         artistInk: t.artistInk || '#202020',
         graphicsInk: t.graphicsInk,
         ...(t.design ? { titlePx: t.titlePx ?? 20, artistPx: t.artistPx ?? 19 } : {}),
@@ -1129,6 +1137,9 @@ createApp({
         ...current.value,
         ...t,
         style: t.id,
+        artistFont: t.artistFont || '',
+        fontOverride: false,
+        artistFontOverride: false,
         ...(settings.value.templateDefaults?.[t.id] || {}),
         customDesign: t.design ? StudioTemplateTools.clone(t.design) : null,
       });
@@ -1136,6 +1147,11 @@ createApp({
       stylePanel.value = 'edit';
       styleAll.value = false;
       styleDialog.value = true;
+    }
+    function setStyleFont(key, value) {
+      const target = styleCard.value;
+      target[key] = value;
+      target[key + 'Override'] = true;
     }
     function setStyleColor(key, value) {
       const target = styleCard.value;
@@ -2444,6 +2460,7 @@ createApp({
       editTemplateDefaults,
       finishStyle,
       setStyleColor,
+      setStyleFont,
       styleCard,
       useTemplate,
       actionCardId,
