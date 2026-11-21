@@ -1,6 +1,6 @@
 # 7.24.1
 
-- La paleta de tinta ofrece un color automático complementario al fondo, con contraste ajustado.
+- La paleta de tinta ofrece un color automático complementario al fondo y prioriza un contraste de 7:1. En fondos neutros elige blanco o negro.
 
 # 7.24.0
 

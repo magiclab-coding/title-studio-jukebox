@@ -34,12 +34,16 @@ const sample = {
 
 test('la tinta automática persiste y contrasta con el papel, la cartela y el fondo propio', () => {
   const colors = context.StudioColorTools;
+  assert.equal(colors.automaticInk('#000000'), '#ffffff');
+  assert.equal(colors.automaticInk('#ffffff'), '#000000');
+  assert.equal(colors.automaticInk('#ff0000'), '#000000');
+  assert.equal(colors.automaticInk('#ffff00'), '#0000ff');
   for (const background of ['#ffffff', '#000000', '#777777', '#ff0000', '#0000ff', '#f6f5e7']) {
     const foreground = colors.automaticInk(background);
-    const levels = [foreground, background]
-      .map((value) => colors.luminance(value))
-      .sort((a, b) => a - b);
-    assert.ok((levels[1] + 0.05) / (levels[0] + 0.05) >= 4.5, background);
+    const backdrop = colors.luminance(background) + 0.05;
+    const ink = colors.luminance(foreground) + 0.05;
+    const bestContrast = Math.max(backdrop / 0.05, 1.05 / backdrop);
+    assert.ok(Math.max(ink / backdrop, backdrop / ink) >= Math.min(7, bestContrast), background);
   }
   const template = tools.newTemplate();
   const title = template.design.elements[0];

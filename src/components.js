@@ -77,14 +77,17 @@ globalThis.StudioColorTools = {
       const ink = this.luminance(hex);
       return (Math.max(ink, luminance) + 0.05) / (Math.min(ink, luminance) + 0.05);
     };
-    if (contrast(complement) >= 4.5) return complement;
-    // Mezcla con blanco o negro hasta encontrar el primer tono legible.
-    const endpoint = this.textColor(backdrop);
+    const targetContrast = 7;
+    const endpoint = contrast('#000000') >= contrast('#ffffff') ? '#000000' : '#ffffff';
+    // Los neutros usan el máximo contraste. Algunos fondos medios no permiten 7:1.
+    if (!s || contrast(endpoint) < targetContrast) return endpoint;
+    if (contrast(complement) >= targetContrast) return complement;
+    // Conserva el matiz complementario al acercarlo al extremo legible.
     let low = 0;
     let high = 255;
     while (high - low > 1) {
       const middle = Math.floor((high + low) / 2);
-      if (contrast(this.blend(endpoint, complement, middle / 255)) >= 4.5) high = middle;
+      if (contrast(this.blend(endpoint, complement, middle / 255)) >= targetContrast) high = middle;
       else low = middle;
     }
     return this.blend(endpoint, complement, high / 255);
