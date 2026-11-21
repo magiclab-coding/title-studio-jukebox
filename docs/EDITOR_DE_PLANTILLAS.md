@@ -77,8 +77,8 @@ selecciona de nuevo la plantilla en su estilo o aplícala a toda la composición
 
 El editor permite importar/exportar una plantilla JSON individual. **Guardar
 todo** conserva también el catálogo y los recursos. Las copias de composición
-incluyen los diseños usados en sus posiciones. La salida SVG, PDF y la impresión
-usan el mismo renderizado.
+incluyen los diseños usados en sus posiciones. La vista previa y el PDF a escala
+1:1 usan el mismo dibujo SVG.
 
 ## Partir de un diseño integrado
 

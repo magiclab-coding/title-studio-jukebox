@@ -5,10 +5,8 @@ import assert from 'node:assert/strict';
 import { ref, computed, watch, nextTick } from 'vue';
 import XLSX from 'xlsx';
 // --- Entorno mínimo: ejecuta la lógica Vue sin abrir un navegador real ---
-let app,
-  printed = 0;
+let app;
 const storage = new Map(),
-  output = { innerHTML: '' },
   downloaded = [];
 const context = {
   DOMParser,
@@ -35,14 +33,9 @@ const context = {
   localStorage: { getItem: (k) => storage.get(k) || null, setItem: (k, v) => storage.set(k, v) },
   innerWidth: 360,
   crypto: globalThis.crypto,
-  window: {
-    print() {
-      printed++;
-    },
-  },
+  window: {},
   document: {
     querySelector: () => null,
-    getElementById: () => output,
     createElement: (tag) =>
       tag === 'canvas'
         ? {
@@ -91,11 +84,9 @@ assert.equal(app.compositionCards.value.length, 2);
 app.composition.value.items[0].x = 20;
 await nextTick();
 app.printSource.value = 'composition';
-app.printAll();
-await nextTick();
-assert.equal(printed, 1);
-assert.match(output.innerHTML, /left:37mm/);
-assert.equal((output.innerHTML.match(/<svg/g) || []).length, 2);
+const compositionJob = app.printJob();
+assert.equal(compositionJob.pages[0][0].x, 37);
+assert.equal(compositionJob.pages[0].length, 2);
 app.settings.value.orientation = 'landscape';
 await nextTick();
 assert.deepEqual([...app.dimensions.value], [297, 210]);
@@ -104,10 +95,9 @@ assert.equal(app.settings.value.width, 76);
 assert.equal(app.settings.value.height, 38);
 assert.equal(app.composition.value.items[0].x, 10);
 app.printSource.value = 'collection';
-app.printAll();
-await nextTick();
-assert.equal((output.innerHTML.match(/<svg/g) || []).length, 6);
-assert.match(output.innerHTML, /@page\{size:297mm 210mm/);
+const collectionJob = app.printJob();
+assert.equal(collectionJob.pages.flat().length, 6);
+assert.deepEqual([...collectionJob.dims], [297, 210]);
 app.composition.value.items[0].x = 23;
 await nextTick();
 // --- Recuperación completa y copias parciales ---
@@ -252,9 +242,12 @@ app.addSheet();
 await nextTick();
 assert.equal(app.compositionPages.value, 3);
 app.printSource.value = 'composition';
-app.printAll();
-await nextTick();
-assert.match(output.innerHTML, /left:190.5mm/);
+assert.ok(
+  app
+    .printJob()
+    .pages.flat()
+    .some((item) => item.x === 190.5),
+);
 assert.equal(
   JSON.parse(storage.get('title-studio-v3')).compositions.find(
     (c) => c.id === app.activeComposition.value,
@@ -326,9 +319,12 @@ app.selectCard(firstPlacement);
 assert.equal(app.current.value.style, 'block');
 assert.equal(app.slotIndex(app.currentItem.value), 7);
 app.printSource.value = 'composition';
-app.printAll();
-await nextTick();
-assert.match(output.innerHTML, /#324d70/);
+assert.ok(
+  app
+    .printJob()
+    .pages.flat()
+    .some(({ card }) => app.svg(card).includes('#324d70')),
+);
 app.saveEverything();
 await nextTick();
 const savedData = JSON.parse(await downloaded.at(-1).text());
@@ -972,9 +968,12 @@ assert.equal(
   beforeCustomRestore,
 );
 app.printSource.value = 'composition';
-app.printAll();
-await nextTick();
-assert.match(output.innerHTML, /viewBox=/);
+assert.ok(
+  app
+    .printJob()
+    .pages.flat()
+    .some(({ card }) => app.svg(card).includes('viewBox=')),
+);
 console.log('PASS: custom templates persist, apply, print and keep existing positions independent');
 
 // El lápiz convierte todos los diseños integrados sin tocar catálogo ni posiciones.
@@ -1056,9 +1055,12 @@ assert.equal(
 );
 assert.match(app.svg(app.compositionCards.value[0]), /data-text-background/);
 app.printSource.value = 'composition';
-app.printAll();
-await nextTick();
-assert.match(output.innerHTML, /data-text-background/);
+assert.ok(
+  app
+    .printJob()
+    .pages.flat()
+    .some(({ card }) => app.svg(card).includes('data-text-background')),
+);
 const backgroundBackup = JSON.parse(storage.get('title-studio-v3'));
 assert.equal(
   backgroundBackup.compositions.find(
