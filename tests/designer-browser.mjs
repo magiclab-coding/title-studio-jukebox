@@ -166,6 +166,7 @@ try {
         await chooseCustomBackground('Color de elementos gráficos', '#F9C1D8');
         assert.equal(await song.getAttribute('fill'), '#ffffff');
         assert.equal(await artist.getAttribute('fill'), '#000000');
+        await page.locator('.color-popover:visible').waitFor({ state: 'hidden' });
         await styleModal.screenshot({
           path: '.test-artifacts/tinta-rosa-movil.png',
           animations: 'disabled',
