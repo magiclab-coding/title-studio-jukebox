@@ -1,3 +1,11 @@
+# 7.26.0
+
+- Publicación del ajuste de tinta automática para tonos medios, conservando los complementarios de alto contraste.
+
+# 7.25.1
+
+- La tinta automática conserva el color complementario de alto contraste y prefiere blanco sobre fondos de color medios cuando alcanza 3:1.
+
 # 7.25.0
 
 - Publicación de la tinta automática de alto contraste para canciones, artistas y capas de texto.
