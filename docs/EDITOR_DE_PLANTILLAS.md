@@ -145,8 +145,8 @@ el artista, incluso si sus capas tienen una tipografía propia. El lápiz abre
 el editor de capas.
 
 En **Color canciones**, **Color artista** y **Tinta** de una capa de texto,
-**Automático** usa el tono complementario al fondo y lo aclara u oscurece
-para alcanzar un contraste de 7:1 cuando el fondo lo permite. Para los
-fondos neutros y aquellos en los que no se puede alcanzar esa relación,
-elige el blanco o negro que da más contraste. La elección se guarda y se
-recalcula al modificar el fondo. La vista previa y el PDF usan la misma tinta.
+**Automático** conserva el tono complementario si alcanza un contraste de
+7:1. En los demás fondos de color usa blanco si alcanza 3:1 y negro si el
+fondo es más claro. En los fondos neutros usa el blanco o negro de mayor
+contraste. La elección se guarda y se recalcula al modificar el fondo. La
+vista previa y el PDF usan la misma tinta.

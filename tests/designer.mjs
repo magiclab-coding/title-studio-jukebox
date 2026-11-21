@@ -36,14 +36,20 @@ test('la tinta automática persiste y contrasta con el papel, la cartela y el fo
   const colors = context.StudioColorTools;
   assert.equal(colors.automaticInk('#000000'), '#ffffff');
   assert.equal(colors.automaticInk('#ffffff'), '#000000');
-  assert.equal(colors.automaticInk('#ff0000'), '#000000');
+  assert.equal(colors.automaticInk('#ff0000'), '#ffffff');
   assert.equal(colors.automaticInk('#ffff00'), '#0000ff');
+  assert.equal(colors.automaticInk('#0000ff'), '#ffff00');
+  for (const background of ['#ED649E', '#EF4444', '#A8653C', '#EA580C', '#3B82F6']) {
+    assert.equal(colors.automaticInk(background), '#ffffff', background);
+  }
+  for (const background of ['#F9C1D8', '#FCA5A5', '#E0B996', '#FDBA74', '#93C5FD']) {
+    assert.equal(colors.automaticInk(background), '#000000', background);
+  }
   for (const background of ['#ffffff', '#000000', '#777777', '#ff0000', '#0000ff', '#f6f5e7']) {
     const foreground = colors.automaticInk(background);
     const backdrop = colors.luminance(background) + 0.05;
     const ink = colors.luminance(foreground) + 0.05;
-    const bestContrast = Math.max(backdrop / 0.05, 1.05 / backdrop);
-    assert.ok(Math.max(ink / backdrop, backdrop / ink) >= Math.min(7, bestContrast), background);
+    assert.ok(Math.max(ink / backdrop, backdrop / ink) >= 3, background);
   }
   const template = tools.newTemplate();
   const title = template.design.elements[0];

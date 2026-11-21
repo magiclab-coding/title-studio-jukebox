@@ -154,6 +154,22 @@ try {
         await chooseColor('Color de elementos gráficos', 'Usar Amarillo #FFFF00');
         assert.notEqual(await artist.getAttribute('fill'), artistInk);
         assert.equal(await artist.getAttribute('fill'), '#0000ff');
+        const chooseCustomBackground = async (label, hex) => {
+          const palette = page.locator('.color-popover:visible');
+          await styleModal.getByRole('button', { name: label, exact: true }).click();
+          await palette.getByRole('button', { name: 'Personalizar color…' }).click();
+          await page.getByRole('textbox', { name: 'Hexadecimal de ' + label }).fill(hex);
+          await page.getByRole('button', { name: 'Guardar color', exact: true }).click();
+          await palette.getByRole('button', { name: new RegExp('Usar Custom .*' + hex) }).click();
+        };
+        await chooseCustomBackground('Color del papel', '#ED649E');
+        await chooseCustomBackground('Color de elementos gráficos', '#F9C1D8');
+        assert.equal(await song.getAttribute('fill'), '#ffffff');
+        assert.equal(await artist.getAttribute('fill'), '#000000');
+        await styleModal.screenshot({
+          path: '.test-artifacts/tinta-rosa-movil.png',
+          animations: 'disabled',
+        });
         await styleModal.getByRole('button', { name: 'Guardar estilo' }).click();
         await styleModal.waitFor({ state: 'hidden' });
         await page.reload();
