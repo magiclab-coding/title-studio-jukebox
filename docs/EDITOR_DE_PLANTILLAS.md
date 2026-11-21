@@ -140,4 +140,6 @@ en controles redondeados. Los títulos largos se recortan para caber.
 En **Diseños y plantillas**, pulsa el nombre o la vista previa de un diseño
 predefinido o propio para abrir **Estilo del diseño**. **Guardar estilo**
 establece sus colores, fuentes y tamaños para las próximas tarjetas que usen
-la plantilla. El lápiz abre el editor de capas.
+la plantilla. Al elegir una fuente, la vista previa actualiza las canciones o
+el artista, incluso si sus capas tienen una tipografía propia. El lápiz abre
+el editor de capas.

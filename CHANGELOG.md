@@ -1,3 +1,7 @@
+# 7.23.1
+
+- Las fuentes elegidas en Estilo del diseño se aplican a la vista previa y se guardan para las próximas tarjetas.
+
 # 7.23.0
 
 - La vista de salida ofrece únicamente la descarga de etiquetas en PDF a escala 1:1.
