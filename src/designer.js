@@ -505,7 +505,12 @@
   const isArtist = (e) => e.field.startsWith('artist');
   function metrics(e, card, fit) {
     const artist = isArtist(e);
-    const family = e.font || (artist ? card.artistFont || card.font : card.font) || 'DM Sans';
+    const styleFont = (artist && card.artistFont) || card.font || 'DM Sans';
+    // Solo una elección explícita en Estilo del diseño sustituye la fuente de la capa.
+    const override = artist
+      ? card.artistFontOverride
+      : card.fontOverride && (e.field === 'a' || e.field === 'b');
+    const family = (!override && e.font) || styleFont;
     const scale = artist ? (card.artistPx ?? 19) / 19 : (card.titlePx ?? 20) / 20;
     const px =
       e.fontSize *

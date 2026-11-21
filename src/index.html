@@ -788,7 +788,8 @@
                       <div class="type-row">
                         <font-picker
                           label="Fuente canciones"
-                          v-model="styleCard.font"
+                          :model-value="styleCard.font"
+                          @update:model-value="setStyleFont('font', $event)"
                           :options="fontOptions"
                           :sample="styleCard.a"
                         ></font-picker
@@ -810,7 +811,8 @@
                       <div class="type-row">
                         <font-picker
                           label="Fuente artista"
-                          v-model="styleCard.artistFont"
+                          :model-value="styleCard.artistFont"
+                          @update:model-value="setStyleFont('artistFont', $event)"
                           :options="fontOptions"
                           :sample="artistName(styleCard)"
                           inherit

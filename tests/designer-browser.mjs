@@ -112,6 +112,21 @@ try {
         ) < 3,
         'El título queda centrado en el modal',
       );
+      const chooseStyleFont = async (label, name) => {
+        const picker = styleModal.locator('.font-picker').filter({ hasText: label });
+        await picker.locator('summary').click();
+        await picker.getByRole('button', { name }).click();
+      };
+      if (width === 360) {
+        await chooseStyleFont('Fuente canciones', /Monoespaciada/);
+        assert.equal(
+          await styleModal
+            .locator('.custom-style-preview svg text')
+            .first()
+            .getAttribute('font-family'),
+          'monospace',
+        );
+      }
       await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
       await styleModal.waitFor({ state: 'hidden' });
       for (const name of builtinNames) {
@@ -754,10 +769,31 @@ try {
       await page.getByRole('button', { name: 'Usar Verde #008000', exact: true }).click();
       const linkedBackground = styleModal.locator('.custom-style-preview [data-text-background]');
       assert.equal(await linkedBackground.getAttribute('fill'), '#008000');
+      const previewText = styleModal.locator('.custom-style-preview svg text');
+      if (width === 360) {
+        // La canción A tiene una fuente propia en su capa, asignada en el editor.
+        assert.equal(await previewText.first().getAttribute('font-family'), 'Courier Prime');
+        await chooseStyleFont('Fuente canciones', /Monoespaciada/);
+        assert.equal(await previewText.first().getAttribute('font-family'), 'monospace');
+        await chooseStyleFont('Fuente artista', /Arial · Sans/);
+        assert.equal(
+          await previewText.filter({ hasText: /Elvis Presley/i }).getAttribute('font-family'),
+          'Arial',
+        );
+      }
       await styleModal.getByRole('button', { name: 'Guardar estilo' }).click();
       await styleModal.waitFor({ state: 'hidden' });
+      if (width === 360) await page.reload();
       await card.locator('.template-name').click();
       assert.equal(await linkedBackground.getAttribute('fill'), '#008000');
+      if (width === 360) {
+        assert.equal(await previewText.first().getAttribute('font-family'), 'monospace');
+        assert.equal(
+          await previewText.filter({ hasText: /Elvis Presley/i }).getAttribute('font-family'),
+          'Arial',
+        );
+        await styleModal.screenshot({ path: '.test-artifacts/style-font-360.png' });
+      }
       await styleModal.getByRole('button', { name: 'Cerrar estilos' }).click();
       await styleModal.waitFor({ state: 'hidden' });
       await page
