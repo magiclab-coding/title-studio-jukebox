@@ -28,6 +28,14 @@ Las nuevas funciones se integran únicamente en develop y aumentan el tercer nú
 
 ## Publicar solo cuando se solicite
 
-Preparar una PR develop → main con el segundo número incrementado y el tercero a cero: 7.4.1 → 7.5.0. Publicar solo tras la petición explícita del usuario. El merge a main activa Release y Pages; después se sincroniza develop con main.
+Si el encargo del cambio incluye publicar, prepara la versión en un commit
+separado de la misma rama de trabajo antes de abrir la PR hacia `develop`. Si el
+cambio ya está integrado al pedir la publicación, prepara la versión en una
+nueva rama cuando haga falta. La versión de publicación incrementa el segundo
+número y pone el tercero a cero, por ejemplo 7.4.1 → 7.5.0.
+
+La PR `develop` → `main` ejecuta todas las comprobaciones. La fusión en
+`main` activa Release y Pages. Después se sincroniza `develop` con `main`. El
+[flujo de publicación](FLUJO_GITHUB.md#publicación) detalla los dos casos.
 
 Los datos de localhost son independientes de los de GitHub Pages. Para llevar tus discos y composiciones a local, exporta Guardar todo en producción e importa ese JSON en local. No borres datos del navegador para actualizar el programa.

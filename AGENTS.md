@@ -43,10 +43,12 @@ Use short section comments to organize significant areas of authored code. Add c
 
 ## Local development and release policy
 
-- Each feature starts from latest develop, increments the patch number and merges only into develop.
+- Each feature starts from latest develop and merges into develop. For development-only work, increment the patch number.
 - develop runs validation only; it must never publish Pages.
 - Start the user-local server with npm run dev when the user computer terminal is available. A remote preview is not the user computer.
-- Only an explicit publication request authorizes develop -> main. Prepare the version as major.(minor+1).0 before merging; then synchronize develop with main.
+- Only an explicit publication request authorizes develop -> main. When the user requests publication while assigning a change, prepare the next minor version with patch zero in a separate commit on the same feature branch before opening its PR to develop. Update package.json, package-lock.json and CHANGELOG.md together.
+- When publication is requested after the change has already been integrated, prepare the version in a new feature branch and integrate it into develop. Reuse a version already prepared for that publication.
+- Publish through the develop -> main PR after its full checks pass. Synchronize develop with main after publication.
 - See docs/DESARROLLO_LOCAL.md for installation and testing. Never claim a server runs on the user computer without observing it there.
 
 ## Consistencia visual permanente
