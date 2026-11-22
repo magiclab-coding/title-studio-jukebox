@@ -60,6 +60,39 @@ try {
         assert.ok(
           (await readFile(await download.path())).subarray(0, 5).equals(Buffer.from('%PDF-')),
         );
+        await page
+          .locator('.icon-rail')
+          .getByRole('button', { name: 'Discos', exact: true })
+          .click();
+        const table = page.locator('.disc-library');
+        const chooser = table.locator('.column-chooser');
+        await chooser.getByLabel('Elegir columnas').click();
+        const menu = chooser.locator('.column-menu');
+        for (const screenWidth of [320, 360]) {
+          await page.setViewportSize({ width: screenWidth, height: 900 });
+          const [bounds, panel] = await Promise.all([menu.boundingBox(), table.boundingBox()]);
+          assert.ok(bounds.x >= panel.x, 'El selector debe quedar dentro del borde izquierdo');
+          assert.ok(
+            bounds.x + bounds.width <= Math.min(screenWidth, panel.x + panel.width),
+            'El selector debe quedar dentro del borde derecho',
+          );
+        }
+        const artist = menu.getByRole('checkbox', { name: 'Artista A', exact: true });
+        await artist.uncheck();
+        assert.equal(await artist.isChecked(), false);
+        await menu.getByRole('button', { name: 'Mostrar todas', exact: true }).click();
+        assert.equal(await menu.getByRole('checkbox', { checked: false }).count(), 0);
+        await menu.getByRole('button', { name: 'Artistas y canciones', exact: true }).click();
+        assert.equal(await menu.getByRole('checkbox', { checked: true }).count(), 4);
+        await page.getByText('PDF descargado con medidas 1:1', { exact: true }).waitFor({
+          state: 'hidden',
+        });
+        await page.screenshot({
+          path: '.test-artifacts/selector-columnas-movil.png',
+          animations: 'disabled',
+        });
+        await chooser.getByLabel('Elegir columnas').click();
+        assert.equal(await menu.isVisible(), false);
       }
       await page
         .locator('.icon-rail')
